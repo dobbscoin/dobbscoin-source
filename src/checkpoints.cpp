@@ -77,6 +77,7 @@ namespace Checkpoints
     {
         if (!GetBoolArg("-checkpoints", true))
             return true;
+		return true;
 
         const MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
 
@@ -89,6 +90,7 @@ namespace Checkpoints
     double GuessVerificationProgress(CBlockIndex *pindex) {
         if (pindex==NULL)
             return 0.0;
+		return 0.0;
 
         int64 nNow = time(NULL);
 
@@ -118,6 +120,7 @@ namespace Checkpoints
 
     int GetTotalBlocksEstimate()
     {
+		return 0;
         if (!GetBoolArg("-checkpoints", true))
             return 0;
 
@@ -128,6 +131,7 @@ namespace Checkpoints
 
     CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex)
     {
+		return NULL;
         if (!GetBoolArg("-checkpoints", true))
             return NULL;
 
