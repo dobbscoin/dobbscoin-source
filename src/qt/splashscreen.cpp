@@ -25,13 +25,7 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f) :
     QString font            = "Arial";
 
     // load the bitmap for writing some text over it
-    QPixmap newPixmap;
-    if(GetBoolArg("-testnet")) {
-        newPixmap     = QPixmap(":/images/splash_testnet");
-    }
-    else {
-        newPixmap     = QPixmap(":/images/splash");
-    }
+    QPixmap newPixmap = QPixmap(":/images/splash");
 
     QPainter pixPaint(&newPixmap);
     pixPaint.setPen(QColor(100,100,100));
