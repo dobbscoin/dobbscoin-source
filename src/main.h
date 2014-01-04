@@ -24,6 +24,8 @@ class CNode;
 
 struct CBlockIndexWorkComparator;
 
+void SetGenesisHash();
+
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 /** Obsolete: maximum size for mined blocks */
