@@ -32,6 +32,7 @@ unsigned int nTransactionsUpdated = 0;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
 uint256 hashGenesisBlock("0x12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2");
+uint256 hashGenesisScrypt("0x12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2");
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 20);
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
@@ -1178,7 +1179,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     CBigNum bnTarget;
     bnTarget.SetCompact(nBits);
 
-    if (hash == hashGenesisBlock)
+    if (hash == hashGenesisScrypt)
         return true;
 
     // Check range
@@ -2767,6 +2768,7 @@ void SetGenesisHash() {
         //// debug print
         uint256 hash = block.GetHash();
         hashGenesisBlock = hash;
+        hashGenesisScrypt = block.GetPoWHash();
 }
 
 bool InitBlockIndex() {
@@ -2814,6 +2816,7 @@ bool InitBlockIndex() {
         //// debug print
         uint256 hash = block.GetHash();
         hashGenesisBlock = hash;
+        hashGenesisScrypt = block.GetPoWHash();
         printf("%s\n", hash.ToString().c_str());
         printf("%s\n", hashGenesisBlock.ToString().c_str());
         printf("%s\n", block.hashMerkleRoot.ToString().c_str());
