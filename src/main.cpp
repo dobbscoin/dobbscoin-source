@@ -2749,7 +2749,7 @@ void SetGenesisHash() {
         //   vMerkleTree: 4a5e1e
 
         // Genesis block
-        const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
+        const char* pszTimestamp = "NY Times 05/Oct/2011 Steve Jobs, Apple’s Visionary, Dies at 56";
         CTransaction txNew;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
@@ -2762,8 +2762,14 @@ void SetGenesisHash() {
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
         block.nTime    = 1231006505;
-        block.nBits    = 0x1d00ffff;
-        block.nNonce   = 2083236893;
+        block.nBits    = 0x1e0ffff0;
+        block.nNonce   = 2084524493;
+
+        if (fTestNet)
+        {
+            block.nTime    = 1296688602;
+            block.nNonce   = 414098458;
+        }
 
         //// debug print
         uint256 hash = block.GetHash();
@@ -2803,7 +2809,7 @@ bool InitBlockIndex() {
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1317972665;
+        block.nTime    = 1231006505;
         block.nBits    = 0x1e0ffff0;
         block.nNonce   = 2084524493;
 
