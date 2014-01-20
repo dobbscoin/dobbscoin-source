@@ -1,1 +1,1 @@
-To get an updated client, go to http://coingen.io
+To get an updated client, go to https://github.com/dobbscoin
