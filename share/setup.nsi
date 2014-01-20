@@ -7,7 +7,7 @@ SetCompressor /SOLID lzma
 !define REGKEY "SOFTWARE\$(^Name)"
 !define VERSION 0.8.6
 !define COMPANY "Dobbscoin project"
-!define URL http://www.coingen.io/
+!define URL http://www.dobbscoin.info/
 
 # MUI Symbol Definitions
 !define MUI_ICON "../share/pixmaps/dobbscoin.ico"
