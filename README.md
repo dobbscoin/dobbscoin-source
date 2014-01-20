@@ -1,32 +1,30 @@
 Dobbscoin integration/staging tree
 ================================
 
-http://www.coingen.io
-
-Copyright (c) 2009-2013 Bitcoin Developers
-
 What is Dobbscoin?
 ----------------
 
-Dobbscoin is an experimental new digital currency that enables instant payments to
+Dobbscoin is a peer to peer settlement instrument, a 'currency like - electronic
+document', not to be confused with 'Legal Tender'. Dobbscoin enables instant Slack to
 anyone, anywhere in the world. Dobbscoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Dobbscoin is also the name of the open source
-software which enables the use of this currency.
+with no central authority: managing transactions and issuing Slack is carried
+out collectively by the network. 
 
-For more information, as well as an immediately useable, binary version of
-the Dobbscoin client software, see http://www.coingen.io.
 
 License
 -------
 
-Dobbscoin is released under the terms of the MIT license. See `COPYING` for more
-information or see http://opensource.org/licenses/MIT.
-
 Dobbscoin is based on Bitcoin.
-Its development tracks Bitcoin's, the following information applies to Bitcoin's developemnt.
-Development process
+Its development tracks Bitcoin's. 
+
+
+
+The following information applies to Bitcoin's developemnt.
+Copyright (c) 2009-2013 Bitcoin Developers
 -------------------
+
+BitCoin is released under the terms of the MIT license. See `COPYING` for more
+information or see http://opensource.org/licenses/MIT.
 
 Developers work in their own trees, then submit pull requests when they think
 their feature or bug fix is ready.
@@ -72,7 +70,7 @@ Unit tests for the GUI code are in `src/qt/test/`. To compile and run them:
 
 Every pull request is built for both Windows and Linux on a dedicated server,
 and unit and sanity tests are automatically run. The binaries produced may be
-used for manual QA testing — a link to them will appear in a comment on the
+used for manual QA testing â€” a link to them will appear in a comment on the
 pull request posted by [BitcoinPullTester](https://github.com/BitcoinPullTester). See https://github.com/TheBlueMatt/test-scripts
 for the build/test scripts.
 
