@@ -1,7 +1,7 @@
 --- 
 name: dobbscoin
 urls:
-- http://coingen.io/dobbscoin-latest-linux-gitian.zip
+- http://dobbscoin.info/dobbscoin-latest-linux-gitian.zip
 rss:
 - url: http://sourceforge.net/api/file/index/project-id/244765/mtime/desc/limit/100/rss
   xpath: //item/link/text()
