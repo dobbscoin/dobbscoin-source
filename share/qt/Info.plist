@@ -7,7 +7,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleGetInfoString</key>
-	<string>$VERSION, Copyright © 2009-$YEAR The Bitcoin developers</string>
+	<string>$VERSION, Copyright © 2009-$YEAR The Dobbscoin developers</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$VERSION</string>
 	<key>CFBundleVersion</key>
@@ -17,17 +17,17 @@
 	<key>CFBundleExecutable</key>
 	<string>Dobbscoin-Qt</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.bitcoinfoundation.Dobbscoin-Qt</string>
+	<string>info.dobbscoin.Dobbscoin-Qt</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>org.bitcoinfoundation.BitcoinPayment</string>
+			<string>info.dobbscoin.DobbscoinPayment</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>bitcoin</string>
+				<string>dobbscoin</string>
 			</array>
 		</dict>
 	</array>
