@@ -152,7 +152,10 @@ int main(int argc, char *argv[])
     // as it is used to locate QSettings)
     QApplication::setOrganizationName("Dobbscoin");
     QApplication::setOrganizationDomain("dobbscoin.info");
-    QApplication::setApplicationName("Dobbscoin-Qt");
+    if(GetBoolArg("-testnet")) // Separate UI settings for testnet
+        QApplication::setApplicationName("Dobbscoin-Qt-testnet");
+    else
+        QApplication::setApplicationName("Dobbscoin-Qt");
 
     // ... then GUI settings:
     OptionsModel optionsModel;
@@ -198,6 +201,13 @@ int main(int argc, char *argv[])
         help.showOrPrint();
         return 1;
     }
+
+#ifdef Q_OS_MAC
+    // on mac, also change the icon now because it would look strange to have a testnet splash (green) and a std app icon (orange)
+    if(GetBoolArg("-testnet")) {
+        MacDockIconHandler::instance()->setIcon(QIcon(":icons/dobbscoin_testnet"));
+    }
+#endif
 
     SplashScreen splash(QPixmap(), 0);
     if (GetBoolArg("-splash", true) && !GetBoolArg("-min"))
