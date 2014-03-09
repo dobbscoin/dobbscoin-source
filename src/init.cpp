@@ -493,8 +493,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 #endif
 
     // ********************************************************* Step 2: parameter interactions
-    fTestNet = false;
-    SetGenesisHash();
+    fTestNet = GetBoolArg("-testnet");
 
     if (mapArgs.count("-bind")) {
         // when specifying an explicit binding address, you want to listen on it
