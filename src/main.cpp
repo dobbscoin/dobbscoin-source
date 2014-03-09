@@ -1209,7 +1209,7 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
 		if (PastRateActualSeconds != 0 && PastRateTargetSeconds != 0) {
 		PastRateAdjustmentRatio			= double(PastRateTargetSeconds) / double(PastRateActualSeconds);
 		}
-		EventHorizonDeviation			= 1 + (0.7084 * pow((double(PastBlocksMass)/double(144)), -1.228));
+		EventHorizonDeviation			= 1 + (0.7084 * pow((double(PastBlocksMass)/double(9)), -1.228));
 		EventHorizonDeviationFast		= EventHorizonDeviation;
 		EventHorizonDeviationSlow		= 1 / EventHorizonDeviation;
 		
@@ -1228,7 +1228,7 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
     if (bnNew > bnProofOfWorkLimit) { bnNew = bnProofOfWorkLimit; }
 	
     /// debug print
-    printf("Difficulty Retarget - Kimoto Gravity Well\n");
+    printf("Difficulty Retarget - BOB's Wormh0le (KGW)\n");
     printf("PastRateAdjustmentRatio = %g\n", PastRateAdjustmentRatio);
     printf("Before: %08x  %s\n", BlockLastSolved->nBits, CBigNum().SetCompact(BlockLastSolved->nBits).getuint256().ToString().c_str());
     printf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
@@ -1240,8 +1240,8 @@ unsigned int static GetNextWorkRequired_V2(const CBlockIndex* pindexLast, const 
 {
 	static const int64	BlocksTargetSpacing			= 10 * 60; // 2.5 minutes
 	unsigned int		TimeDaySeconds				= 60 * 60 * 24;
-	int64				PastSecondsMin				= TimeDaySeconds * 0.25;
-	int64				PastSecondsMax				= TimeDaySeconds * 7;
+	int64				PastSecondsMin				= TimeDaySeconds * 0.0625;
+	int64				PastSecondsMax				= TimeDaySeconds * 1.75;
 	uint64				PastBlocksMin				= PastSecondsMin / BlocksTargetSpacing;
 	uint64				PastBlocksMax				= PastSecondsMax / BlocksTargetSpacing;	
 	
