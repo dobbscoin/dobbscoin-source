@@ -301,12 +301,12 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
         if(clientModel->isTestNet())
         {
             setWindowTitle(windowTitle() + QString(" ") + tr("[testnet]"));
-#ifndef Q_OS_MAC
+// #ifndef Q_OS_MAC
             QApplication::setWindowIcon(QIcon(":icons/dobbscoin_testnet"));
             setWindowIcon(QIcon(":icons/dobbscoin_testnet"));
-#else
+/* #else
             MacDockIconHandler::instance()->setIcon(QIcon(":icons/dobbscoin_testnet"));
-#endif
+#endif */
             if(trayIcon)
             {
                 // Just attach " [testnet]" to the existing tooltip
