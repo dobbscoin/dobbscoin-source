@@ -49,7 +49,7 @@ QT_TRANSLATE_NOOP("dobbscoin-core", ""
 "Execute command when the best block changes (%s in cmd is replaced by block "
 "hash)"),
 QT_TRANSLATE_NOOP("dobbscoin-core", ""
-"Listen for JSON-RPC connections on <port> (default: 19984 or testnet: 119984)"),
+"Listen for JSON-RPC connections on <port> (default: 19984 or testnet: 39984)"),
 QT_TRANSLATE_NOOP("dobbscoin-core", ""
 "Number of seconds to keep misbehaving peers from reconnecting (default: "
 "86400)"),
@@ -142,7 +142,7 @@ QT_TRANSLATE_NOOP("dobbscoin-core", "Invalid amount for -mintxfee=<amount>: '%s'
 QT_TRANSLATE_NOOP("dobbscoin-core", "Invalid amount for -paytxfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Invalid amount"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "List commands"),
-QT_TRANSLATE_NOOP("dobbscoin-core", "Listen for connections on <port> (default: 19985 or testnet: 119985)"),
+QT_TRANSLATE_NOOP("dobbscoin-core", "Listen for connections on <port> (default: 19985 or testnet: 39985)"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Loading addresses..."),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Loading block index..."),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Loading wallet..."),
