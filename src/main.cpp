@@ -31,8 +31,8 @@ CTxMemPool mempool;
 unsigned int nTransactionsUpdated = 0;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
-uint256 hashGenesisBlock("0x12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2");
-uint256 hashGenesisScrypt("0x12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2");
+uint256 hashGenesisBlock("0x6d2d7d525900712451b9697d0b5b2304ebae6efb349540da445bf575c0159969");
+uint256 hashGenesisPoW("0xb83bb8028229439a4e645a56d48ee31b884efdb0e395c8538a10a462166563f3");
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 20);
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
@@ -1179,7 +1179,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     CBigNum bnTarget;
     bnTarget.SetCompact(nBits);
 
-    if (hash == hashGenesisScrypt)
+    if (hash == hashGenesisPoW)
         return true;
 
     // Check range
@@ -2724,11 +2724,11 @@ bool LoadBlockIndex()
 {
     if (fTestNet)
     {
-        pchMessageStart[0] = 0x0b;
-        pchMessageStart[1] = 0x11;
-        pchMessageStart[2] = 0x09;
-        pchMessageStart[3] = 0x07;
-        hashGenesisBlock = uint256("0x000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943");
+        pchMessageStart[0] = 0xfa;
+        pchMessageStart[1] = 0xda;
+        pchMessageStart[2] = 0x0b;
+        pchMessageStart[3] = 0xbf;
+        hashGenesisBlock = uint256("0x0d44ae9be7f13a64253c9b61dbbddc37304e1c359fd593565caf356e4fd597c7");
     }
 
     //
@@ -2738,43 +2738,6 @@ bool LoadBlockIndex()
         return false;
 
     return true;
-}
-
-void SetGenesisHash() {
-        // Genesis Block:
-        // CBlock(hash=000000000019d6, ver=1, hashPrevBlock=00000000000000, hashMerkleRoot=4a5e1e, nTime=1389086657, nBits=1d00ffff, nNonce=2083236893, vtx=1)
-        //   CTransaction(hash=4a5e1e, ver=1, vin.size=1, vout.size=1, nLockTime=0)
-        //     CTxIn(COutPoint(000000, -1), coinbase 04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73)
-        //     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
-        //   vMerkleTree: 4a5e1e
-
-        // Genesis block
-        const char* pszTimestamp = "NY Times 05/Oct/2011 Steve Jobs, Apple’s Visionary, Dies at 56";
-        CTransaction txNew;
-        txNew.vin.resize(1);
-        txNew.vout.resize(1);
-        txNew.vin[0].scriptSig = CScript() << 0xa0fb1783 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].nValue = 1;
-        txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
-        CBlock block;
-        block.vtx.push_back(txNew);
-        block.hashPrevBlock = 0;
-        block.hashMerkleRoot = block.BuildMerkleTree();
-        block.nVersion = 1;
-        block.nTime    = 1389086657;
-        block.nBits    = 0x1e0ffff0;
-        block.nNonce   = 2084524493;
-
-        if (fTestNet)
-        {
-            block.nTime    = 1296688602;
-            block.nNonce   = 414098458;
-        }
-
-        //// debug print
-        uint256 hash = block.GetHash();
-        hashGenesisBlock = hash;
-        hashGenesisScrypt = block.GetPoWHash();
 }
 
 bool InitBlockIndex() {
@@ -2790,7 +2753,7 @@ bool InitBlockIndex() {
     // Only add the genesis block if not reindexing (in which case we reuse the one already on disk)
     if (!fReindex) {
         // Genesis Block:
-        // CBlock(hash=000000000019d6, ver=1, hashPrevBlock=00000000000000, hashMerkleRoot=4a5e1e, nTime=1389086657, nBits=1d00ffff, nNonce=2083236893, vtx=1)
+        // CBlock(hash=6d2d7d52590071245, ver=1, hashPrevBlock=00000000000000, hashMerkleRoot=21e66ff8b6f1, nTime=1389086657, nBits=0x1e0ffff0, nNonce=2083236893, vtx=1)
         //   CTransaction(hash=4a5e1e, ver=1, vin.size=1, vout.size=1, nLockTime=0)
         //     CTxIn(COutPoint(000000, -1), coinbase 04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73)
         //     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
@@ -2815,18 +2778,17 @@ bool InitBlockIndex() {
 
         if (fTestNet)
         {
-            block.nTime    = 1296688602;
-            block.nNonce   = 414098458;
+            block.nTime    = 1393990003;
+            block.nNonce   = 2181768;
         }
 
         //// debug print
         uint256 hash = block.GetHash();
         hashGenesisBlock = hash;
-        hashGenesisScrypt = block.GetPoWHash();
         printf("%s\n", hash.ToString().c_str());
         printf("%s\n", hashGenesisBlock.ToString().c_str());
         printf("%s\n", block.hashMerkleRoot.ToString().c_str());
-        //assert(block.hashMerkleRoot == uint256("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+        assert(block.hashMerkleRoot == uint256("0x21e66ff8b6f14eb3fa0edf35dc93440a751fdddb421965c88029ad0048d98ca1"));
         block.print();
         assert(hash == hashGenesisBlock);
 
@@ -4515,7 +4477,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     uint256 hash = pblock->GetPoWHash();
     uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
 
-    if (hash == hashGenesisBlock)
+    if (hash == hashGenesisPoW)
         return true;
 
     if (hash > hashTarget)
