@@ -1238,7 +1238,7 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
 
 unsigned int static GetNextWorkRequired_V2(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
-	static const int64	BlocksTargetSpacing			= 10 * 60; // 2.5 minutes
+	static const int64	BlocksTargetSpacing			= 10 * 60; // 10 minutes
 	unsigned int		TimeDaySeconds				= 60 * 60 * 24;
 	int64				PastSecondsMin				= TimeDaySeconds * 0.0625;
 	int64				PastSecondsMax				= TimeDaySeconds * 1.75;
@@ -1390,7 +1390,7 @@ void CBlockHeader::UpdateTime(const CBlockIndex* pindexPrev)
     nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
 
     // Updating time can change work required on testnet:
-    if (fTestNet)
+    if (fTestNet && pindexPrev->nHeight+1 < 50)
         nBits = GetNextWorkRequired(pindexPrev, this);
 }
 
@@ -4717,7 +4717,7 @@ void static BitcoinMiner(CWallet *pwallet)
             // Update nTime every few seconds
             pblock->UpdateTime(pindexPrev);
             nBlockTime = ByteReverse(pblock->nTime);
-            if (fTestNet)
+            if (fTestNet && pindexPrev->nHeight+1 < 50)
             {
                 // Changing pblock->nTime can change work required on testnet:
                 nBlockBits = ByteReverse(pblock->nBits);
