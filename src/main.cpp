@@ -1185,6 +1185,7 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
 	uint64				PastBlocksMass				= 0;
 	int64				PastRateActualSeconds		= 0;
 	int64				PastRateTargetSeconds		= 0;
+    int64               LatestBlockTime             = BlockLastSolved->GetBlockTime();
 	double				PastRateAdjustmentRatio		= double(1);
 	CBigNum				PastDifficultyAverage;
 	CBigNum				PastDifficultyAveragePrev;
@@ -1202,10 +1203,11 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
 		else		{ PastDifficultyAverage = ((CBigNum().SetCompact(BlockReading->nBits) - PastDifficultyAveragePrev) / i) + PastDifficultyAveragePrev; }
 		PastDifficultyAveragePrev = PastDifficultyAverage;
 		
-		PastRateActualSeconds			= BlockLastSolved->GetBlockTime() - BlockReading->GetBlockTime();
+		if (LatestBlockTime < BlockReading->GetBlockTime()) { LatestBlockTime = BlockReading->GetBlockTime(); }
+        PastRateActualSeconds           = LatestBlockTime - BlockReading->GetBlockTime();
 		PastRateTargetSeconds			= TargetBlocksSpacingSeconds * PastBlocksMass;
 		PastRateAdjustmentRatio			= double(1);
-		if (PastRateActualSeconds < 0) { PastRateActualSeconds = 0; }
+		if (PastRateActualSeconds < 1) { PastRateActualSeconds = 1; }
 		if (PastRateActualSeconds != 0 && PastRateTargetSeconds != 0) {
 		PastRateAdjustmentRatio			= double(PastRateTargetSeconds) / double(PastRateActualSeconds);
 		}
