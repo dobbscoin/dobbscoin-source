@@ -5,7 +5,7 @@ SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.8.6
+!define VERSION 0.8.6.1
 !define COMPANY "Dobbscoin project"
 !define URL http://www.dobbscoin.info/
 
@@ -45,13 +45,13 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile dobbscoin-0.8.6-win32-setup.exe
+OutFile dobbscoin-0.8.6.1-win32-setup.exe
 InstallDir $PROGRAMFILES\Dobbscoin
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion 0.8.6.0
+VIProductVersion 0.8.6.1
 VIAddVersionKey ProductName Dobbscoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
