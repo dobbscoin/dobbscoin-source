@@ -14,7 +14,7 @@ TMPNAME='tmp-%03i.png'
 NUMFRAMES=35
 FRAMERATE=10.0
 CONVERT='convert'
-CLOCKWISE=True
+CLOCKWISE=False
 DSIZE=(16,16)
 
 im_src = Image.open(SRC)
