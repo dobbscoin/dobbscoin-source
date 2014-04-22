@@ -67,7 +67,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent) :
     prevBlocks(0)
 {
     restoreWindowGeometry();
-    setWindowTitle(tr("Dobbscoin") + " - " + tr("Wallet"));
+    setWindowTitle(tr("Dobbscoin") + " - " + tr("The Currency of The Econoclypse"));
 #ifndef Q_OS_MAC
     QApplication::setWindowIcon(QIcon(":icons/dobbscoin"));
     setWindowIcon(QIcon(":icons/dobbscoin"));
