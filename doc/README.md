@@ -1,4 +1,4 @@
-Bitcoin 0.8.6 BETA
+Dobbscoin 0.8.6.1 BETA
 ====================
 
 Copyright (c) 2009-2013 Bitcoin Developers
