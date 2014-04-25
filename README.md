@@ -9,8 +9,8 @@ What is Dobbscoin?
 
 Dobbscoin is a peer to peer settlement instrument, a 'currency like - electronic
 document', not to be confused with 'Legal Tender'. Dobbscoin enables instant Slack to
-anyone, anywhere in the world. Dobbscoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing Slack is carried
+anyone, anywhere in the world, useing peer-to-peer technology to operate
+with no central authority. Managing transactions and issuing Slack is carried
 out collectively by the network. 
 
 
