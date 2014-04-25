@@ -1,5 +1,8 @@
 Dobbscoin integration/staging tree
 ================================
+ARE YOU LOOKING FOR WINDOWS / MAC / LINUX Executables?
+
+https://github.com/dobbscoin/dobbscoin-source/releases
 
 What is Dobbscoin?
 ----------------
