@@ -48,7 +48,7 @@ Licenses of statically linked libraries:
 -  GCC           4.3.3
 -  OpenSSL       1.0.1c
 -  Berkeley DB   4.8.30.NC
--  Boost         1.37
+-  Boost         1.37 / 1.42
 -  miniupnpc     1.6
 
 Dependency Build Instructions: Ubuntu & Debian
@@ -57,6 +57,8 @@ Build requirements:
 
 	sudo apt-get install build-essential
 	sudo apt-get install libssl-dev
+	sudo apt-get install libdb4.8-dev
+	sudo apt-get install libboost1.42-all-dev
 
 for Ubuntu 12.04:
 
