@@ -6,6 +6,7 @@ https://github.com/dobbscoin/dobbscoin-source/releases
 
 What is Dobbscoin?
 ----------------
+READ THIS: http://www.dobbscoin.info/smf/index.php?topic=35.0
 
 Dobbscoin is a peer to peer settlement instrument, a 'currency like - electronic
 document', not to be confused with 'Legal Tender'. Dobbscoin enables instant Slack to
