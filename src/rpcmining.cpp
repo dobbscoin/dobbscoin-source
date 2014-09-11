@@ -151,8 +151,8 @@ Value getwork(const Array& params, bool fHelp)
     if (vNodes.empty())
         throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Dobbscoin is not connected!");
 
-    if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dobbscoin is downloading blocks...");
+   // if (IsInitialBlockDownload())
+   //     throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dobbscoin is downloading blocks...");
 
     typedef map<uint256, pair<CBlock*, CScript> > mapNewBlock_t;
     static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
