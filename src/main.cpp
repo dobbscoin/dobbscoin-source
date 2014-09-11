@@ -1365,7 +1365,7 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
 	else 
     {
         if (pindexLast->nHeight+1 >= 13579) { DiffMode = 2; } // KGW @ Block 13579
-        if(pindexLast->nHeight+1 >= 30777) { DiffMode = 3; } //digishield immediately
+        if(pindexLast->nHeight+1 >= 30778) { DiffMode = 3; } //digishield immediately
     }
 	printf("diffmode: %i\n", DiffMode);
 	if		(DiffMode == 1) { return GetNextWorkRequired_V1(pindexLast, pblock); }
