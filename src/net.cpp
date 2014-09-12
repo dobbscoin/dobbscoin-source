@@ -1190,19 +1190,26 @@ void MapPort(bool)
 // Each pair gives a source name and a seed name.
 // The first name is used as information source for addrman.
 // The second name should resolve to a list of seed addresses.
-static const char *strMainNetDNSSeed[][2] = {
-    {"dobbscoin.info", "seed.dobbscoin.info"},
+static const char *strMainNetDNSSeed[][7] = {
+    {"seed.dobbscoin.info", "seed.dobbscoin.info"},
+    {"dobbscoin.info", "dobbscoin.info"},
+    {"dobbscoin.info", "seed2.dobbscoin.info"},
+    {"earlz.net", "dobbscoin.earlz.net"},
+    {"nurdspace.us", "nurdspace.us"},
+    {"dobbscoin.net", "dobbscoin.net"},
     {NULL, NULL}
 };
 
-static const char *strTestNetDNSSeed[][2] = {
+static const char *strTestNetDNSSeed[][7] = {
     {"dobbscoin.info", "testnet-seed.dobbscoin.info"},
+    {"dobbscoin.info", "dobbscoin.info"},
+    {"earlz.net", "dobbscoin.earlz.net"},
     {NULL, NULL}
 };
 
 void ThreadDNSAddressSeed()
 {
-    static const char *(*strDNSSeed)[2] = fTestNet ? strTestNetDNSSeed : strMainNetDNSSeed;
+    static const char *(*strDNSSeed)[7] = fTestNet ? strTestNetDNSSeed : strMainNetDNSSeed;
 
     int found = 0;
 
