@@ -1311,13 +1311,11 @@ unsigned int static GetNextWorkRequired_V3(const CBlockIndex* pindexLast, const 
     bnNew.SetCompact(pindexLast->nBits);
     
     //DigiShield implementation - thanks to RealSolid & WDC for this code
-    {
-        // amplitude filter - thanks to daft27 for this code
-        nActualTimespan = retargetTimespan + (nActualTimespan - retargetTimespan)/8;
-        printf("DIGISHIELD RETARGET\n");
-        if (nActualTimespan < (retargetTimespan - (retargetTimespan/4)) ) nActualTimespan = (retargetTimespan - (retargetTimespan/4));
-        if (nActualTimespan > (retargetTimespan + (retargetTimespan/2)) ) nActualTimespan = (retargetTimespan + (retargetTimespan/2));
-    }
+    // amplitude filter - thanks to daft27 for this code
+    nActualTimespan = retargetTimespan + (nActualTimespan - retargetTimespan)/8;
+    printf("DIGISHIELD RETARGET\n");
+    if (nActualTimespan < (retargetTimespan - (retargetTimespan/4)) ) nActualTimespan = (retargetTimespan - (retargetTimespan/4));
+    if (nActualTimespan > (retargetTimespan + (retargetTimespan/2)) ) nActualTimespan = (retargetTimespan + (retargetTimespan/2));
 
     // Retarget
     
@@ -1333,7 +1331,7 @@ unsigned int static GetNextWorkRequired_V3(const CBlockIndex* pindexLast, const 
     printf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString().c_str());
     printf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
 
-        unsigned int bits=bnNew.GetCompact();
+    unsigned int bits=bnNew.GetCompact();
 
     int nShift = (bits >> 24) & 0xff;
 
@@ -1361,13 +1359,14 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
 	int DiffMode = 1;
 	if (fTestNet) {
 		if (pindexLast->nHeight+1 >= 50) { DiffMode = 2; }
+        if (pindexLast->nHeight+1 >= 100) { DiffMode = 3; }
+
 	}
 	else 
     {
         if (pindexLast->nHeight+1 >= 13579) { DiffMode = 2; } // KGW @ Block 13579
-        if(pindexLast->nHeight+1 >= 30778) { DiffMode = 3; } //digishield immediately
+        if(pindexLast->nHeight+1 >= 31597) { DiffMode = 3; } //switch to dobbshield @ block 31597
     }
-	printf("diffmode: %i\n", DiffMode);
 	if		(DiffMode == 1) { return GetNextWorkRequired_V1(pindexLast, pblock); }
 	else if	(DiffMode == 2) { return GetNextWorkRequired_V2(pindexLast, pblock); }
     else if (DiffMode == 3) { return GetNextWorkRequired_V3(pindexLast, pblock); }
