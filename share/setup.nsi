@@ -5,7 +5,7 @@ SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.8.6.2
+!define VERSION 0.8.7.0
 !define COMPANY "Dobbscoin project"
 !define URL http://www.dobbscoin.info/
 
