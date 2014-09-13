@@ -17,11 +17,11 @@ Release Process
 
 ###tag version in git
 
-	git tag -a v0.8.6.2
+	git tag -a v0.8.7.0
 
 ###write release notes. git shortlog helps a lot, for example:
 
-	git shortlog --no-merges v0.7.2..v0.8.6
+	git shortlog --no-merges v0.7.2..v0.8.7
 
 * * *
 
@@ -30,7 +30,7 @@ Release Process
  From a directory containing the dobbscoin source, gitian-builder and gitian.sigs
   
 	export SIGNER=(your gitian key, ie bluematt, sipa, etc)
-	export VERSION=0.8.6.2
+	export VERSION=0.8.7.0
 	pushd ./gitian-builder
 
  Fetch and build inputs: (first time, or when dependency versions change)
