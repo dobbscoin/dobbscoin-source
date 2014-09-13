@@ -135,7 +135,7 @@ Commit your signature to gitian.sigs:
 
 From a directory containing dobbscoin source, gitian.sigs and gitian zips
 
-	export VERSION=0.8.6.1
+	export VERSION=0.8.7.0
 	mkdir dobbscoin-${VERSION}-linux-gitian
 	pushd dobbscoin-${VERSION}-linux-gitian
 	unzip ../dobbscoin-${VERSION}-linux-gitian.zip
