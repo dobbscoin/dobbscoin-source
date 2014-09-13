@@ -45,13 +45,13 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile dobbscoin-0.8.6.2-win32-setup.exe
+OutFile dobbscoin-0.8.7.0-win32-setup.exe
 InstallDir $PROGRAMFILES\Dobbscoin
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion 0.8.6.2
+VIProductVersion 0.8.7.0
 VIAddVersionKey ProductName Dobbscoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
