@@ -1,4 +1,4 @@
-Dobbscoin 0.8.6.2 BETA
+Dobbscoin 0.8.7.0 BETA
 ====================
 
 Copyright (c) 2009-2013 Bitcoin Developers
