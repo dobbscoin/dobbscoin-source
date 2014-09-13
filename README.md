@@ -84,3 +84,5 @@ Large changes should have a test plan, and should be tested by somebody other
 than the developer who wrote the code.
 
 See https://github.com/bitcoin/QA/ for how to create a test plan.
+
+[ ![Codeship Status for dobbscoin/dobbscoin-source](https://www.codeship.io/projects/8dbff820-1daa-0132-768d-224b38841bfb/status)](https://www.codeship.io/projects/35448)
