@@ -72,17 +72,5 @@ Unit tests for the GUI code are in `src/qt/test/`. To compile and run them:
     make -f Makefile.test
     ./bitcoin-qt_test
 
-Every pull request is built for both Windows and Linux on a dedicated server,
-and unit and sanity tests are automatically run. The binaries produced may be
-used for manual QA testing â€” a link to them will appear in a comment on the
-pull request posted by [BitcoinPullTester](https://github.com/BitcoinPullTester). See https://github.com/TheBlueMatt/test-scripts
-for the build/test scripts.
 
-### Manual Quality Assurance (QA) Testing
 
-Large changes should have a test plan, and should be tested by somebody other
-than the developer who wrote the code.
-
-See https://github.com/bitcoin/QA/ for how to create a test plan.
-
-[ ![Codeship Status for dobbscoin/dobbscoin-source](https://www.codeship.io/projects/8dbff820-1daa-0132-768d-224b38841bfb/status)](https://www.codeship.io/projects/35448)
