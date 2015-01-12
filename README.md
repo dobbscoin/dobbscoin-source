@@ -1,27 +1,27 @@
-Dobbscoin integration/staging tree
+DobbsCoin integration/staging tree
 ================================
 ARE YOU LOOKING FOR WINDOWS / MAC / LINUX Executables?
 
 https://github.com/dobbscoin/dobbscoin-source/releases
 
-What is Dobbscoin?
+What is DobbsCoin?
 ----------------
 READ THIS: http://www.dobbscoin.info/smf/index.php?topic=35.0
 
-Dobbscoin is a peer to peer settlement instrument, a 'currency like - electronic
-document', not to be confused with 'Legal Tender'. Dobbscoin enables instant Slack to
-anyone, anywhere in the world, useing peer-to-peer technology to operate
-with no central authority. Managing transactions and issuing Slack is carried
-out collectively by the network. 
+DobbsCoin is a peer to peer settlement instrument, a 'currency like
+electronic document', not to be confused with 'Legal Tender'. 
+DobbsCoin enables instant Slack to anyone, anywhere in the world,
+using peer-to-peer technology to operate with no central authority. 
+
+Managing transactions and issuing Slack is carried out collectively
+by the users clients within the DobbsCoin network. 
 
 
 License
 -------
 
-Dobbscoin is based on Bitcoin.
+DobbsCoin is based on Bitcoin.
 Its development tracks Bitcoin's. 
-
-
 
 The following information applies to Bitcoin's developemnt.
 Copyright (c) 2009-2013 Bitcoin Developers
