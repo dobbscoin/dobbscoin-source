@@ -234,7 +234,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     bool fOverflow;
     uint256 bnTarget;
 
-    if(hash==hashGenesisPoW) //mainnet genesis
+    if(hash==HashGenesisPoW) //mainnet genesis
     {
         return true;
     }
