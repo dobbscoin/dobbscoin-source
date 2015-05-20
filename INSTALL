@@ -1,9 +1,0 @@
-Building Dobbscoin
-
-See doc/readme-qt.rst for instructions on building Dobbscoin-Qt,
-the intended-for-end-users, nice-graphical-interface, reference
-implementation of Dobbscoin.
-
-See doc/build-*.txt for instructions on building dobbscoind,
-the intended-for-services, no-graphical-interface, reference
-implementation of Dobbscoin.
