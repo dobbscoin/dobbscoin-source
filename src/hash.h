@@ -8,6 +8,7 @@
 
 #include "crypto/ripemd160.h"
 #include "crypto/sha256.h"
+#include "crypto/scrypt.h"
 #include "serialize.h"
 #include "uint256.h"
 #include "version.h"
@@ -37,6 +38,38 @@ public:
         return *this;
     }
 };
+
+class CHashScrypt {
+public:
+    static const size_t OUTPUT_SIZE = CSHA256::OUTPUT_SIZE;
+
+    void Finalize(unsigned char hash[OUTPUT_SIZE]) {
+        scrypt_1024_1_1_256((const char*)buffer, (char*)hash);
+    }
+    unsigned char buffer[80];
+    CHashScrypt& Write(const unsigned char *data, size_t len) {
+        assert(len == 80); 
+        memcpy(buffer, data, len);
+        //sha.Write(data, len);
+        return *this;
+    }
+
+    CHashScrypt& Reset() {
+        //do nothing.. ?
+        return *this;
+    }
+};
+
+/** Compute the 256-bit hash of an object. */
+template<typename T1>
+inline uint256 HashScrypt(const T1 pbegin, const T1 pend)
+{
+    static const unsigned char pblank[1] = {};
+    uint256 result;
+    CHashScrypt().Write(pbegin == pend ? pblank : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0]))
+              .Finalize((unsigned char*)&result);
+    return result;
+}
 
 /** A hasher class for Bitcoin's 160-bit hash (SHA-256 + RIPEMD-160). */
 class CHash160 {

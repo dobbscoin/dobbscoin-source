@@ -2513,7 +2513,13 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     assert(pindexPrev);
 
     int nHeight = pindexPrev->nHeight+1;
-
+    LogPrintf("CBlockHeader(hash=%s, PoW=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u\n",
+        block.GetHash().ToString(),
+        block.GetPoWHash().ToString(),
+        block.nVersion,
+        block.hashPrevBlock.ToString(),
+        block.hashMerkleRoot.ToString(),
+        block.nTime, block.nBits, block.nNonce);
     // Check proof of work
     if ((!Params().SkipProofOfWorkCheck()) &&
        (block.nBits != GetNextWorkRequired(pindexPrev, &block)))

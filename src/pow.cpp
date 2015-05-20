@@ -3,6 +3,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <math.h>
 #include "pow.h"
 
 #include "chain.h"
@@ -22,12 +23,12 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
     int64_t               PastRateTargetSeconds       = 0;
     int64_t               LatestBlockTime             = BlockLastSolved->GetBlockTime();
     double              PastRateAdjustmentRatio     = double(1);
-    CBigNum             PastDifficultyAverage;
-    CBigNum             PastDifficultyAveragePrev;
+    uint256             PastDifficultyAverage;
+    uint256             PastDifficultyAveragePrev;
     double              EventHorizonDeviation;
     double              EventHorizonDeviationFast;
     double              EventHorizonDeviationSlow;
-    const CBigNum &bnProofOfWorkLimit = Params().ProofOfWorkLimit();
+    const uint256 &bnProofOfWorkLimit = Params().ProofOfWorkLimit();
     
     if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || (uint64_t)BlockLastSolved->nHeight < PastBlocksMin) { return bnProofOfWorkLimit.GetCompact(); }
     
@@ -36,7 +37,7 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
         PastBlocksMass++;
         
         if (i == 1) { PastDifficultyAverage.SetCompact(BlockReading->nBits); }
-        else        { PastDifficultyAverage = ((CBigNum().SetCompact(BlockReading->nBits) - PastDifficultyAveragePrev) / i) + PastDifficultyAveragePrev; }
+        else        { PastDifficultyAverage = ((uint256().SetCompact(BlockReading->nBits) - PastDifficultyAveragePrev) / i) + PastDifficultyAveragePrev; }
         PastDifficultyAveragePrev = PastDifficultyAverage;
         
         if (LatestBlockTime < BlockReading->GetBlockTime()) { LatestBlockTime = BlockReading->GetBlockTime(); }
@@ -58,7 +59,7 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
         BlockReading = BlockReading->pprev;
     }
     
-    CBigNum bnNew(PastDifficultyAverage);
+    uint256 bnNew(PastDifficultyAverage);
     if (PastRateActualSeconds != 0 && PastRateTargetSeconds != 0) {
         bnNew *= PastRateActualSeconds;
         bnNew /= PastRateTargetSeconds;
@@ -68,8 +69,8 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
     /// debug print
     LogPrintf("Difficulty Retarget - BOB's Wormh0le (KGW)\n");
     LogPrintf("PastRateAdjustmentRatio = %g\n", PastRateAdjustmentRatio);
-    LogPrintf("Before: %08x  %s\n", BlockLastSolved->nBits, CBigNum().SetCompact(BlockLastSolved->nBits).getuint256().ToString().c_str());
-    LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
+    LogPrintf("Before: %08x  %s\n", BlockLastSolved->nBits, uint256().SetCompact(BlockLastSolved->nBits).ToString().c_str());
+    LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.ToString().c_str());
     
     return bnNew.GetCompact();
 }
@@ -86,67 +87,6 @@ unsigned int static GetNextWorkRequired_V2(const CBlockIndex* pindexLast, const 
     return KimotoGravityWell(pindexLast, pblock, BlocksTargetSpacing, PastBlocksMin, PastBlocksMax);
 }
 
-unsigned int GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
-{
-    unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
-
-    // Genesis block
-    if (pindexLast == NULL)
-        return nProofOfWorkLimit;
-
-    // Only change once per interval
-    if ((pindexLast->nHeight+1) % nInterval != 0)
-    {
-        if (TestNet())
-        {
-            // Special difficulty rule for testnet:
-            // If the new block's timestamp is more than 2* 10 minutes
-            // then allow mining of a min-difficulty block.
-            if (pblock->nTime > pindexLast->nTime + nTargetSpacing*2)
-                return nProofOfWorkLimit;
-            else
-            {
-                // Return the last non-special-min-difficulty-rules-block
-                const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % nInterval != 0 && pindex->nBits == nProofOfWorkLimit)
-                    pindex = pindex->pprev;
-                return pindex->nBits;
-            }
-        }
-        return pindexLast->nBits;
-    }
-
-    // Go back by what we want to be 14 days worth of blocks
-    const CBlockIndex* pindexFirst = pindexLast;
-    for (int i = 0; pindexFirst && i < nInterval-1; i++)
-        pindexFirst = pindexFirst->pprev;
-    assert(pindexFirst);
-
-    // Limit adjustment step
-    int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
-    LogPrintf("  nActualTimespan = %d  before bounds\n", nActualTimespan);
-    if (nActualTimespan < nTargetTimespan/4)
-        nActualTimespan = nTargetTimespan/4;
-    if (nActualTimespan > nTargetTimespan*4)
-        nActualTimespan = nTargetTimespan*4;
-
-    // Retarget
-    CBigNum bnNew;
-    bnNew.SetCompact(pindexLast->nBits);
-    bnNew *= nActualTimespan;
-    bnNew /= nTargetTimespan;
-
-    if (bnNew > Params().ProofOfWorkLimit())
-        bnNew = Params().ProofOfWorkLimit();
-
-    /// debug print
-    LogPrintf("GetNextWorkRequired RETARGET\n");
-    LogPrintf("nTargetTimespan = %d    nActualTimespan = %d\n", nTargetTimespan, nActualTimespan);
-    LogPrintf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString());
-    LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString());
-
-    return bnNew.GetCompact();
-}
 
 unsigned int GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
@@ -215,8 +155,8 @@ unsigned int GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const CBlockH
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
     int DiffMode = 1;
-    if (TestNet()) {
-        if (pindexLast->nHeight+1 >= 50) { DiffMode = 2; }
+    if (Params().AllowMinDifficultyBlocks()) {
+    //    if (pindexLast->nHeight+1 >= 50) { DiffMode = 2; }
     }
     else {
         if (pindexLast->nHeight+1 >= 13579) { DiffMode = 2; } // KGW @ Block 13579
@@ -234,7 +174,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     bool fOverflow;
     uint256 bnTarget;
 
-    if(hash==HashGenesisPoW) //mainnet genesis
+    if(hash==HASHGENESISBLOCKPOW) //ignore genesis block
     {
         return true;
     }
