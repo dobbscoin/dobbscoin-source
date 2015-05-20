@@ -206,6 +206,7 @@ crypto_libbitcoin_crypto_a_CPPFLAGS = $(BITCOIN_CONFIG_INCLUDES)
 crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sha1.cpp \
   crypto/sha256.cpp \
+  crypto/scrypt.cpp \
   crypto/sha512.cpp \
   crypto/hmac_sha256.cpp \
   crypto/rfc6979_hmac_sha256.cpp \
@@ -214,6 +215,7 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/common.h \
   crypto/sha256.h \
   crypto/sha512.h \
+  crypto/scrypt.h \
   crypto/hmac_sha256.h \
   crypto/rfc6979_hmac_sha256.h \
   crypto/hmac_sha512.h \
@@ -356,6 +358,7 @@ libbitcoinconsensus_la_SOURCES = \
   crypto/hmac_sha512.cpp \
   crypto/sha1.cpp \
   crypto/sha256.cpp \
+  crypto/scrypt.cpp \
   crypto/sha512.cpp \
   crypto/ripemd160.cpp \
   eccryptoverify.cpp \
