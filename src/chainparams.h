@@ -15,8 +15,8 @@
 #include <vector>
 
 //Because Dobbscoin started it's life as a shitty clone coin, it's genesis block isn't technically valid. We need to force it to skip checks on it
-#define HashGenesisBlock uint256("0x6d2d7d525900712451b9697d0b5b2304ebae6efb349540da445bf575c0159969")
-#define HashGenesisPoW uint256("0xb83bb8028229439a4e645a56d48ee31b884efdb0e395c8538a10a462166563f3")
+#define HASHGENESISBLOCK uint256("0x6d2d7d525900712451b9697d0b5b2304ebae6efb349540da445bf575c0159969")
+#define HASHGENESISBLOCKPOW uint256("0xb83bb8028229439a4e645a56d48ee31b884efdb0e395c8538a10a462166563f3")
 
 typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 

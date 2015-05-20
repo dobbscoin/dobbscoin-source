@@ -54,7 +54,7 @@ static void convertSeed6(std::vector<CAddress> &vSeedsOut, const SeedSpec6 *data
  */
 static Checkpoints::MapCheckpoints mapCheckpoints =
         boost::assign::map_list_of
-        ( 0, HashGenesisBlock)
+        ( 0, HASHGENESISBLOCK)
         ;
 static const Checkpoints::CCheckpointData data = {
         &mapCheckpoints,
@@ -139,7 +139,7 @@ public:
         genesis.nNonce   = 2084524493;
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == HashGenesisBlock);
+        assert(hashGenesisBlock == HASHGENESISBLOCK);
 
         vSeeds.push_back(CDNSSeedData("dobbscoin.info", "seed.dobbscoin.info"));
         vSeeds.push_back(CDNSSeedData("earlz.net", "earlz.net"));
