@@ -109,7 +109,7 @@ public:
         pchMessageStart[1] = 0xfb;
         pchMessageStart[2] = 0x17;
         pchMessageStart[3] = 0x83; 
-        vAlertPubKey = ParaseHex("048D0BCFA9D2B74DE677EBDC9A369C398D9A4CBFCF7F8873E17EAAAE1CD340D127E871CAA0CD9F58CBB31A6D439BBA26559B6B5F03F6A309CD3C962694A8DA2F3E");
+        vAlertPubKey = ParseHex("048D0BCFA9D2B74DE677EBDC9A369C398D9A4CBFCF7F8873E17EAAAE1CD340D127E871CAA0CD9F58CBB31A6D439BBA26559B6B5F03F6A309CD3C962694A8DA2F3E");
         nDefaultPort = 19985;
         bnProofOfWorkLimit = ~uint256(0) >> 20;
         nEnforceBlockUpgradeMajority = 750;
@@ -199,8 +199,8 @@ public:
         nMinerThreads = 0;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
-        block.nTime    = 1393990003;
-        block.nNonce   = 2181768;
+        genesis.nTime    = 1393990003;
+        genesis.nNonce   = 2181768;
         hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256("0x0d44ae9be7f13a64253c9b61dbbddc37304e1c359fd593565caf356e4fd597c7"));
 
