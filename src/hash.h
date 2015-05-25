@@ -54,6 +54,7 @@ public:
     CHashScrypt& Write(const unsigned char *data, size_t len) {
         assert(pos+len <= 80); 
         memcpy(&buffer[pos], data, pos+len);
+        pos+=len;
         return *this;
     }
 
