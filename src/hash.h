@@ -42,12 +42,15 @@ public:
 class CHashScrypt {
 public:
     static const size_t OUTPUT_SIZE = CSHA256::OUTPUT_SIZE;
-
+    CHashScrypt() {
+        pos=0;
+    }
     void Finalize(unsigned char hash[OUTPUT_SIZE]) {
+        assert(pos==80);
         scrypt_1024_1_1_256((const char*)buffer, (char*)hash);
     }
     unsigned char buffer[80];
-    int pos=0;
+    int pos;
     CHashScrypt& Write(const unsigned char *data, size_t len) {
         assert(pos+len <= 80); 
         memcpy(&buffer[pos], data, pos+len);
