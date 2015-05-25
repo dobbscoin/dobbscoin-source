@@ -47,10 +47,10 @@ public:
         scrypt_1024_1_1_256((const char*)buffer, (char*)hash);
     }
     unsigned char buffer[80];
+    int pos=0;
     CHashScrypt& Write(const unsigned char *data, size_t len) {
-        assert(len == 80); 
-        memcpy(buffer, data, len);
-        //sha.Write(data, len);
+        assert(pos+len <= 80); 
+        memcpy(&buffer[pos], data, pos+len);
         return *this;
     }
 
