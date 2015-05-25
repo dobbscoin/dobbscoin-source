@@ -177,31 +177,32 @@ public:
     CTestNetParams() {
         networkID = CBaseChainParams::TESTNET;
         strNetworkID = "test";
-        pchMessageStart[0] = 0x0b;
-        pchMessageStart[1] = 0x11;
-        pchMessageStart[2] = 0x09;
-        pchMessageStart[3] = 0x07;
+        pchMessageStart[0] = 0xfa;
+        pchMessageStart[1] = 0xda;
+        pchMessageStart[2] = 0x0b;
+        pchMessageStart[3] = 0xbf;
         vAlertPubKey = ParseHex("04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c6467cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162dabbdb45200ca2b0a");
-        nDefaultPort = 18333;
+        nDefaultPort = 39985;
         nEnforceBlockUpgradeMajority = 51;
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
         nMinerThreads = 0;
-        nTargetTimespan = 14 * 24 * 60 * 60; //! two weeks
-        nTargetSpacing = 10 * 60;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
-        genesis.nTime = 1296688602;
-        genesis.nNonce = 414098458;
+        block.nTime    = 1393990003;
+        block.nNonce   = 2181768;
         hashGenesisBlock = genesis.GetHash();
         //assert(hashGenesisBlock == uint256("0x000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"));
+        pchMessageStart[0] = 0xfa;
+        pchMessageStart[1] = 0xda;
+        pchMessageStart[2] = 0x0b;
+        pchMessageStart[3] = 0xbf;
+        hashGenesisBlock = uint256("0x0d44ae9be7f13a64253c9b61dbbddc37304e1c359fd593565caf356e4fd597c7");
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        vSeeds.push_back(CDNSSeedData("alexykot.me", "testnet-seed.alexykot.me"));
-        vSeeds.push_back(CDNSSeedData("bitcoin.petertodd.org", "testnet-seed.bitcoin.petertodd.org"));
-        vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
-        vSeeds.push_back(CDNSSeedData("bitcoin.schildbach.de", "testnet-seed.bitcoin.schildbach.de"));
+        vSeeds.push_back(CDNSSeedData("earlz.net", "earlz.net"));
+
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(111);
         base58Prefixes[SCRIPT_ADDRESS] = list_of(196);
