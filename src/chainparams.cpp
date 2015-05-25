@@ -54,7 +54,16 @@ static void convertSeed6(std::vector<CAddress> &vSeedsOut, const SeedSpec6 *data
  */
 static Checkpoints::MapCheckpoints mapCheckpoints =
         boost::assign::map_list_of
-        ( 0, HASHGENESISBLOCK)
+        (     0, HASHGENESISBLOCK)
+        (  2016, uint256("0x94a9ab39b9e1e7dafdda1a5823c11556750157aa16e93ae2a59de426e185de58"))
+        (  4032, uint256("0xa29010ca0ec82b0d2d937f5d82d2e30918467b1f4b3bb51026d13782b7aac73a"))
+        (  8064, uint256("0x76ef2061b587842f424aae28fcab25fb8434612b58125258292799aaaed0f833"))
+        ( 12096, uint256("0x5abe39584788a018296d97a6f00ca80c81603ebbe8ad84af5778e7d6fcdbed70"))
+        ( 13422, uint256("0xc70a40fe1c53e5525636644e625d4c38c8493b180a0ca81c9d7c9801748e6b52"))
+        ( 14496, uint256("0xd50a2656a6ac593ebb034c1d5ca5eac93220455727f677e7506629f61d566239"))
+        ( 15809, uint256("0x31cdc96eb5510e69bf2635b76b0266c0065839685bb30d9b94224d9a5c972b78"))
+        ( 15882, uint256("0xbfbbf161974b59797b5698b086fd8a5efab4786a3cee389d130da20e03d65eaf"))
+        ( 30800, uint256("0x3a767fc61883f7d5adfd2b07c810ec4b065812dd40aafbda1944f8f792e2c00a"))
         ;
 static const Checkpoints::CCheckpointData data = {
         &mapCheckpoints,
@@ -66,7 +75,7 @@ static const Checkpoints::CCheckpointData data = {
 
 static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
         boost::assign::map_list_of
-        ( 546, uint256("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70"))
+        ( 0, uint256("0d44ae9be7f13a64253c9b61dbbddc37304e1c359fd593565caf356e4fd597c7"))
         ;
 static const Checkpoints::CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
@@ -181,7 +190,7 @@ public:
         pchMessageStart[1] = 0xda;
         pchMessageStart[2] = 0x0b;
         pchMessageStart[3] = 0xbf;
-        vAlertPubKey = ParseHex("04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c6467cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162dabbdb45200ca2b0a");
+        vAlertPubKey = ParseHex("048ABF4042CD25AE93BA2A1A9E9E71A41640515C396A94FC4AB902E692683282F28E6697DCDB6FCE14ACAD407213131A941E3F720A203E0FFFC5B1C79FE02A2E84");
         nDefaultPort = 39985;
         nEnforceBlockUpgradeMajority = 51;
         nRejectBlockOutdatedMajority = 75;
@@ -192,16 +201,13 @@ public:
         block.nTime    = 1393990003;
         block.nNonce   = 2181768;
         hashGenesisBlock = genesis.GetHash();
-        //assert(hashGenesisBlock == uint256("0x000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"));
-        pchMessageStart[0] = 0xfa;
-        pchMessageStart[1] = 0xda;
-        pchMessageStart[2] = 0x0b;
-        pchMessageStart[3] = 0xbf;
-        hashGenesisBlock = uint256("0x0d44ae9be7f13a64253c9b61dbbddc37304e1c359fd593565caf356e4fd597c7");
+        assert(hashGenesisBlock == uint256("0x0d44ae9be7f13a64253c9b61dbbddc37304e1c359fd593565caf356e4fd597c7"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
         vSeeds.push_back(CDNSSeedData("earlz.net", "earlz.net"));
+        vSeeds.push_back(CDNSSeedData("testnet-seed.dobbscoin.info", "testnet-seed.dobbscoin.info"));
+        vSeeds.push_back(CDNSSeedData("dobbscoin.info", "dobbscoin.info"));
 
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(111);
