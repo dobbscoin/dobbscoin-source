@@ -49,6 +49,13 @@ class CValidationState;
 struct CBlockTemplate;
 struct CNodeStateStats;
 
+//Note, these can have network wide effects, but are not concensus-critical. 
+/** If a fork is found that is greater than this amount of blocks ahead(by height or difficultY?), then enter safe-mode **/
+static const unsigned int FORK_WARNING_BLOCKS=12;
+/** If safe-mode is entered for a large fork, after this many blocks of difference, the original fork will be dropped **/
+static const unsigned int FORK_WARNING_DROP_BLOCKS=72;
+
+
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
 static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 750000;
 static const unsigned int DEFAULT_BLOCK_MIN_SIZE = 0;
