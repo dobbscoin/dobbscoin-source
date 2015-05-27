@@ -473,6 +473,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>dobbscoin-core</name>
     </context>
 </TS>

@@ -8,13 +8,13 @@ Normally the Bitcoin client will download the transaction and network informatio
 
 ### Download the blockchain via BitTorrent
 
-Jeff Garzik, Bitcoin Core developer, offers an [torrent file](https://bitcointalk.org/index.php?topic=145386.0) for bootstrapping purposes that is updated often. BitTorrent is a protocol that speeds up the downloading of large files by using the other clients in the network. Examples of free and safe open source clients are [Deluge](http://deluge-torrent.org/) or [qBittorrent](http://www.qbittorrent.org/). A guide to installing and configuring the torrent clients can be found [here](http://dev.deluge-torrent.org/wiki/UserGuide) for Deluge and [here](http://qbforums.shiki.hu/) for qBittorrent. A further in-depth tutorial on BitTorrent can be found [here](http://www.howtogeek.com/howto/31846/bittorrent-for-beginners-how-get-started-downloading-torrents/).
+Jeff Garzik, Bitcoin Core developer, offers an [torrent file](https://dobbscointalk.org/index.php?topic=145386.0) for bootstrapping purposes that is updated often. BitTorrent is a protocol that speeds up the downloading of large files by using the other clients in the network. Examples of free and safe open source clients are [Deluge](http://deluge-torrent.org/) or [qBittorrent](http://www.qbittorrent.org/). A guide to installing and configuring the torrent clients can be found [here](http://dev.deluge-torrent.org/wiki/UserGuide) for Deluge and [here](http://qbforums.shiki.hu/) for qBittorrent. A further in-depth tutorial on BitTorrent can be found [here](http://www.howtogeek.com/howto/31846/bittorrent-for-beginners-how-get-started-downloading-torrents/).
 
 With the client installed we'll proceed to download the blockchain torrent file. Use the following magnet link:
 
 	magnet:?xt=urn:btih:2d4e6c1f96c5d5fb260dff92aea4e600227f1aea&dn=bootstrap.dat&tr=udp://tracker.openbittorrent.com:80&tr=udp://tracker.publicbt.com:80&tr=udp://tracker.ccc.de:80&tr=udp://tracker.istole.it:80
 	
- or go to [Jeff Garzik's topic](https://bitcointalk.org/index.php?topic=145386.0) for a signed magnet link. Alternatively you can use the [.torrent file](http://sourceforge.net/projects/bitcoin/files/Bitcoin/blockchain/bootstrap.dat.torrent/download) found on SourceForge.
+ or go to [Jeff Garzik's topic](https://dobbscointalk.org/index.php?topic=145386.0) for a signed magnet link. Alternatively you can use the [.torrent file](http://sourceforge.net/projects/dobbscoin/files/Bitcoin/blockchain/bootstrap.dat.torrent/download) found on SourceForge.
      
 ![Fig1](img/bootstrap1.png)
 
@@ -43,7 +43,7 @@ Open Finder by pressing Press [shift] + [cmd] + [g] and enter:
 **For Linux users:**
 The directory is hidden in your User folder. Go to:
 
-	~/.bitcoin/
+	~/.dobbscoin/
     
 ### Importing the blockchain
 Now start the Bitcoin client software. It should show "Importing blocks from disk" like the image below. 

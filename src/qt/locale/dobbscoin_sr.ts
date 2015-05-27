@@ -108,8 +108,8 @@
         <translation>Новчаник је шифрован</translation>
     </message>
     <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin će se sad zatvoriti da bi završio  proces enkripcije. Zapamti da enkripcija tvog novčanika ne može u potpunosti da zaštiti tvoje bitcoine da ne budu ukradeni od malawarea koji bi inficirao tvoj kompjuter.</translation>
+        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dobbscoins from being stolen by malware infecting your computer.</source>
+        <translation>Bitcoin će se sad zatvoriti da bi završio  proces enkripcije. Zapamti da enkripcija tvog novčanika ne može u potpunosti da zaštiti tvoje dobbscoine da ne budu ukradeni od malawarea koji bi inficirao tvoj kompjuter.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -196,11 +196,11 @@
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation>Пошаљите новац на bitcoin адресу</translation>
+        <translation>Пошаљите новац на dobbscoin адресу</translation>
     </message>
     <message>
         <source>Modify configuration options for Bitcoin</source>
-        <translation>Изаберите могућности bitcoin-а</translation>
+        <translation>Изаберите могућности dobbscoin-а</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
@@ -757,7 +757,7 @@ Address: %4
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>dobbscoin-core</name>
     <message>
         <source>Options:</source>
         <translation>Opcije</translation>

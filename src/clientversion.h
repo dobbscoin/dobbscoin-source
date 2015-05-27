@@ -6,14 +6,14 @@
 #define BITCOIN_CLIENTVERSION_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/dobbscoin-config.h"
 #else
 
 /**
  * client versioning and copyright year
  */
 
-//! These need to be macros, as clientversion.cpp's and bitcoin*-res.rc's voodoo requires it
+//! These need to be macros, as clientversion.cpp's and dobbscoin*-res.rc's voodoo requires it
 #define CLIENT_VERSION_MAJOR 0
 #define CLIENT_VERSION_MINOR 10
 #define CLIENT_VERSION_REVISION 2
@@ -41,7 +41,7 @@
 #define COPYRIGHT_STR "2009-" STRINGIZE(COPYRIGHT_YEAR) " The Bitcoin Core Developers, 2013-2015 Dobbscoin Developers"
 
 /**
- * bitcoind-res.rc includes this file, but it cannot cope with real c++ code.
+ * dobbscoind-res.rc includes this file, but it cannot cope with real c++ code.
  * WINDRES_PREPROC is defined to indicate that its pre-processor is running.
  * Anything other than a define should be guarded below.
  */

@@ -184,7 +184,7 @@
         <translation>أدخل عبارة مرور جديدة إلى المحفظة. الرجاء استخدام عبارة مرور تتكون من10 حروف عشوائية على الاقل, أو أكثر من 7 كلمات</translation>
     </message>
     <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dobbscoins from being stolen by malware infecting your computer.</source>
         <translation>بتكوين سوف يغلق الآن لإنهاء عملية التشفير. تذكر أن التشفير لا يستطيع حماية محفظتك تمامًا من السرقة من خلال البرمجيات الخبيثة التي تصيب جهازك </translation>
     </message>
     <message>
@@ -308,7 +308,7 @@
     </message>
     <message>
         <source>Modify configuration options for Bitcoin</source>
-        <translation>تعديل إعدادات bitcoin</translation>
+        <translation>تعديل إعدادات dobbscoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -376,7 +376,7 @@
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
-        <translation>حول bitcoin core</translation>
+        <translation>حول dobbscoin core</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -1661,7 +1661,7 @@
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>dobbscoin-core</name>
     <message>
         <source>Options:</source>
         <translation>خيارات: </translation>

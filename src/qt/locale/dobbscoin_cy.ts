@@ -493,7 +493,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>dobbscoin-core</name>
     <message>
         <source>Information</source>
         <translation>Gwybodaeth</translation>

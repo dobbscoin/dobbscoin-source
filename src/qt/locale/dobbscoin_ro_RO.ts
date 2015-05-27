@@ -188,7 +188,7 @@
         <translation>Introduceţi noua parolă a portofelului electronic.&lt;br/&gt;Vă rugăm să folosiţi o parolă de&lt;b&gt;minimum 10 caractere aleatoare&lt;/b&gt;, sau &lt;b&gt;minimum 8 cuvinte&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dobbscoins from being stolen by malware infecting your computer.</source>
         <translation>Bitcoin se va închide acum pentru a termina procesul de criptare. Ţineţi minte că criptarea portofelului nu vă poate proteja în totalitate de furtul monedelor de către programe dăunătoare care vă infectează calculatorul.</translation>
     </message>
     <message>
@@ -395,8 +395,8 @@
         <translation>Nucleul Bitcoin</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Cereţi plăţi (generează coduri QR şi bitcoin-uri: URls)</translation>
+        <source>Request payments (generates QR codes and dobbscoin: URIs)</source>
+        <translation>Cereţi plăţi (generează coduri QR şi dobbscoin-uri: URls)</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
@@ -411,8 +411,8 @@
         <translation>Arată lista de adrese pentru primire şi etichetele</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Deschidere bitcoin: o adresa URI sau o cerere de plată</translation>
+        <source>Open a dobbscoin: URI or payment request</source>
+        <translation>Deschidere dobbscoin: o adresa URI sau o cerere de plată</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -777,7 +777,7 @@ Adresa: %4
     </message>
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>Adresa introdusă "%1" nu este o adresă bitcoin validă.</translation>
+        <translation>Adresa introdusă "%1" nu este o adresă dobbscoin validă.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -1088,7 +1088,7 @@ Adresa: %4
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Alegeţi subdiviziunea folosită la afişarea interfeţei şi la trimiterea de bitcoin.</translation>
+        <translation>Alegeţi subdiviziunea folosită la afişarea interfeţei şi la trimiterea de dobbscoin.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1128,7 +1128,7 @@ Adresa: %4
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>Adresa bitcoin pe care aţi specificat-o nu este validă.</translation>
+        <translation>Adresa dobbscoin pe care aţi specificat-o nu este validă.</translation>
     </message>
 </context>
 <context>
@@ -1245,8 +1245,8 @@ Adresa: %4
         <translation>Eroare la cererea de plată</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Nu poate porni bitcoin: manipulator clic-pentru-plată</translation>
+        <source>Cannot start dobbscoin: click-to-pay handler</source>
+        <translation>Nu poate porni dobbscoin: manipulator clic-pentru-plată</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1542,7 +1542,7 @@ Adresa: %4
     </message>
     <message>
         <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Bun venit la consola bitcoin RPC.</translation>
+        <translation>Bun venit la consola dobbscoin RPC.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1978,7 +1978,7 @@ Adresa: %4
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation>Atenţie: Adresa bitcoin nevalidă!</translation>
+        <translation>Atenţie: Adresa dobbscoin nevalidă!</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2029,7 +2029,7 @@ Adresa: %4
     </message>
     <message>
         <source>The Bitcoin address to send the payment to</source>
-        <translation>Adresa bitcoin către care se face plata</translation>
+        <translation>Adresa dobbscoin către care se face plata</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2060,8 +2060,8 @@ Adresa: %4
         <translation>Introduceţi eticheta pentru ca această adresa să fie introdusă în lista de adrese folosite</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>un mesaj a fost ataşat la bitcoin: URI care va fi stocat cu tranzacţia pentru referinţa dvs. Notă: Acest mesaj nu va fi trimis către reţeaua bitcoin.</translation>
+        <source>A message that was attached to the dobbscoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation>un mesaj a fost ataşat la dobbscoin: URI care va fi stocat cu tranzacţia pentru referinţa dvs. Notă: Acest mesaj nu va fi trimis către reţeaua dobbscoin.</translation>
     </message>
     <message>
         <source>This is an unverified payment request.</source>
@@ -2670,7 +2670,7 @@ Adresa: %4
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation>Trimitere bitcoin</translation>
+        <translation>Trimitere dobbscoin</translation>
     </message>
 </context>
 <context>
@@ -2709,7 +2709,7 @@ Adresa: %4
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>dobbscoin-core</name>
     <message>
         <source>Options:</source>
         <translation>Opţiuni:</translation>
