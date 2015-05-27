@@ -58,7 +58,7 @@ Release Process
 
   Only missing files will be fetched, so this is safe to re-run for each build.
 
-###Build Bitcoin Core for Linux, Windows, and OS X:
+###Build Dobbscoin Core for Linux, Windows, and OS X:
   
 	./bin/gbuild --commit dobbscoin=v${VERSION} ../dobbscoin/contrib/gitian-descriptors/gitian-linux.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../dobbscoin/contrib/gitian-descriptors/gitian-linux.yml
@@ -136,14 +136,14 @@ rm SHA256SUMS
 
 - Update dobbscoin.org version
 
-  - First, check to see if the Bitcoin.org maintainers have prepared a
+  - First, check to see if the Dobbscoin.org maintainers have prepared a
     release: https://github.com/dobbscoin/dobbscoin.org/labels/Releases
 
       - If they have, it will have previously failed their Travis CI
         checks because the final release files weren't uploaded.
         Trigger a Travis CI rebuild---if it passes, merge.
 
-  - If they have not prepared a release, follow the Bitcoin.org release
+  - If they have not prepared a release, follow the Dobbscoin.org release
     instructions: https://github.com/dobbscoin/dobbscoin.org#release-notes
 
   - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
@@ -153,11 +153,11 @@ rm SHA256SUMS
 
   - Release sticky on dobbscointalk: https://dobbscointalk.org/index.php?board=1.0
 
-  - Bitcoin-development mailing list
+  - Dobbscoin-development mailing list
 
   - Update title of #dobbscoin on Freenode IRC
 
-  - Optionally reddit /r/Bitcoin, ... but this will usually sort out itself
+  - Optionally reddit /r/Dobbscoin, ... but this will usually sort out itself
 
 - Notify BlueMatt so that he can start building [https://launchpad.net/~dobbscoin/+archive/ubuntu/dobbscoin](the PPAs)
 

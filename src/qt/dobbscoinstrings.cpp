@@ -30,7 +30,7 @@ QT_TRANSLATE_NOOP("dobbscoin-core", ""
 "notation for IPv6. This option can be specified multiple times (default: "
 "bind to all interfaces)"),
 QT_TRANSLATE_NOOP("dobbscoin-core", ""
-"Cannot obtain a lock on data directory %s. Bitcoin Core is probably already "
+"Cannot obtain a lock on data directory %s. Dobbscoin Core is probably already "
 "running."),
 QT_TRANSLATE_NOOP("dobbscoin-core", ""
 "Continuously rate-limit free transactions to <n>*1000 bytes per minute "
@@ -128,9 +128,9 @@ QT_TRANSLATE_NOOP("dobbscoin-core", ""
 "If the file does not exist, create it with owner-readable-only file "
 "permissions.\n"
 "It is also recommended to set alertnotify so you are notified of problems;\n"
-"for example: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com\n"),
+"for example: alertnotify=echo %%s | mail -s \"Dobbscoin Alert\" admin@foo.com\n"),
 QT_TRANSLATE_NOOP("dobbscoin-core", ""
-"Unable to bind to %s on this computer. Bitcoin Core is probably already "
+"Unable to bind to %s on this computer. Dobbscoin Core is probably already "
 "running."),
 QT_TRANSLATE_NOOP("dobbscoin-core", ""
 "Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: "
@@ -143,7 +143,7 @@ QT_TRANSLATE_NOOP("dobbscoin-core", ""
 "pay if you send a transaction."),
 QT_TRANSLATE_NOOP("dobbscoin-core", ""
 "Warning: Please check that your computer's date and time are correct! If "
-"your clock is wrong Bitcoin Core will not work properly."),
+"your clock is wrong Dobbscoin Core will not work properly."),
 QT_TRANSLATE_NOOP("dobbscoin-core", ""
 "Warning: The network does not appear to fully agree! Some miners appear to "
 "be experiencing issues."),
@@ -184,7 +184,7 @@ QT_TRANSLATE_NOOP("dobbscoin-core", "Connect only to the specified node(s)"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Connect through SOCKS5 proxy"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Connect to a node to retrieve peer addresses, and disconnect"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Connection options:"),
-QT_TRANSLATE_NOOP("dobbscoin-core", "Copyright (C) 2009-%i The Bitcoin Core Developers"),
+QT_TRANSLATE_NOOP("dobbscoin-core", "Copyright (C) 2009-%i The Dobbscoin Core Developers"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Corrupted block database detected"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Could not parse -rpcbind value %s as network address"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Debugging/Testing options:"),
@@ -198,7 +198,7 @@ QT_TRANSLATE_NOOP("dobbscoin-core", "Error initializing wallet database environm
 QT_TRANSLATE_NOOP("dobbscoin-core", "Error loading block database"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Error loading wallet.dat"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Error loading wallet.dat: Wallet corrupted"),
-QT_TRANSLATE_NOOP("dobbscoin-core", "Error loading wallet.dat: Wallet requires newer version of Bitcoin Core"),
+QT_TRANSLATE_NOOP("dobbscoin-core", "Error loading wallet.dat: Wallet requires newer version of Dobbscoin Core"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Error opening block database"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Error reading from database, shutting down."),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Error"),
@@ -216,7 +216,7 @@ QT_TRANSLATE_NOOP("dobbscoin-core", "Imports blocks from external blk000??.dat f
 QT_TRANSLATE_NOOP("dobbscoin-core", "Include IP addresses in debug output (default: %u)"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Incorrect or no genesis block found. Wrong datadir for network?"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Information"),
-QT_TRANSLATE_NOOP("dobbscoin-core", "Initialization sanity check failed. Bitcoin Core is shutting down."),
+QT_TRANSLATE_NOOP("dobbscoin-core", "Initialization sanity check failed. Dobbscoin Core is shutting down."),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Insufficient funds"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Invalid -onion address: '%s'"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Invalid -proxy address: '%s'"),
@@ -244,7 +244,7 @@ QT_TRANSLATE_NOOP("dobbscoin-core", "Only connect to nodes in network <net> (ipv
 QT_TRANSLATE_NOOP("dobbscoin-core", "Options:"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Password for JSON-RPC connections"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Prepend debug output with timestamp (default: %u)"),
-QT_TRANSLATE_NOOP("dobbscoin-core", "RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)"),
+QT_TRANSLATE_NOOP("dobbscoin-core", "RPC SSL options: (see the Dobbscoin Wiki for SSL setup instructions)"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "RPC server options:"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "RPC support for HTTP persistent connections (default: %d)"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Randomly drop 1 of every <n> network messages"),
@@ -296,7 +296,7 @@ QT_TRANSLATE_NOOP("dobbscoin-core", "Username for JSON-RPC connections"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Verifying blocks..."),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Verifying wallet..."),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Wallet %s resides outside data directory %s"),
-QT_TRANSLATE_NOOP("dobbscoin-core", "Wallet needed to be rewritten: restart Bitcoin Core to complete"),
+QT_TRANSLATE_NOOP("dobbscoin-core", "Wallet needed to be rewritten: restart Dobbscoin Core to complete"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Wallet options:"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Warning"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Warning: This version is obsolete, upgrade required!"),

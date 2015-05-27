@@ -1,14 +1,14 @@
 Format: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?rev=174
-Upstream-Name: Bitcoin
+Upstream-Name: Dobbscoin
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
  irc://#dobbscoin@freenode.net
 Source: http://sourceforge.net/projects/dobbscoin/files/
  https://github.com/dobbscoin/dobbscoin
 
 Files: *
-Copyright: 2009-2012, Bitcoin Core Developers
+Copyright: 2009-2012, Dobbscoin Core Developers
 License: Expat
-Comment: The Bitcoin Core Developers encompasses the current developers listed on dobbscoin.org,
+Comment: The Dobbscoin Core Developers encompasses the current developers listed on dobbscoin.org,
          as well as the numerous contributors to the project.
 
 Files: src/json/*

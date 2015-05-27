@@ -1,5 +1,5 @@
-Bitcoin-Qt version 0.8.3 is now available from:
-  http://sourceforge.net/projects/dobbscoin/files/Bitcoin/dobbscoin-0.8.3/
+Dobbscoin-Qt version 0.8.3 is now available from:
+  http://sourceforge.net/projects/dobbscoin/files/Dobbscoin/dobbscoin-0.8.3/
 
 This is a maintenance release to fix a denial-of-service attack that
 can cause nodes to crash.

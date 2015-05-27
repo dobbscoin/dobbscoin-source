@@ -62,12 +62,12 @@
         <translation>Naslovi za prejemanje</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>To so tvoji Bitcoin naslovi za pošiljanje plačil. Vedno preveri znesek in prejemnikov naslov pred pošiljanjem kovancev.</translation>
+        <source>These are your Dobbscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>To so tvoji Dobbscoin naslovi za pošiljanje plačil. Vedno preveri znesek in prejemnikov naslov pred pošiljanjem kovancev.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>To so tvoji Bitcoin naslovi za prejemanje plačil. Priporočljivo je uporabljati nov prejemni naslov za vsako izmed transakcij.</translation>
+        <source>These are your Dobbscoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>To so tvoji Dobbscoin naslovi za prejemanje plačil. Priporočljivo je uporabljati nov prejemni naslov za vsako izmed transakcij.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -172,8 +172,8 @@
         <translation>Denarnica šifrirana</translation>
     </message>
     <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dobbscoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin se bo zaprl, da bi dokončal proces šifriranja. Zapomnite si, da šifriranje vaše denarnice ne more popolnoma zaščititi pred krajami zlonamernih programov, ki bi lahko bili nameščeni na vašem računalniku.</translation>
+        <source>Dobbscoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dobbscoins from being stolen by malware infecting your computer.</source>
+        <translation>Dobbscoin se bo zaprl, da bi dokončal proces šifriranja. Zapomnite si, da šifriranje vaše denarnice ne more popolnoma zaščititi pred krajami zlonamernih programov, ki bi lahko bili nameščeni na vašem računalniku.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -201,7 +201,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>DobbscoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>Podpiši &amp;sporočilo ...</translation>
@@ -275,8 +275,8 @@
         <translation>Odpri &amp;URI...</translation>
     </message>
     <message>
-        <source>Bitcoin Core client</source>
-        <translation>Odjemalec Bitcoin Core</translation>
+        <source>Dobbscoin Core client</source>
+        <translation>Odjemalec Dobbscoin Core</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -287,12 +287,12 @@
         <translation>Poustvarjam kazalo blokov na disku...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Pošlji kovance na Bitcoin naslov</translation>
+        <source>Send coins to a Dobbscoin address</source>
+        <translation>Pošlji kovance na Dobbscoin naslov</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Spremeni konfiguracijo nastavitev za Bitcoin</translation>
+        <source>Modify configuration options for Dobbscoin</source>
+        <translation>Spremeni konfiguracijo nastavitev za Dobbscoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -311,8 +311,8 @@
         <translation>Odpri razhroščevalno in diagnostično konzolo</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>Dobbscoin</source>
+        <translation>Dobbscoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -327,8 +327,8 @@
         <translation>&amp;Sprejmi</translation>
     </message>
     <message>
-        <source>Show information about Bitcoin Core</source>
-        <translation>Pokaži informacije o Bitcoin Core</translation>
+        <source>Show information about Dobbscoin Core</source>
+        <translation>Pokaži informacije o Dobbscoin Core</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -343,8 +343,8 @@
         <translation>Šifiraj zasebne ključe v moji denarnici</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Za dokaz, da ste lastniki sporočil, se podpišite z Bitcoin naslovom</translation>
+        <source>Sign messages with your Dobbscoin addresses to prove you own them</source>
+        <translation>Za dokaz, da ste lastniki sporočil, se podpišite z Dobbscoin naslovom</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -363,12 +363,12 @@
         <translation>Orodna vrstica zavihkov</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Jedro Bitcoina</translation>
+        <source>Dobbscoin Core</source>
+        <translation>Jedro Dobbscoina</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>&amp;O jedru Bitcoina</translation>
+        <source>&amp;About Dobbscoin Core</source>
+        <translation>&amp;O jedru Dobbscoina</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -380,10 +380,10 @@
     </message>
     <message>
         <source>Open a dobbscoin: URI or payment request</source>
-        <translation>Odpri Bitcoin: URI ali zahteva o plačilu</translation>
+        <translation>Odpri Dobbscoin: URI ali zahteva o plačilu</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
+        <source>%n active connection(s) to Dobbscoin network</source>
         <translation><numerusform>%n aktivna povezava v dobbscoin omrežje</numerusform><numerusform>%n aktivni povezavi v dobbscoin omrežje</numerusform><numerusform>%n aktivnih povezav v dobbscoin omrežje</numerusform><numerusform>%n aktivnih povezav v dobbscoin omrežje</numerusform></translation>
     </message>
     <message numerus="yes">
@@ -704,8 +704,8 @@ Naslov: %4
         <translation>Uredi naslov za odlive</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>Vnešeni naslov "%1" ni veljaven Bitcoin naslov.</translation>
+        <source>The entered address "%1" is not a valid Dobbscoin address.</source>
+        <translation>Vnešeni naslov "%1" ni veljaven Dobbscoin naslov.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -742,8 +742,8 @@ Naslov: %4
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Jedro Bitcoina</translation>
+        <source>Dobbscoin Core</source>
+        <translation>Jedro Dobbscoina</translation>
     </message>
     <message>
         <source>version</source>
@@ -754,8 +754,8 @@ Naslov: %4
         <translation>(%1-bit)</translation>
     </message>
     <message>
-        <source>About Bitcoin Core</source>
-        <translation>O jedru Bitcoina</translation>
+        <source>About Dobbscoin Core</source>
+        <translation>O jedru Dobbscoina</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -801,16 +801,16 @@ Naslov: %4
         <translation>Dobrodošli</translation>
     </message>
     <message>
-        <source>Welcome to Bitcoin Core.</source>
-        <translation>Dobrodošli v jedru Bitcoina</translation>
+        <source>Welcome to Dobbscoin Core.</source>
+        <translation>Dobrodošli v jedru Dobbscoina</translation>
     </message>
     <message>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation>Program poganjaš prvič. Izberi kje bo Bitcoin Core shranjeval svoje podatke.</translation>
+        <source>As this is the first time the program is launched, you can choose where Dobbscoin Core will store its data.</source>
+        <translation>Program poganjaš prvič. Izberi kje bo Dobbscoin Core shranjeval svoje podatke.</translation>
     </message>
     <message>
-        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin Core bo prenesel in shranil kopijo Bitcoin verige blokov. V izbrano mapo bo shranjenih vsaj %1 GB podatkov, ta količina pa bo sčasoma še naraščala. Denarnica bo prav tako shranjena v to mapo.</translation>
+        <source>Dobbscoin Core will download and store a copy of the Dobbscoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Dobbscoin Core bo prenesel in shranil kopijo Dobbscoin verige blokov. V izbrano mapo bo shranjenih vsaj %1 GB podatkov, ta količina pa bo sčasoma še naraščala. Denarnica bo prav tako shranjena v to mapo.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -821,8 +821,8 @@ Naslov: %4
         <translation>Uporabi to mapo za shranjevanje podatkov:</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Jedro Bitcoina</translation>
+        <source>Dobbscoin Core</source>
+        <translation>Jedro Dobbscoina</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -867,12 +867,12 @@ Naslov: %4
         <translation>&amp;Glavno</translation>
     </message>
     <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Po prijavi v sistem samodejno zaženite Bitcoin.</translation>
+        <source>Automatically start Dobbscoin after logging in to the system.</source>
+        <translation>Po prijavi v sistem samodejno zaženite Dobbscoin.</translation>
     </message>
     <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Zaženi Bitcoin ob prijavi v sistem</translation>
+        <source>&amp;Start Dobbscoin on system login</source>
+        <translation>&amp;Zaženi Dobbscoin ob prijavi v sistem</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -915,8 +915,8 @@ Naslov: %4
         <translation>Omogoči Coin &amp; Control funkcijo</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Avtomatično odpri vrata Bitcoin odjemalca na usmerjevalniku. To deluje samo, če vaš usmerjevalnik podpira UPnP in je omogočen.</translation>
+        <source>Automatically open the Dobbscoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Avtomatično odpri vrata Dobbscoin odjemalca na usmerjevalniku. To deluje samo, če vaš usmerjevalnik podpira UPnP in je omogočen.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -963,8 +963,8 @@ Naslov: %4
         <translation>Vmesnik uporabnika &amp;jezik:</translation>
     </message>
     <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>Tukaj je mogoče nastaviti uporabniški vmesnik za jezike. Ta nastavitev bo prikazana šele, ko boste znova zagnali Bitcoin.</translation>
+        <source>The user interface language can be set here. This setting will take effect after restarting Dobbscoin.</source>
+        <translation>Tukaj je mogoče nastaviti uporabniški vmesnik za jezike. Ta nastavitev bo prikazana šele, ko boste znova zagnali Dobbscoin.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -994,8 +994,8 @@ Naslov: %4
         <translation>Oblika</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Prikazanim podatkom je lahko potekel rok. Vaša denarnica bo po vzpostavitvi povezave samodejno sinhronizirana z Bitcoin omrežjem, ampak ta proces še ni bil zaključen.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dobbscoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>Prikazanim podatkom je lahko potekel rok. Vaša denarnica bo po vzpostavitvi povezave samodejno sinhronizirana z Dobbscoin omrežjem, ampak ta proces še ni bil zaključen.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1205,8 +1205,8 @@ Naslov: %4
         <translation>Počisti konzolo</translation>
     </message>
     <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Dobrodošli na Bitcoin RPC konzoli.</translation>
+        <source>Welcome to the Dobbscoin RPC console.</source>
+        <translation>Dobrodošli na Dobbscoin RPC konzoli.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1493,8 +1493,8 @@ Naslov: %4
         <translation>Najdena kopija naslova, možnost pošiljanja na vsakega izmed naslov le enkrat ob pošiljanju.</translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>Opozorilo: Neveljaven Bitcoin naslov</translation>
+        <source>Warning: Invalid Dobbscoin address</source>
+        <translation>Opozorilo: Neveljaven Dobbscoin naslov</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1657,8 +1657,8 @@ Naslov: %4
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Jedro Bitcoina</translation>
+        <source>Dobbscoin Core</source>
+        <translation>Jedro Dobbscoina</translation>
     </message>
     <message>
         <source>[testnet]</source>
