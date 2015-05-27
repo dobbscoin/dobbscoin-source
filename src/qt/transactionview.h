@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_TRANSACTIONVIEW_H
-#define BITCOIN_QT_TRANSACTIONVIEW_H
+#ifndef DOBBSCOIN_QT_TRANSACTIONVIEW_H
+#define DOBBSCOIN_QT_TRANSACTIONVIEW_H
 
 #include "guiutil.h"
 
@@ -112,4 +112,4 @@ public slots:
 
 };
 
-#endif // BITCOIN_QT_TRANSACTIONVIEW_H
+#endif // DOBBSCOIN_QT_TRANSACTIONVIEW_H

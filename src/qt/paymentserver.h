@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_PAYMENTSERVER_H
-#define BITCOIN_QT_PAYMENTSERVER_H
+#ifndef DOBBSCOIN_QT_PAYMENTSERVER_H
+#define DOBBSCOIN_QT_PAYMENTSERVER_H
 
 // This class handles payment requests from clicking on
 // dobbscoin: URIs
@@ -141,4 +141,4 @@ private:
     OptionsModel *optionsModel;
 };
 
-#endif // BITCOIN_QT_PAYMENTSERVER_H
+#endif // DOBBSCOIN_QT_PAYMENTSERVER_H

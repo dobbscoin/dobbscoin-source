@@ -62,7 +62,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         QString header = tr("Usage:") + "\n" +
             "  dobbscoin-qt [" + tr("command-line options") + "]                     " + "\n";
 
-        QString coreOptions = QString::fromStdString(HelpMessage(HMM_BITCOIN_QT));
+        QString coreOptions = QString::fromStdString(HelpMessage(HMM_DOBBSCOIN_QT));
 
         QString uiOptions = tr("UI options") + ":\n" +
             "  -choosedatadir            " + tr("Choose data directory on startup (default: 0)") + "\n" +

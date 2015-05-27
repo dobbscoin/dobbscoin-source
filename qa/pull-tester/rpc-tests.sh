@@ -2,11 +2,11 @@
 set -e
 
 CURDIR=$(cd $(dirname "$0"); pwd)
-# Get BUILDDIR and REAL_BITCOIND
+# Get BUILDDIR and REAL_DOBBSCOIND
 . "${CURDIR}/tests-config.sh"
 
-export BITCOINCLI=${BUILDDIR}/qa/pull-tester/run-dobbscoin-cli
-export BITCOIND=${REAL_BITCOIND}
+export DOBBSCOINCLI=${BUILDDIR}/qa/pull-tester/run-dobbscoin-cli
+export DOBBSCOIND=${REAL_DOBBSCOIND}
 
 if [ "x${EXEEXT}" = "x.exe" ]; then
   echo "Win tests currently disabled"
@@ -15,7 +15,7 @@ fi
 
 #Run the tests
 
-if [ "x${ENABLE_BITCOIND}${ENABLE_UTILS}${ENABLE_WALLET}" = "x111" ]; then
+if [ "x${ENABLE_DOBBSCOIND}${ENABLE_UTILS}${ENABLE_WALLET}" = "x111" ]; then
   ${BUILDDIR}/qa/rpc-tests/wallet.py --srcdir "${BUILDDIR}/src"
   ${BUILDDIR}/qa/rpc-tests/listtransactions.py --srcdir "${BUILDDIR}/src"
   ${BUILDDIR}/qa/rpc-tests/mempool_resurrect_test.py --srcdir "${BUILDDIR}/src"

@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UINT256_H
-#define BITCOIN_UINT256_H
+#ifndef DOBBSCOIN_UINT256_H
+#define DOBBSCOIN_UINT256_H
 
 #include <assert.h>
 #include <cstring>
@@ -330,4 +330,4 @@ public:
     uint64_t GetHash(const uint256& salt) const;
 };
 
-#endif // BITCOIN_UINT256_H
+#endif // DOBBSCOIN_UINT256_H

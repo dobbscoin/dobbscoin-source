@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NET_H
-#define BITCOIN_NET_H
+#ifndef DOBBSCOIN_NET_H
+#define DOBBSCOIN_NET_H
 
 #include "bloom.h"
 #include "compat.h"
@@ -623,4 +623,4 @@ public:
     bool Read(CAddrMan& addr);
 };
 
-#endif // BITCOIN_NET_H
+#endif // DOBBSCOIN_NET_H

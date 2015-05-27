@@ -80,7 +80,7 @@ bool AppInit(int argc, char* argv[])
             strUsage += "\n" + _("Usage:") + "\n" +
                   "  dobbscoind [options]                     " + _("Start Dobbscoin Core Daemon") + "\n";
 
-            strUsage += "\n" + HelpMessage(HMM_BITCOIND);
+            strUsage += "\n" + HelpMessage(HMM_DOBBSCOIND);
         }
 
         fprintf(stdout, "%s", strUsage.c_str());

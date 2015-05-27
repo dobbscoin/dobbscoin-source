@@ -7,8 +7,8 @@
  * Server/client environment: argument handling, config file parsing,
  * logging, thread wrappers
  */
-#ifndef BITCOIN_UTIL_H
-#define BITCOIN_UTIL_H
+#ifndef DOBBSCOIN_UTIL_H
+#define DOBBSCOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
 #include "config/dobbscoin-config.h"
@@ -229,4 +229,4 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     }
 }
 
-#endif // BITCOIN_UTIL_H
+#endif // DOBBSCOIN_UTIL_H
