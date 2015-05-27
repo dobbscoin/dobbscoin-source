@@ -40,9 +40,9 @@ QString DobbscoinUnits::id(int unit)
 {
     switch(unit)
     {
-    case BOB: return QString("btc");
-    case mBOB: return QString("mbtc");
-    case uBOB: return QString("ubtc");
+    case BOB: return QString("bob");
+    case mBOB: return QString("mbob");
+    case uBOB: return QString("ubob");
     default: return QString("???");
     }
 }
@@ -125,7 +125,7 @@ QString DobbscoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separat
 // TODO: Review all remaining calls to DobbscoinUnits::formatWithUnit to
 // TODO: determine whether the output is used in a plain text context
 // TODO: or an HTML context (and replace with
-// TODO: BtcoinUnits::formatHtmlWithUnit in the latter case). Hopefully
+// TODO: boboinUnits::formatHtmlWithUnit in the latter case). Hopefully
 // TODO: there aren't instances where the result could be used in
 // TODO: either context.
 

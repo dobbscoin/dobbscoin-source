@@ -8,8 +8,8 @@
 # Does the following:
 #   a) creates 3 nodes, with an empty chain (no blocks).
 #   b) node0 mines a block
-#   c) node1 mines 101 blocks, so now nodes 0 and 1 have 50btc, node2 has none. 
-#   d) node0 sends 21 btc to node2, in two transactions (11 btc, then 10 btc).
+#   c) node1 mines 101 blocks, so now nodes 0 and 1 have 50bob, node2 has none. 
+#   d) node0 sends 21 bob to node2, in two transactions (11 bob, then 10 bob).
 #   e) node0 mines a block, collects the fee on the second transaction
 #   f) node1 mines 100 blocks, to mature node0's just-mined block
 #   g) check that node0 has 100-21, node2 has 21
@@ -62,7 +62,7 @@ class WalletTest (DobbscoinTestFramework):
         self.nodes[1].setgenerate(True, 100)
         self.sync_all()
 
-        # node0 should end up with 100 btc in block rewards plus fees, but
+        # node0 should end up with 100 bob in block rewards plus fees, but
         # minus the 21 plus fees sent to node2
         assert_equal(self.nodes[0].getbalance(), 100-21)
         assert_equal(self.nodes[2].getbalance(), 21)
