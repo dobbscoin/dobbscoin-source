@@ -140,8 +140,8 @@
         <translation>Billetera codificada</translation>
     </message>
     <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin se cerrará para finalizar el proceso de encriptación. Recuerde que encriptar su billetera no protegera completatamente sus bitcoins de ser robados por malware que infecte su computador</translation>
+        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dobbscoins from being stolen by malware infecting your computer.</source>
+        <translation>Bitcoin se cerrará para finalizar el proceso de encriptación. Recuerde que encriptar su billetera no protegera completatamente sus dobbscoins de ser robados por malware que infecte su computador</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -236,7 +236,7 @@
     </message>
     <message>
         <source>Bitcoin Core client</source>
-        <translation>cliente bitcoin core</translation>
+        <translation>cliente dobbscoin core</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -244,11 +244,11 @@
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation>Enviar monedas a una dirección bitcoin</translation>
+        <translation>Enviar monedas a una dirección dobbscoin</translation>
     </message>
     <message>
         <source>Modify configuration options for Bitcoin</source>
-        <translation>Modifica las opciones de configuración de bitcoin</translation>
+        <translation>Modifica las opciones de configuración de dobbscoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -308,7 +308,7 @@
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>bitcoin core</translation>
+        <translation>dobbscoin core</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -490,7 +490,7 @@ Dirección: %4</translation>
     <name>HelpMessageDialog</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>bitcoin core</translation>
+        <translation>dobbscoin core</translation>
     </message>
     <message>
         <source>version</source>
@@ -518,7 +518,7 @@ Dirección: %4</translation>
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>bitcoin core</translation>
+        <translation>dobbscoin core</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1000,7 +1000,7 @@ Dirección: %4</translation>
     <name>SplashScreen</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>bitcoin core</translation>
+        <translation>dobbscoin core</translation>
     </message>
     <message>
         <source>[testnet]</source>
@@ -1351,7 +1351,7 @@ Dirección: %4</translation>
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>dobbscoin-core</name>
     <message>
         <source>Options:</source>
         <translation>Opciones:

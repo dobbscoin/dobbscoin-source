@@ -3,13 +3,13 @@ Description=Bitcoin's distributed currency daemon
 After=network.target
 
 [Service]
-User=bitcoin
-Group=bitcoin
+User=dobbscoin
+Group=dobbscoin
 
 Type=forking
-PIDFile=/var/lib/bitcoind/bitcoind.pid
-ExecStart=/usr/bin/bitcoind -daemon -pid=/var/lib/bitcoind/bitcoind.pid \
--conf=/etc/bitcoin/bitcoin.conf -datadir=/var/lib/bitcoind -disablewallet
+PIDFile=/var/lib/dobbscoind/dobbscoind.pid
+ExecStart=/usr/bin/dobbscoind -daemon -pid=/var/lib/dobbscoind/dobbscoind.pid \
+-conf=/etc/dobbscoin/dobbscoin.conf -datadir=/var/lib/dobbscoind -disablewallet
 
 Restart=always
 PrivateTmp=true

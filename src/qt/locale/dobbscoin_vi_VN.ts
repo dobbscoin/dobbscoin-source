@@ -685,7 +685,7 @@ Loại: %3
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>dobbscoin-core</name>
     <message>
         <source>Information</source>
         <translation>Thông tin</translation>
