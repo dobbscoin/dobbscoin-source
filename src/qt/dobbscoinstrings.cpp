@@ -62,10 +62,10 @@ QT_TRANSLATE_NOOP("dobbscoin-core", ""
 "Execute command when the best block changes (%s in cmd is replaced by block "
 "hash)"),
 QT_TRANSLATE_NOOP("dobbscoin-core", ""
-"Fees (in BTC/Kb) smaller than this are considered zero fee for relaying "
+"Fees (in BOB/Kb) smaller than this are considered zero fee for relaying "
 "(default: %s)"),
 QT_TRANSLATE_NOOP("dobbscoin-core", ""
-"Fees (in BTC/Kb) smaller than this are considered zero fee for transaction "
+"Fees (in BOB/Kb) smaller than this are considered zero fee for transaction "
 "creation (default: %s)"),
 QT_TRANSLATE_NOOP("dobbscoin-core", ""
 "Flush database activity from memory pool to disk log every <n> megabytes "
@@ -206,7 +206,7 @@ QT_TRANSLATE_NOOP("dobbscoin-core", "Error: A fatal internal error occured, see 
 QT_TRANSLATE_NOOP("dobbscoin-core", "Error: Disk space is low!"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Error: Unsupported argument -tor found, use -onion."),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Failed to listen on any port. Use -listen=0 if you want this."),
-QT_TRANSLATE_NOOP("dobbscoin-core", "Fee (in BTC/kB) to add to transactions you send (default: %s)"),
+QT_TRANSLATE_NOOP("dobbscoin-core", "Fee (in BOB/kB) to add to transactions you send (default: %s)"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Force safe mode (default: %u)"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "Generate coins (default: %u)"),
 QT_TRANSLATE_NOOP("dobbscoin-core", "How many blocks to check at startup (default: %u, 0 = all)"),

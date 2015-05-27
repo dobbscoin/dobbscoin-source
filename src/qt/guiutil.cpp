@@ -164,7 +164,7 @@ bool parseDobbscoinURI(const QUrl &uri, SendCoinsRecipient *out)
         {
             if(!i->second.isEmpty())
             {
-                if(!DobbscoinUnits::parse(DobbscoinUnits::BTC, i->second, &rv.amount))
+                if(!DobbscoinUnits::parse(DobbscoinUnits::BOB, i->second, &rv.amount))
                 {
                     return false;
                 }
@@ -203,7 +203,7 @@ QString formatDobbscoinURI(const SendCoinsRecipient &info)
 
     if (info.amount)
     {
-        ret += QString("?amount=%1").arg(DobbscoinUnits::format(DobbscoinUnits::BTC, info.amount, false, DobbscoinUnits::separatorNever));
+        ret += QString("?amount=%1").arg(DobbscoinUnits::format(DobbscoinUnits::BOB, info.amount, false, DobbscoinUnits::separatorNever));
         paramCount++;
     }
 

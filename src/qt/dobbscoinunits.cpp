@@ -17,9 +17,9 @@ DobbscoinUnits::DobbscoinUnits(QObject *parent):
 QList<DobbscoinUnits::Unit> DobbscoinUnits::availableUnits()
 {
     QList<DobbscoinUnits::Unit> unitlist;
-    unitlist.append(BTC);
-    unitlist.append(mBTC);
-    unitlist.append(uBTC);
+    unitlist.append(BOB);
+    unitlist.append(mBOB);
+    unitlist.append(uBOB);
     return unitlist;
 }
 
@@ -27,9 +27,9 @@ bool DobbscoinUnits::valid(int unit)
 {
     switch(unit)
     {
-    case BTC:
-    case mBTC:
-    case uBTC:
+    case BOB:
+    case mBOB:
+    case uBOB:
         return true;
     default:
         return false;
@@ -40,9 +40,9 @@ QString DobbscoinUnits::id(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("btc");
-    case mBTC: return QString("mbtc");
-    case uBTC: return QString("ubtc");
+    case BOB: return QString("btc");
+    case mBOB: return QString("mbtc");
+    case uBOB: return QString("ubtc");
     default: return QString("???");
     }
 }
@@ -51,9 +51,9 @@ QString DobbscoinUnits::name(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("BTC");
-    case mBTC: return QString("mBTC");
-    case uBTC: return QString::fromUtf8("μBTC");
+    case BOB: return QString("BOB");
+    case mBOB: return QString("mBOB");
+    case uBOB: return QString::fromUtf8("μBOB");
     default: return QString("???");
     }
 }
@@ -62,9 +62,9 @@ QString DobbscoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("Dobbscoins");
-    case mBTC: return QString("Milli-Dobbscoins (1 / 1" THIN_SP_UTF8 "000)");
-    case uBTC: return QString("Micro-Dobbscoins (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case BOB: return QString("Dobbscoins");
+    case mBOB: return QString("Milli-Dobbscoins (1 / 1" THIN_SP_UTF8 "000)");
+    case uBOB: return QString("Micro-Dobbscoins (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
 }
@@ -73,9 +73,9 @@ qint64 DobbscoinUnits::factor(int unit)
 {
     switch(unit)
     {
-    case BTC:  return 100000000;
-    case mBTC: return 100000;
-    case uBTC: return 100;
+    case BOB:  return 100000000;
+    case mBOB: return 100000;
+    case uBOB: return 100;
     default:   return 100000000;
     }
 }
@@ -84,9 +84,9 @@ int DobbscoinUnits::decimals(int unit)
 {
     switch(unit)
     {
-    case BTC: return 8;
-    case mBTC: return 5;
-    case uBTC: return 2;
+    case BOB: return 8;
+    case mBOB: return 5;
+    case uBOB: return 2;
     default: return 0;
     }
 }
