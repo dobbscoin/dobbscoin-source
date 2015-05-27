@@ -133,6 +133,6 @@ Threads
 
 - ThreadRPCServer : Remote procedure call handler, listens on port 19984 for connections and services them.
 
-- BitcoinMiner : Generates dobbscoins (if wallet is enabled).
+- DobbscoinMiner : Generates dobbscoins (if wallet is enabled).
 
 - Shutdown : Does an orderly shutdown of everything.

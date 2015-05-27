@@ -75,7 +75,7 @@ src/qt/test/moc*.cpp
 *.qm
 Makefile
 dobbscoin-qt
-Bitcoin-Qt.app
+Dobbscoin-Qt.app
 
 # Unit-tests
 Makefile.test

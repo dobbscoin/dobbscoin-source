@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Dobbscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,14 +7,14 @@
 # Test proper accounting with malleable transactions
 #
 
-from test_framework import BitcoinTestFramework
+from test_framework import DobbscoinTestFramework
 from dobbscoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from decimal import Decimal
 from util import *
 import os
 import shutil
 
-class TxnMallTest(BitcoinTestFramework):
+class TxnMallTest(DobbscoinTestFramework):
 
     def add_options(self, parser):
         parser.add_option("--mineblock", dest="mine_block", default=False, action="store_true",

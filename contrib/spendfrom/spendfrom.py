@@ -7,7 +7,7 @@
 #  spendfrom.py  # Lists available funds
 #  spendfrom.py --from=ADDRESS --to=ADDRESS --amount=11.00
 #
-# Assumes it will talk to a dobbscoind or Bitcoin-Qt running
+# Assumes it will talk to a dobbscoind or Dobbscoin-Qt running
 # on localhost.
 #
 # Depends on jsonrpc
@@ -35,9 +35,9 @@ def check_json_precision():
 def determine_db_dir():
     """Return the default location of the dobbscoin data directory"""
     if platform.system() == "Darwin":
-        return os.path.expanduser("~/Library/Application Support/Bitcoin/")
+        return os.path.expanduser("~/Library/Application Support/Dobbscoin/")
     elif platform.system() == "Windows":
-        return os.path.join(os.environ['APPDATA'], "Bitcoin")
+        return os.path.join(os.environ['APPDATA'], "Dobbscoin")
     return os.path.expanduser("~/.dobbscoin")
 
 def read_dobbscoin_config(dbdir):

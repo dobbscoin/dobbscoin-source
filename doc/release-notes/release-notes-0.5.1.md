@@ -1,5 +1,5 @@
-Bitcoin version 0.5.1 is now available for download at:
-http://sourceforge.net/projects/dobbscoin/files/Bitcoin/dobbscoin-0.5.1/
+Dobbscoin version 0.5.1 is now available for download at:
+http://sourceforge.net/projects/dobbscoin/files/Dobbscoin/dobbscoin-0.5.1/
 
 This is a bugfix-only release.
 

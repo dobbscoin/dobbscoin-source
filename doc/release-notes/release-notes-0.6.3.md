@@ -1,5 +1,5 @@
-Bitcoin version 0.6.3 is now available for download at:
-  http://sourceforge.net/projects/dobbscoin/files/Bitcoin/dobbscoin-0.6.3/
+Dobbscoin version 0.6.3 is now available for download at:
+  http://sourceforge.net/projects/dobbscoin/files/Dobbscoin/dobbscoin-0.6.3/
 
 This is a bug-fix release, with no new features.
 
@@ -20,7 +20,7 @@ Fixed an obscure bug that could cause the dobbscoin process to get
 stuck on an invalid block-chain, if the invalid chain was
 hundreds of blocks long.
 
-Bitcoin-Qt no longer automatically selects the first address
+Dobbscoin-Qt no longer automatically selects the first address
 in the address book (Issue #1384).
 
 Fixed minimize-to-dock behavior of Bitcon-Qt on the Mac.

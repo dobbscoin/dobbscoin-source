@@ -1,5 +1,5 @@
-Bitcoin version 0.6.2 is now available for download at:
-http://sourceforge.net/projects/dobbscoin/files/Bitcoin/dobbscoin-0.6.2/
+Dobbscoin version 0.6.2 is now available for download at:
+http://sourceforge.net/projects/dobbscoin/files/Dobbscoin/dobbscoin-0.6.2/
 
 This is a bug-fix and code-cleanup release, with no major new features.
 

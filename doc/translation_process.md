@@ -1,7 +1,7 @@
 Translations
 ============
 
-The Bitcoin Core GUI can be easily translated into other languages. Here's how we
+The Dobbscoin Core GUI can be easily translated into other languages. Here's how we
 handle those translations.
 
 Files and Folders

@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Dobbscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,11 +7,11 @@
 # Test fee estimation code
 #
 
-from test_framework import BitcoinTestFramework
+from test_framework import DobbscoinTestFramework
 from dobbscoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 
-class EstimateFeeTest(BitcoinTestFramework):
+class EstimateFeeTest(DobbscoinTestFramework):
 
     def setup_network(self):
         self.nodes = []

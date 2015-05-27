@@ -121,7 +121,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>DobbscoinGUI</name>
     <message>
         <source>Synchronizing with network...</source>
         <translation>नेटवर्क से समकालिक (मिल) रहा है ...</translation>
@@ -164,7 +164,7 @@
         <translation>पहचान शब्द/अक्षर जो वॉलेट एनक्रिपशन के लिए इस्तेमाल किया है उसे बदलिए!</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
+        <source>Dobbscoin</source>
         <translation>बीटकोइन</translation>
     </message>
     <message>
@@ -188,7 +188,7 @@
         <translation>टैबस टूलबार</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
+        <source>%n active connection(s) to Dobbscoin network</source>
         <translation><numerusform>%n सक्रिया संपर्क बीटकोइन नेटवर्क से</numerusform><numerusform>%n सक्रिया संपर्क बीटकोइन नेटवर्क से</numerusform></translation>
     </message>
     <message numerus="yes">

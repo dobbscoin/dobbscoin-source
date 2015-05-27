@@ -104,9 +104,9 @@ Creating a release build
 ------------------------
 You can ignore this section if you are building `dobbscoind` for your own use.
 
-dobbscoind/dobbscoin-cli binaries are not included in the Bitcoin-Qt.app bundle.
+dobbscoind/dobbscoin-cli binaries are not included in the Dobbscoin-Qt.app bundle.
 
-If you are building `dobbscoind` or `Bitcoin-Qt` for others, your build machine should be set up
+If you are building `dobbscoind` or `Dobbscoin-Qt` for others, your build machine should be set up
 as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:
@@ -115,7 +115,7 @@ All dependencies should be compiled with these flags:
  -arch x86_64
  -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
 
-Once dependencies are compiled, see release-process.md for how the Bitcoin-Qt.app
+Once dependencies are compiled, see release-process.md for how the Dobbscoin-Qt.app
 bundle is packaged and signed to create the .dmg disk image that is distributed.
 
 Running
@@ -127,14 +127,14 @@ directory. We have to first create the RPC configuration file, though.
 Run `./dobbscoind` to get the filename where it should be put, or just try these
 commands:
 
-    echo -e "rpcuser=dobbscoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Bitcoin/dobbscoin.conf"
-    chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/dobbscoin.conf"
+    echo -e "rpcuser=dobbscoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Dobbscoin/dobbscoin.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/Dobbscoin/dobbscoin.conf"
 
 The next time you run it, it will start downloading the blockchain, but it won't
 output anything while it's doing this. This process may take several hours;
 you can monitor its process by looking at the debug.log file, like this:
 
-    tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
+    tail -f $HOME/Library/Application\ Support/Dobbscoin/debug.log
 
 Other commands:
 -------

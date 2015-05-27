@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Dobbscoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,7 +47,7 @@ static bool AppInitRawTx(int argc, char* argv[])
     if (argc<2 || mapArgs.count("-?") || mapArgs.count("-help"))
     {
         // First part of help message is specific to this utility
-        std::string strUsage = _("Bitcoin Core dobbscoin-tx utility version") + " " + FormatFullVersion() + "\n\n" +
+        std::string strUsage = _("Dobbscoin Core dobbscoin-tx utility version") + " " + FormatFullVersion() + "\n\n" +
             _("Usage:") + "\n" +
               "  dobbscoin-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded dobbscoin transaction") + "\n" +
               "  dobbscoin-tx [options] -create [commands]   " + _("Create hex-encoded dobbscoin transaction") + "\n" +
@@ -224,7 +224,7 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const string& strInput)
 
     // extract and validate ADDRESS
     string strAddr = strInput.substr(pos + 1, string::npos);
-    CBitcoinAddress addr(strAddr);
+    CDobbscoinAddress addr(strAddr);
     if (!addr.IsValid())
         throw runtime_error("invalid TX output address");
 
@@ -356,7 +356,7 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
     for (unsigned int kidx = 0; kidx < keysObj.count(); kidx++) {
         if (!keysObj[kidx].isStr())
             throw runtime_error("privatekey not a string");
-        CBitcoinSecret vchSecret;
+        CDobbscoinSecret vchSecret;
         bool fGood = vchSecret.SetString(keysObj[kidx].getValStr());
         if (!fGood)
             throw runtime_error("privatekey not valid");

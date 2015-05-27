@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Bitcoin developers
+// Copyright (c) 2014 The Dobbscoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,7 @@
 
 /**
  * CBaseChainParams defines the base parameters (shared between dobbscoin-cli and dobbscoind)
- * of a given instance of the Bitcoin system.
+ * of a given instance of the Dobbscoin system.
  */
 class CBaseChainParams
 {

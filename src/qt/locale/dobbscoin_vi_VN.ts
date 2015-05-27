@@ -137,7 +137,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>DobbscoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation>&amp;Tổng quan</translation>
@@ -167,12 +167,12 @@
         <translation>Mở &amp;URI...</translation>
     </message>
     <message>
-        <source>Bitcoin Core client</source>
-        <translation>Bitcoin Core client</translation>
+        <source>Dobbscoin Core client</source>
+        <translation>Dobbscoin Core client</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>Dobbscoin</source>
+        <translation>Dobbscoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -207,12 +207,12 @@
         <translation>Trợ &amp;giúp</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Dobbscoin Core</source>
+        <translation>Dobbscoin Core</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>&amp;Về Bitcoin Core</translation>
+        <source>&amp;About Dobbscoin Core</source>
+        <translation>&amp;Về Dobbscoin Core</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -374,16 +374,16 @@ Loại: %3
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Dobbscoin Core</source>
+        <translation>Dobbscoin Core</translation>
     </message>
     <message>
         <source>version</source>
         <translation>version</translation>
     </message>
     <message>
-        <source>About Bitcoin Core</source>
-        <translation>Về Bitcoin Core</translation>
+        <source>About Dobbscoin Core</source>
+        <translation>Về Dobbscoin Core</translation>
     </message>
     </context>
 <context>
@@ -393,8 +393,8 @@ Loại: %3
         <translation>Chào mừng</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Dobbscoin Core</source>
+        <translation>Dobbscoin Core</translation>
     </message>
     <message>
         <source>Error</source>
@@ -593,8 +593,8 @@ Loại: %3
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Dobbscoin Core</source>
+        <translation>Dobbscoin Core</translation>
     </message>
     </context>
 <context>

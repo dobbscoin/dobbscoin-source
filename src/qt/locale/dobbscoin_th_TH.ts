@@ -109,7 +109,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>DobbscoinGUI</name>
     <message>
         <source>Synchronizing with network...</source>
         <translation>กำลังทำข้อมูลให้ตรงกันกับเครือข่าย ...</translation>
@@ -159,8 +159,8 @@
         <translation>แถบเครื่องมือ</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n ที่ใช้งานการเชื่อมต่อกับเครือข่าย Bitcoin</numerusform></translation>
+        <source>%n active connection(s) to Dobbscoin network</source>
+        <translation><numerusform>%n ที่ใช้งานการเชื่อมต่อกับเครือข่าย Dobbscoin</numerusform></translation>
     </message>
     <message>
         <source>Up to date</source>

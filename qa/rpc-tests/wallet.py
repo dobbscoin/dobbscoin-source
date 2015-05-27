@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Dobbscoin Core developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,11 +18,11 @@
 #   j) check balances - node0 should have 0, node2 should have 100
 #
 
-from test_framework import BitcoinTestFramework
+from test_framework import DobbscoinTestFramework
 from util import *
 
 
-class WalletTest (BitcoinTestFramework):
+class WalletTest (DobbscoinTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)

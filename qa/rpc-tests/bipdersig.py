@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Dobbscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,13 +7,13 @@
 # Test the BIP66 changeover logic
 #
 
-from test_framework import BitcoinTestFramework
+from test_framework import DobbscoinTestFramework
 from dobbscoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 import os
 import shutil
 
-class BIP66Test(BitcoinTestFramework):
+class BIP66Test(DobbscoinTestFramework):
 
     def setup_network(self):
         self.nodes = []

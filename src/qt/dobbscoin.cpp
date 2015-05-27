@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
+// Copyright (c) 2011-2014 The Dobbscoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -159,14 +159,14 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 }
 #endif
 
-/** Class encapsulating Bitcoin Core startup and shutdown.
+/** Class encapsulating Dobbscoin Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
-class BitcoinCore: public QObject
+class DobbscoinCore: public QObject
 {
     Q_OBJECT
 public:
-    explicit BitcoinCore();
+    explicit DobbscoinCore();
 
 public slots:
     void initialize();
@@ -184,13 +184,13 @@ private:
     void handleRunawayException(std::exception *e);
 };
 
-/** Main Bitcoin application object */
-class BitcoinApplication: public QApplication
+/** Main Dobbscoin application object */
+class DobbscoinApplication: public QApplication
 {
     Q_OBJECT
 public:
-    explicit BitcoinApplication(int &argc, char **argv);
-    ~BitcoinApplication();
+    explicit DobbscoinApplication(int &argc, char **argv);
+    ~DobbscoinApplication();
 
 #ifdef ENABLE_WALLET
     /// Create payment server
@@ -211,7 +211,7 @@ public:
     /// Get process return value
     int getReturnValue() { return returnValue; }
 
-    /// Get window identifier of QMainWindow (BitcoinGUI)
+    /// Get window identifier of QMainWindow (DobbscoinGUI)
     WId getMainWinId() const;
 
 public slots:
@@ -230,7 +230,7 @@ private:
     QThread *coreThread;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
-    BitcoinGUI *window;
+    DobbscoinGUI *window;
     QTimer *pollShutdownTimer;
 #ifdef ENABLE_WALLET
     PaymentServer* paymentServer;
@@ -243,18 +243,18 @@ private:
 
 #include "dobbscoin.moc"
 
-BitcoinCore::BitcoinCore():
+DobbscoinCore::DobbscoinCore():
     QObject()
 {
 }
 
-void BitcoinCore::handleRunawayException(std::exception *e)
+void DobbscoinCore::handleRunawayException(std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
     emit runawayException(QString::fromStdString(strMiscWarning));
 }
 
-void BitcoinCore::initialize()
+void DobbscoinCore::initialize()
 {
     try
     {
@@ -275,7 +275,7 @@ void BitcoinCore::initialize()
     }
 }
 
-void BitcoinCore::shutdown()
+void DobbscoinCore::shutdown()
 {
     try
     {
@@ -292,7 +292,7 @@ void BitcoinCore::shutdown()
     }
 }
 
-BitcoinApplication::BitcoinApplication(int &argc, char **argv):
+DobbscoinApplication::DobbscoinApplication(int &argc, char **argv):
     QApplication(argc, argv),
     coreThread(0),
     optionsModel(0),
@@ -308,7 +308,7 @@ BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     setQuitOnLastWindowClosed(false);
 }
 
-BitcoinApplication::~BitcoinApplication()
+DobbscoinApplication::~DobbscoinApplication()
 {
     if(coreThread)
     {
@@ -329,27 +329,27 @@ BitcoinApplication::~BitcoinApplication()
 }
 
 #ifdef ENABLE_WALLET
-void BitcoinApplication::createPaymentServer()
+void DobbscoinApplication::createPaymentServer()
 {
     paymentServer = new PaymentServer(this);
 }
 #endif
 
-void BitcoinApplication::createOptionsModel()
+void DobbscoinApplication::createOptionsModel()
 {
     optionsModel = new OptionsModel();
 }
 
-void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
+void DobbscoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
-    window = new BitcoinGUI(networkStyle, 0);
+    window = new DobbscoinGUI(networkStyle, 0);
 
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, SIGNAL(timeout()), window, SLOT(detectShutdown()));
     pollShutdownTimer->start(200);
 }
 
-void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
+void DobbscoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
 {
     SplashScreen *splash = new SplashScreen(0, networkStyle);
     // We don't hold a direct pointer to the splash screen after creation, so use
@@ -359,12 +359,12 @@ void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
     connect(this, SIGNAL(splashFinished(QWidget*)), splash, SLOT(slotFinish(QWidget*)));
 }
 
-void BitcoinApplication::startThread()
+void DobbscoinApplication::startThread()
 {
     if(coreThread)
         return;
     coreThread = new QThread(this);
-    BitcoinCore *executor = new BitcoinCore();
+    DobbscoinCore *executor = new DobbscoinCore();
     executor->moveToThread(coreThread);
 
     /*  communication to and from thread */
@@ -380,14 +380,14 @@ void BitcoinApplication::startThread()
     coreThread->start();
 }
 
-void BitcoinApplication::requestInitialize()
+void DobbscoinApplication::requestInitialize()
 {
     qDebug() << __func__ << ": Requesting initialize";
     startThread();
     emit requestedInitialize();
 }
 
-void BitcoinApplication::requestShutdown()
+void DobbscoinApplication::requestShutdown()
 {
     qDebug() << __func__ << ": Requesting shutdown";
     startThread();
@@ -410,7 +410,7 @@ void BitcoinApplication::requestShutdown()
     emit requestedShutdown();
 }
 
-void BitcoinApplication::initializeResult(int retval)
+void DobbscoinApplication::initializeResult(int retval)
 {
     qDebug() << __func__ << ": Initialization result: " << retval;
     // Set exit result: 0 if successful, 1 if failure
@@ -430,8 +430,8 @@ void BitcoinApplication::initializeResult(int retval)
         {
             walletModel = new WalletModel(pwalletMain, optionsModel);
 
-            window->addWallet(BitcoinGUI::DEFAULT_WALLET, walletModel);
-            window->setCurrentWallet(BitcoinGUI::DEFAULT_WALLET);
+            window->addWallet(DobbscoinGUI::DEFAULT_WALLET, walletModel);
+            window->setCurrentWallet(DobbscoinGUI::DEFAULT_WALLET);
 
             connect(walletModel, SIGNAL(coinsSent(CWallet*,SendCoinsRecipient,QByteArray)),
                              paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
@@ -465,19 +465,19 @@ void BitcoinApplication::initializeResult(int retval)
     }
 }
 
-void BitcoinApplication::shutdownResult(int retval)
+void DobbscoinApplication::shutdownResult(int retval)
 {
     qDebug() << __func__ << ": Shutdown result: " << retval;
     quit(); // Exit main loop after shutdown finished
 }
 
-void BitcoinApplication::handleRunawayException(const QString &message)
+void DobbscoinApplication::handleRunawayException(const QString &message)
 {
-    QMessageBox::critical(0, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. Bitcoin can no longer continue safely and will quit.") + QString("\n\n") + message);
+    QMessageBox::critical(0, "Runaway exception", DobbscoinGUI::tr("A fatal error occurred. Dobbscoin can no longer continue safely and will quit.") + QString("\n\n") + message);
     ::exit(1);
 }
 
-WId BitcoinApplication::getMainWinId() const
+WId DobbscoinApplication::getMainWinId() const
 {
     if (!window)
         return 0;
@@ -506,7 +506,7 @@ int main(int argc, char *argv[])
     Q_INIT_RESOURCE(dobbscoin);
     Q_INIT_RESOURCE(dobbscoin_locale);
 
-    BitcoinApplication app(argc, argv);
+    DobbscoinApplication app(argc, argv);
 #if QT_VERSION > 0x050100
     // Generate high-dpi pixmaps
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
@@ -552,14 +552,14 @@ int main(int argc, char *argv[])
     /// - Do not call GetDataDir(true) before this step finishes
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {
-        QMessageBox::critical(0, QObject::tr("Bitcoin Core"),
+        QMessageBox::critical(0, QObject::tr("Dobbscoin Core"),
                               QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
         return 1;
     }
     try {
         ReadConfigFile(mapArgs, mapMultiArgs);
     } catch(std::exception &e) {
-        QMessageBox::critical(0, QObject::tr("Bitcoin Core"),
+        QMessageBox::critical(0, QObject::tr("Dobbscoin Core"),
                               QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
         return false;
     }
@@ -572,7 +572,7 @@ int main(int argc, char *argv[])
 
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
     if (!SelectParamsFromCommandLine()) {
-        QMessageBox::critical(0, QObject::tr("Bitcoin Core"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
+        QMessageBox::critical(0, QObject::tr("Dobbscoin Core"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
         return 1;
     }
 #ifdef ENABLE_WALLET
@@ -630,7 +630,7 @@ int main(int argc, char *argv[])
         app.createWindow(networkStyle.data());
         app.requestInitialize();
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
-        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Bitcoin Core didn't yet exit safely..."), (HWND)app.getMainWinId());
+        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Dobbscoin Core didn't yet exit safely..."), (HWND)app.getMainWinId());
 #endif
         app.exec();
         app.requestShutdown();

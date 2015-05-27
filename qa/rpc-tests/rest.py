@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Dobbscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,7 @@
 # Test REST interface
 #
 
-from test_framework import BitcoinTestFramework
+from test_framework import DobbscoinTestFramework
 from util import *
 import json
 
@@ -30,7 +30,7 @@ def http_get_call(host, port, path, response_object = 0):
     return conn.getresponse().read()
 
 
-class RESTTest (BitcoinTestFramework):
+class RESTTest (DobbscoinTestFramework):
     FORMAT_SEPARATOR = "."
     
     def run_test(self):

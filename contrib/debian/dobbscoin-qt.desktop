@@ -1,9 +1,9 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=Bitcoin
-Comment=Bitcoin P2P Cryptocurrency
-Comment[fr]=Bitcoin, monnaie virtuelle cryptographique pair à pair
-Comment[tr]=Bitcoin, eşten eşe kriptografik sanal para birimi
+Name=Dobbscoin
+Comment=Dobbscoin P2P Cryptocurrency
+Comment[fr]=Dobbscoin, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=Dobbscoin, eşten eşe kriptografik sanal para birimi
 Exec=dobbscoin-qt %u
 Terminal=false
 Type=Application

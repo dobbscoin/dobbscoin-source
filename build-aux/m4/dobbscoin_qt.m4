@@ -182,7 +182,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
 
 
   dnl enable qt support
-  AC_MSG_CHECKING(whether to build Bitcoin Core GUI)
+  AC_MSG_CHECKING(whether to build Dobbscoin Core GUI)
   BITCOIN_QT_CHECK([
     dobbscoin_enable_qt=yes
     dobbscoin_enable_qt_test=yes
