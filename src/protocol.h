@@ -7,8 +7,8 @@
 #error This header can only be compiled as C++.
 #endif
 
-#ifndef BITCOIN_PROTOCOL_H
-#define BITCOIN_PROTOCOL_H
+#ifndef DOBBSCOIN_PROTOCOL_H
+#define DOBBSCOIN_PROTOCOL_H
 
 #include "netbase.h"
 #include "serialize.h"
@@ -149,4 +149,4 @@ enum {
     MSG_FILTERED_BLOCK,
 };
 
-#endif // BITCOIN_PROTOCOL_H
+#endif // DOBBSCOIN_PROTOCOL_H

@@ -84,11 +84,11 @@ def initialize_chain(test_dir):
         # Create cache directories, run dobbscoinds:
         for i in range(4):
             datadir=initialize_datadir("cache", i)
-            args = [ os.getenv("BITCOIND", "dobbscoind"), "-keypool=1", "-datadir="+datadir, "-discover=0" ]
+            args = [ os.getenv("DOBBSCOIND", "dobbscoind"), "-keypool=1", "-datadir="+datadir, "-discover=0" ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             dobbscoind_processes[i] = subprocess.Popen(args)
-            subprocess.check_call([ os.getenv("BITCOINCLI", "dobbscoin-cli"), "-datadir="+datadir,
+            subprocess.check_call([ os.getenv("DOBBSCOINCLI", "dobbscoin-cli"), "-datadir="+datadir,
                                     "-rpcwait", "getblockcount"], stdout=devnull)
         devnull.close()
         rpcs = []
@@ -163,11 +163,11 @@ def start_node(i, dirname, extra_args=None, rpchost=None):
     Start a dobbscoind and return RPC connection to it
     """
     datadir = os.path.join(dirname, "node"+str(i))
-    args = [ os.getenv("BITCOIND", "dobbscoind"), "-datadir="+datadir, "-keypool=1", "-discover=0", "-rest" ]
+    args = [ os.getenv("DOBBSCOIND", "dobbscoind"), "-datadir="+datadir, "-keypool=1", "-discover=0", "-rest" ]
     if extra_args is not None: args.extend(extra_args)
     dobbscoind_processes[i] = subprocess.Popen(args)
     devnull = open("/dev/null", "w+")
-    subprocess.check_call([ os.getenv("BITCOINCLI", "dobbscoin-cli"), "-datadir="+datadir] +
+    subprocess.check_call([ os.getenv("DOBBSCOINCLI", "dobbscoin-cli"), "-datadir="+datadir] +
                           _rpchost_to_args(rpchost)  +
                           ["-rpcwait", "getblockcount"], stdout=devnull)
     devnull.close()

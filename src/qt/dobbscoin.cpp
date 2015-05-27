@@ -485,7 +485,7 @@ WId DobbscoinApplication::getMainWinId() const
     return window->winId();
 }
 
-#ifndef BITCOIN_QT_TEST
+#ifndef DOBBSCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
     SetupEnvironment();
@@ -644,4 +644,4 @@ int main(int argc, char *argv[])
     }
     return app.getReturnValue();
 }
-#endif // BITCOIN_QT_TEST
+#endif // DOBBSCOIN_QT_TEST

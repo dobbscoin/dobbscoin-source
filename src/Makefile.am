@@ -17,19 +17,19 @@ $(LIBLEVELDB) $(LIBMEMENV):
           OPT="$(CXXFLAGS) $(CPPFLAGS)"
 endif
 
-BITCOIN_CONFIG_INCLUDES=-I$(builddir)/config
-BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
+DOBBSCOIN_CONFIG_INCLUDES=-I$(builddir)/config
+DOBBSCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
 
-BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
+DOBBSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 
-LIBBITCOIN_SERVER=libdobbscoin_server.a
-LIBBITCOIN_WALLET=libdobbscoin_wallet.a
-LIBBITCOIN_COMMON=libdobbscoin_common.a
-LIBBITCOIN_CLI=libdobbscoin_cli.a
-LIBBITCOIN_UTIL=libdobbscoin_util.a
-LIBBITCOIN_CRYPTO=crypto/libdobbscoin_crypto.a
-LIBBITCOIN_UNIVALUE=univalue/libdobbscoin_univalue.a
-LIBBITCOINQT=qt/libdobbscoinqt.a
+LIBDOBBSCOIN_SERVER=libdobbscoin_server.a
+LIBDOBBSCOIN_WALLET=libdobbscoin_wallet.a
+LIBDOBBSCOIN_COMMON=libdobbscoin_common.a
+LIBDOBBSCOIN_CLI=libdobbscoin_cli.a
+LIBDOBBSCOIN_UTIL=libdobbscoin_util.a
+LIBDOBBSCOIN_CRYPTO=crypto/libdobbscoin_crypto.a
+LIBDOBBSCOIN_UNIVALUE=univalue/libdobbscoin_univalue.a
+LIBDOBBSCOINQT=qt/libdobbscoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
@@ -45,31 +45,31 @@ EXTRA_LIBRARIES = \
   libdobbscoin_server.a \
   libdobbscoin_cli.a
 if ENABLE_WALLET
-BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
+DOBBSCOIN_INCLUDES += $(BDB_CPPFLAGS)
 EXTRA_LIBRARIES += libdobbscoin_wallet.a
 endif
 
-if BUILD_BITCOIN_LIBS
+if BUILD_DOBBSCOIN_LIBS
 lib_LTLIBRARIES = libdobbscoinconsensus.la
-LIBBITCOIN_CONSENSUS=libdobbscoinconsensus.la
+LIBDOBBSCOIN_CONSENSUS=libdobbscoinconsensus.la
 else
-LIBBITCOIN_CONSENSUS=
+LIBDOBBSCOIN_CONSENSUS=
 endif
 
 bin_PROGRAMS =
 TESTS =
 
-if BUILD_BITCOIND
+if BUILD_DOBBSCOIND
   bin_PROGRAMS += dobbscoind
 endif
 
-if BUILD_BITCOIN_UTILS
+if BUILD_DOBBSCOIN_UTILS
   bin_PROGRAMS += dobbscoin-cli dobbscoin-tx
 endif
 
 .PHONY: FORCE
 # dobbscoin core #
-BITCOIN_CORE_H = \
+DOBBSCOIN_CORE_H = \
   addrman.h \
   alert.h \
   allocators.h \
@@ -159,7 +159,7 @@ obj/build.h: FORCE
 libdobbscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
 # server: shared between dobbscoind and dobbscoin-qt
-libdobbscoin_server_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS)
+libdobbscoin_server_a_CPPFLAGS = $(DOBBSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS)
 libdobbscoin_server_a_SOURCES = \
   addrman.cpp \
   alert.cpp \
@@ -186,11 +186,11 @@ libdobbscoin_server_a_SOURCES = \
   txdb.cpp \
   txmempool.cpp \
   $(JSON_H) \
-  $(BITCOIN_CORE_H)
+  $(DOBBSCOIN_CORE_H)
 
 # wallet: shared between dobbscoind and dobbscoin-qt, but only linked
 # when wallet enabled
-libdobbscoin_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
+libdobbscoin_wallet_a_CPPFLAGS = $(DOBBSCOIN_INCLUDES)
 libdobbscoin_wallet_a_SOURCES = \
   db.cpp \
   crypter.cpp \
@@ -199,10 +199,10 @@ libdobbscoin_wallet_a_SOURCES = \
   wallet.cpp \
   wallet_ismine.cpp \
   walletdb.cpp \
-  $(BITCOIN_CORE_H)
+  $(DOBBSCOIN_CORE_H)
 
 # crypto primitives library
-crypto_libdobbscoin_crypto_a_CPPFLAGS = $(BITCOIN_CONFIG_INCLUDES)
+crypto_libdobbscoin_crypto_a_CPPFLAGS = $(DOBBSCOIN_CONFIG_INCLUDES)
 crypto_libdobbscoin_crypto_a_SOURCES = \
   crypto/sha1.cpp \
   crypto/sha256.cpp \
@@ -231,7 +231,7 @@ univalue_libdobbscoin_univalue_a_SOURCES = \
   univalue/univalue.h
 
 # common: shared between dobbscoind, and dobbscoin-qt and non-server tools
-libdobbscoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
+libdobbscoin_common_a_CPPFLAGS = $(DOBBSCOIN_INCLUDES)
 libdobbscoin_common_a_SOURCES = \
   allocators.cpp \
   amount.cpp \
@@ -256,12 +256,12 @@ libdobbscoin_common_a_SOURCES = \
   script/sign.cpp \
   script/standard.cpp \
   script/script_error.cpp \
-  $(BITCOIN_CORE_H)
+  $(DOBBSCOIN_CORE_H)
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
 # backward-compatibility objects and their sanity checks are linked.
-libdobbscoin_util_a_CPPFLAGS = $(BITCOIN_INCLUDES)
+libdobbscoin_util_a_CPPFLAGS = $(DOBBSCOIN_INCLUDES)
 libdobbscoin_util_a_SOURCES = \
   compat/strnlen.cpp \
   compat/glibc_sanity.cpp \
@@ -276,7 +276,7 @@ libdobbscoin_util_a_SOURCES = \
   utilstrencodings.cpp \
   utilmoneystr.cpp \
   utiltime.cpp \
-  $(BITCOIN_CORE_H)
+  $(DOBBSCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
 libdobbscoin_util_a_SOURCES += compat/glibc_compat.cpp
@@ -284,21 +284,21 @@ libdobbscoin_util_a_SOURCES += compat/glibcxx_compat.cpp
 endif
 
 # cli: shared between dobbscoin-cli and dobbscoin-qt
-libdobbscoin_cli_a_CPPFLAGS = $(BITCOIN_INCLUDES)
+libdobbscoin_cli_a_CPPFLAGS = $(DOBBSCOIN_INCLUDES)
 libdobbscoin_cli_a_SOURCES = \
   rpcclient.cpp \
-  $(BITCOIN_CORE_H)
+  $(DOBBSCOIN_CORE_H)
 
 nodist_libdobbscoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # dobbscoind binary #
 dobbscoind_LDADD = \
-  $(LIBBITCOIN_SERVER) \
-  $(LIBBITCOIN_COMMON) \
-  $(LIBBITCOIN_UNIVALUE) \
-  $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CRYPTO) \
+  $(LIBDOBBSCOIN_SERVER) \
+  $(LIBDOBBSCOIN_COMMON) \
+  $(LIBDOBBSCOIN_UNIVALUE) \
+  $(LIBDOBBSCOIN_UTIL) \
+  $(LIBDOBBSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
@@ -314,13 +314,13 @@ dobbscoind_SOURCES += dobbscoind-res.rc
 endif
 
 dobbscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
-dobbscoind_CPPFLAGS = $(BITCOIN_INCLUDES)
+dobbscoind_CPPFLAGS = $(DOBBSCOIN_INCLUDES)
 dobbscoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 # dobbscoin-cli binary #
 dobbscoin_cli_LDADD = \
-  $(LIBBITCOIN_CLI) \
-  $(LIBBITCOIN_UTIL) \
+  $(LIBDOBBSCOIN_CLI) \
+  $(LIBDOBBSCOIN_UTIL) \
   $(BOOST_LIBS) \
   $(SSL_LIBS) \
   $(CRYPTO_LIBS)
@@ -328,21 +328,21 @@ dobbscoin_cli_LDADD = \
 dobbscoin_cli_SOURCES = \
   dobbscoin-cli.cpp
 
-dobbscoin_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
+dobbscoin_cli_CPPFLAGS = $(DOBBSCOIN_INCLUDES)
 #
 
 # dobbscoin-tx binary #
 dobbscoin_tx_LDADD = \
-  $(LIBBITCOIN_UNIVALUE) \
-  $(LIBBITCOIN_COMMON) \
-  $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CRYPTO) \
+  $(LIBDOBBSCOIN_UNIVALUE) \
+  $(LIBDOBBSCOIN_COMMON) \
+  $(LIBDOBBSCOIN_UTIL) \
+  $(LIBDOBBSCOIN_CRYPTO) \
   $(LIBSECP256K1) \
   $(BOOST_LIBS) \
   $(CRYPTO_LIBS)
 
 dobbscoin_tx_SOURCES = dobbscoin-tx.cpp
-dobbscoin_tx_CPPFLAGS = $(BITCOIN_INCLUDES)
+dobbscoin_tx_CPPFLAGS = $(DOBBSCOIN_INCLUDES)
 #
 dobbscoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
@@ -351,7 +351,7 @@ dobbscoin_cli_SOURCES += dobbscoin-cli-res.rc
 endif
 dobbscoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
-if BUILD_BITCOIN_LIBS
+if BUILD_DOBBSCOIN_LIBS
 include_HEADERS = script/dobbscoinconsensus.h
 libdobbscoinconsensus_la_SOURCES = \
   primitives/transaction.cpp \
@@ -378,7 +378,7 @@ endif
 
 libdobbscoinconsensus_la_LDFLAGS = -no-undefined $(RELDFLAGS)
 libdobbscoinconsensus_la_LIBADD = $(CRYPTO_LIBS)
-libdobbscoinconsensus_la_CPPFLAGS = $(CRYPTO_CFLAGS) -I$(builddir)/obj -DBUILD_BITCOIN_INTERNAL
+libdobbscoinconsensus_la_CPPFLAGS = $(CRYPTO_CFLAGS) -I$(builddir)/obj -DBUILD_DOBBSCOIN_INTERNAL
 if USE_LIBSECP256K1
 libdobbscoinconsensus_la_LIBADD += secp256k1/libsecp256k1.la
 endif

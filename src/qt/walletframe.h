@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_WALLETFRAME_H
-#define BITCOIN_QT_WALLETFRAME_H
+#ifndef DOBBSCOIN_QT_WALLETFRAME_H
+#define DOBBSCOIN_QT_WALLETFRAME_H
 
 #include <QFrame>
 #include <QMap>
@@ -77,4 +77,4 @@ public slots:
     void usedReceivingAddresses();
 };
 
-#endif // BITCOIN_QT_WALLETFRAME_H
+#endif // DOBBSCOIN_QT_WALLETFRAME_H

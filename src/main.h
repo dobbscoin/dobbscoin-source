@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_MAIN_H
-#define BITCOIN_MAIN_H
+#ifndef DOBBSCOIN_MAIN_H
+#define DOBBSCOIN_MAIN_H
 
 #if defined(HAVE_CONFIG_H)
 #include "config/dobbscoin-config.h"
@@ -617,4 +617,4 @@ protected:
     friend void ::UnregisterAllValidationInterfaces();
 };
 
-#endif // BITCOIN_MAIN_H
+#endif // DOBBSCOIN_MAIN_H

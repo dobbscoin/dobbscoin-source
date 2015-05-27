@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_LEVELDBWRAPPER_H
-#define BITCOIN_LEVELDBWRAPPER_H
+#ifndef DOBBSCOIN_LEVELDBWRAPPER_H
+#define DOBBSCOIN_LEVELDBWRAPPER_H
 
 #include "clientversion.h"
 #include "serialize.h"
@@ -170,4 +170,4 @@ public:
     }
 };
 
-#endif // BITCOIN_LEVELDBWRAPPER_H
+#endif // DOBBSCOIN_LEVELDBWRAPPER_H

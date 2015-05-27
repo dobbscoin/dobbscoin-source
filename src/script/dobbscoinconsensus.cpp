@@ -87,5 +87,5 @@ int dobbscoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned
 unsigned int dobbscoinconsensus_version()
 {
     // Just use the API version for now
-    return BITCOINCONSENSUS_API_VER;
+    return DOBBSCOINCONSENSUS_API_VER;
 }

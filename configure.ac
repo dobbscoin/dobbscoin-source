@@ -14,9 +14,9 @@ AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 AC_CANONICAL_HOST
 
-AH_TOP([#ifndef BITCOIN_CONFIG_H])
-AH_TOP([#define BITCOIN_CONFIG_H])
-AH_BOTTOM([#endif //BITCOIN_CONFIG_H])
+AH_TOP([#ifndef DOBBSCOIN_CONFIG_H])
+AH_TOP([#define DOBBSCOIN_CONFIG_H])
+AH_BOTTOM([#endif //DOBBSCOIN_CONFIG_H])
 
 dnl faketime breaks configure and is only needed for make. Disable it here.
 unset FAKETIME
@@ -506,7 +506,7 @@ AC_SUBST(LIBMEMENV)
 
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
-    BITCOIN_FIND_BDB48
+    DOBBSCOIN_FIND_BDB48
 fi
 
 dnl Check for libminiupnpc (optional)
@@ -518,10 +518,10 @@ if test x$use_upnp != xno; then
   )
 fi
 
-BITCOIN_QT_INIT
+DOBBSCOIN_QT_INIT
 
 dnl sets $dobbscoin_enable_qt, $dobbscoin_enable_qt_test, $dobbscoin_enable_qt_dbus
-BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
+DOBBSCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
 
 if test x$build_dobbscoin_utils$build_dobbscoind$dobbscoin_enable_qt$use_tests = xnononono; then
     use_boost=no
@@ -681,9 +681,9 @@ if test x$use_pkgconfig = xyes; then
     [
       PKG_CHECK_MODULES([SSL], [libssl],, [AC_MSG_ERROR(openssl  not found.)])
       PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR(libcrypto  not found.)])
-      BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [BITCOIN_QT_FAIL(libprotobuf not found)])])
+      DOBBSCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [DOBBSCOIN_QT_FAIL(libprotobuf not found)])])
       if test x$use_qr != xno; then
-        BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
+        DOBBSCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
     ]
   )
@@ -694,10 +694,10 @@ else
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR(libssl missing))
 
-  BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], BITCOIN_QT_FAIL(libprotobuf not found)))
+  DOBBSCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], DOBBSCOIN_QT_FAIL(libprotobuf not found)))
   if test x$use_qr != xno; then
-    BITCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
-    BITCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
+    DOBBSCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
+    DOBBSCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
   fi
 fi
 
@@ -709,18 +709,18 @@ AC_CHECK_HEADER([openssl/ec.h],, AC_MSG_ERROR(OpenSSL ec header missing),)
 CFLAGS="$CFLAGS_TEMP"
 LIBS="$LIBS_TEMP"
 
-BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
+DOBBSCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
 
 AC_MSG_CHECKING([whether to build dobbscoind])
-AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_dobbscoind = xyes])
+AM_CONDITIONAL([BUILD_DOBBSCOIND], [test x$build_dobbscoind = xyes])
 AC_MSG_RESULT($build_dobbscoind)
 
 AC_MSG_CHECKING([whether to build utils (dobbscoin-cli dobbscoin-tx)])
-AM_CONDITIONAL([BUILD_BITCOIN_UTILS], [test x$build_dobbscoin_utils = xyes])
+AM_CONDITIONAL([BUILD_DOBBSCOIN_UTILS], [test x$build_dobbscoin_utils = xyes])
 AC_MSG_RESULT($build_dobbscoin_utils)
 
 AC_MSG_CHECKING([whether to build libraries])
-AM_CONDITIONAL([BUILD_BITCOIN_LIBS], [test x$build_dobbscoin_libs = xyes])
+AM_CONDITIONAL([BUILD_DOBBSCOIN_LIBS], [test x$build_dobbscoin_libs = xyes])
 if test x$build_dobbscoin_libs = xyes; then
   AC_DEFINE(HAVE_CONSENSUS_LIB, 1, [Define this symbol if the consensus lib has been built])
 fi

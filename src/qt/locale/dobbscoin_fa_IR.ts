@@ -460,7 +460,7 @@ Address: %4
     </message>
     <message>
         <source>Welcome to the Dobbscoin RPC console.</source>
-        <translation>به کنسول آر.پی.سی. BITCOIN خوش آمدید</translation>
+        <translation>به کنسول آر.پی.سی. DOBBSCOIN خوش آمدید</translation>
     </message>
     </context>
 <context>

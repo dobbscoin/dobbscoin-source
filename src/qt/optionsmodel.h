@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_OPTIONSMODEL_H
-#define BITCOIN_QT_OPTIONSMODEL_H
+#ifndef DOBBSCOIN_QT_OPTIONSMODEL_H
+#define DOBBSCOIN_QT_OPTIONSMODEL_H
 
 #include "amount.h"
 
@@ -86,4 +86,4 @@ signals:
     void coinControlFeaturesChanged(bool);
 };
 
-#endif // BITCOIN_QT_OPTIONSMODEL_H
+#endif // DOBBSCOIN_QT_OPTIONSMODEL_H

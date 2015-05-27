@@ -138,7 +138,7 @@ QT_MOC_CPP = \
   qt/moc_walletmodel.cpp \
   qt/moc_walletview.cpp
 
-BITCOIN_MM = \
+DOBBSCOIN_MM = \
   qt/macdockiconhandler.mm \
   qt/macnotificationhandler.mm
 
@@ -158,7 +158,7 @@ PROTOBUF_CC = qt/paymentrequest.pb.cc
 PROTOBUF_H = qt/paymentrequest.pb.h
 PROTOBUF_PROTO = qt/paymentrequest.proto
 
-BITCOIN_QT_H = \
+DOBBSCOIN_QT_H = \
   qt/addressbookpage.h \
   qt/addresstablemodel.h \
   qt/askpassphrasedialog.h \
@@ -258,7 +258,7 @@ RES_ICONS = \
   qt/res/icons/unit_mbtc.png \
   qt/res/icons/unit_ubtc.png
 
-BITCOIN_QT_CPP = \
+DOBBSCOIN_QT_CPP = \
   qt/dobbscoinaddressvalidator.cpp \
   qt/dobbscoinamountfield.cpp \
   qt/dobbscoingui.cpp \
@@ -281,7 +281,7 @@ BITCOIN_QT_CPP = \
   qt/winshutdownmonitor.cpp
 
 if ENABLE_WALLET
-BITCOIN_QT_CPP += \
+DOBBSCOIN_QT_CPP += \
   qt/addressbookpage.cpp \
   qt/addresstablemodel.cpp \
   qt/askpassphrasedialog.cpp \
@@ -317,15 +317,15 @@ RES_IMAGES = \
 
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 
-BITCOIN_RC = qt/res/dobbscoin-qt-res.rc
+DOBBSCOIN_RC = qt/res/dobbscoin-qt-res.rc
 
-BITCOIN_QT_INCLUDES = -I$(builddir)/qt -I$(srcdir)/qt -I$(srcdir)/qt/forms \
+DOBBSCOIN_QT_INCLUDES = -I$(builddir)/qt -I$(srcdir)/qt -I$(srcdir)/qt/forms \
   -I$(builddir)/qt/forms
 
-qt_libdobbscoinqt_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
+qt_libdobbscoinqt_a_CPPFLAGS = $(DOBBSCOIN_INCLUDES) $(DOBBSCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
 
-qt_libdobbscoinqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
+qt_libdobbscoinqt_a_SOURCES = $(DOBBSCOIN_QT_CPP) $(DOBBSCOIN_QT_H) $(QT_FORMS_UI) \
   $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 
 nodist_qt_libdobbscoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
@@ -345,21 +345,21 @@ $(QT_MOC): $(PROTOBUF_H)
 $(QT_MOC_CPP): $(PROTOBUF_H)
 
 # dobbscoin-qt binary #
-qt_dobbscoin_qt_CPPFLAGS = $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
+qt_dobbscoin_qt_CPPFLAGS = $(DOBBSCOIN_INCLUDES) $(DOBBSCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
 
 qt_dobbscoin_qt_SOURCES = qt/dobbscoin.cpp
 if TARGET_DARWIN
-  qt_dobbscoin_qt_SOURCES += $(BITCOIN_MM)
+  qt_dobbscoin_qt_SOURCES += $(DOBBSCOIN_MM)
 endif
 if TARGET_WINDOWS
-  qt_dobbscoin_qt_SOURCES += $(BITCOIN_RC)
+  qt_dobbscoin_qt_SOURCES += $(DOBBSCOIN_RC)
 endif
-qt_dobbscoin_qt_LDADD = qt/libdobbscoinqt.a $(LIBBITCOIN_SERVER)
+qt_dobbscoin_qt_LDADD = qt/libdobbscoinqt.a $(LIBDOBBSCOIN_SERVER)
 if ENABLE_WALLET
-qt_dobbscoin_qt_LDADD += $(LIBBITCOIN_WALLET)
+qt_dobbscoin_qt_LDADD += $(LIBDOBBSCOIN_WALLET)
 endif
-qt_dobbscoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBBITCOIN_UNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
+qt_dobbscoin_qt_LDADD += $(LIBDOBBSCOIN_CLI) $(LIBDOBBSCOIN_COMMON) $(LIBDOBBSCOIN_UTIL) $(LIBDOBBSCOIN_CRYPTO) $(LIBDOBBSCOIN_UNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1)
 qt_dobbscoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 qt_dobbscoin_qt_LIBTOOLFLAGS = --tag CXX
@@ -373,7 +373,7 @@ qt/dobbscoinstrings.cpp: $(libdobbscoin_server_a_SOURCES) $(libdobbscoin_wallet_
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) ../share/qt/extract_strings_qt.py $^
 
-translate: qt/dobbscoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(BITCOIN_MM)
+translate: qt/dobbscoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(DOBBSCOIN_QT_CPP) $(DOBBSCOIN_QT_H) $(DOBBSCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts qt/locale/dobbscoin_en.ts
 
@@ -393,7 +393,7 @@ CLEAN_QT = $(nodist_qt_libdobbscoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcd
 CLEANFILES += $(CLEAN_QT)
 
 dobbscoin_qt_clean: FORCE
-	rm -f $(CLEAN_QT) $(qt_libdobbscoinqt_a_OBJECTS) $(qt_dobbscoin_qt_OBJECTS) qt/dobbscoin-qt$(EXEEXT) $(LIBBITCOINQT)
+	rm -f $(CLEAN_QT) $(qt_libdobbscoinqt_a_OBJECTS) $(qt_dobbscoin_qt_OBJECTS) qt/dobbscoin-qt$(EXEEXT) $(LIBDOBBSCOINQT)
 
 dobbscoin_qt : qt/dobbscoin-qt$(EXEEXT)
 

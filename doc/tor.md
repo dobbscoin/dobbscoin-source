@@ -1,4 +1,4 @@
-TOR SUPPORT IN BITCOIN
+TOR SUPPORT IN DOBBSCOIN
 ======================
 
 It is possible to run Dobbscoin as a Tor hidden service, and connect to such services.

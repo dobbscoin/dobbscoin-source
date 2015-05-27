@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COINS_H
-#define BITCOIN_COINS_H
+#ifndef DOBBSCOIN_COINS_H
+#define DOBBSCOIN_COINS_H
 
 #include "compressor.h"
 #include "serialize.h"
@@ -443,4 +443,4 @@ private:
     CCoinsMap::const_iterator FetchCoins(const uint256 &txid) const;
 };
 
-#endif // BITCOIN_COINS_H
+#endif // DOBBSCOIN_COINS_H
