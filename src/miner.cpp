@@ -375,12 +375,9 @@ int64_t nHPSTimerStart = 0;
 //
 bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phash)
 {
-    // Write the first 76 bytes of the block header to a double-SHA256 state.
-    CHash256 hasher;
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << *pblock;
     assert(ss.size() == 80);
-    hasher.Write((unsigned char*)&ss[0], 76);
 
     while (true) {
         nNonce++;
@@ -462,7 +459,7 @@ void static DobbscoinMiner(CWallet *pwallet)
                         LOCK(cs_vNodes);
                         fvNodesEmpty = vNodes.empty();
                     }
-                    if (!fvNodesEmpty && !IsInitialBlockDownload())
+                   // if (!fvNodesEmpty && !IsInitialBlockDownload())
                         break;
                     MilliSleep(1000);
                 } while (true);

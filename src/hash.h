@@ -12,7 +12,7 @@
 #include "serialize.h"
 #include "uint256.h"
 #include "version.h"
-
+#include <stdio.h>
 #include <vector>
 
 /** A hasher class for Dobbscoin's 256-bit hash (double SHA-256). */
@@ -53,13 +53,13 @@ public:
     int pos;
     CHashScrypt& Write(const unsigned char *data, size_t len) {
         assert(pos+len <= 80); 
-        memcpy(&buffer[pos], data, pos+len);
+        memcpy(&buffer[pos], data, len);
         pos+=len;
         return *this;
     }
 
     CHashScrypt& Reset() {
-        //do nothing.. ?
+        pos=0;
         return *this;
     }
 };
