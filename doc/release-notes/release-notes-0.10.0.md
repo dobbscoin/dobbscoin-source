@@ -7,7 +7,7 @@ bug fixes.
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/dobbscoin/dobbscoin/issues
+  https://github.com/earlz/dobbscoin-source/issues
 
 Upgrading and downgrading
 =========================
@@ -230,7 +230,7 @@ bindings such as [python-dobbscoinlib](https://pypi.python.org/pypi/python-dobbs
 alternative node implementations.
 
 This library is called `libdobbscoinconsensus.so` (or, `.dll` for Windows).
-Its interface is defined in the C header [dobbscoinconsensus.h](https://github.com/dobbscoin/dobbscoin/blob/0.10/src/script/dobbscoinconsensus.h).
+Its interface is defined in the C header [dobbscoinconsensus.h](https://github.com/earlz/dobbscoin-source/blob/0.10/src/script/dobbscoinconsensus.h).
 
 In its initial version the API includes two functions:
 
