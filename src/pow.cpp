@@ -100,11 +100,7 @@ public:
     }
 
     //CBigNum(char n) is not portable.  Use 'signed char' or 'unsigned char'.
-    CBigNum(signed char n)      { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
-    CBigNum(short n)            { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
     CBigNum(int n)              { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
-    CBigNum(unsigned char n)    { BN_init(this); setulong(n); }
-    CBigNum(unsigned short n)   { BN_init(this); setulong(n); }
     CBigNum(unsigned int n)     { BN_init(this); setulong(n); }
     CBigNum(uint64_t n)           { BN_init(this); setuint64(n); }
     CBigNum(int64_t n)            { BN_init(this); setint64(n); }
@@ -659,8 +655,8 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
     
     CBigNum bnNew(PastDifficultyAverage);
     if (PastRateActualSeconds != 0 && PastRateTargetSeconds != 0) {
-        bnNew *= (long unsigned int)PastRateActualSeconds;
-        bnNew /= (long unsigned int)PastRateTargetSeconds;
+        bnNew *= (uint64_t)PastRateActualSeconds;
+        bnNew /= (uint64_t)PastRateTargetSeconds;
     }
     if (bnNew > bnProofOfWorkLimit) { bnNew = bnProofOfWorkLimit; }
     
