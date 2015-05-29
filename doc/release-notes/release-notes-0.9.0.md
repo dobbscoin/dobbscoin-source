@@ -7,7 +7,7 @@ bug fixes.
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/dobbscoin/dobbscoin/issues
+  https://github.com/earlz/dobbscoin-source/issues
 
 How to Upgrade
 --------------
