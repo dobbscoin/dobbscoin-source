@@ -103,11 +103,11 @@ public:
     CBigNum(signed char n)      { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
     CBigNum(short n)            { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
     CBigNum(int n)              { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
-    CBigNum(long n)             { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
     CBigNum(unsigned char n)    { BN_init(this); setulong(n); }
     CBigNum(unsigned short n)   { BN_init(this); setulong(n); }
     CBigNum(unsigned int n)     { BN_init(this); setulong(n); }
-    CBigNum(unsigned long n)    { BN_init(this); setulong(n); }
+    CBigNum(uint64_t n)           { BN_init(this); setuint64(n); }
+    CBigNum(int64_t n)            { BN_init(this); setint64(n); }
     explicit CBigNum(uint256 n) { BN_init(this); setuint256(n); }
 
     explicit CBigNum(const std::vector<unsigned char>& vch)
@@ -659,8 +659,8 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
     
     CBigNum bnNew(PastDifficultyAverage);
     if (PastRateActualSeconds != 0 && PastRateTargetSeconds != 0) {
-        bnNew *= PastRateActualSeconds;
-        bnNew /= PastRateTargetSeconds;
+        bnNew *= (long unsigned int)PastRateActualSeconds;
+        bnNew /= (long unsigned int)PastRateTargetSeconds;
     }
     if (bnNew > bnProofOfWorkLimit) { bnNew = bnProofOfWorkLimit; }
     
