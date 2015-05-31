@@ -17,6 +17,7 @@
 #include <QMenu>
 #include <QPoint>
 #include <QSystemTrayIcon>
+#include <QMovie>
 
 class ClientModel;
 class NetworkStyle;
@@ -105,6 +106,8 @@ private:
     QAction *openRPCConsoleAction;
     QAction *openAction;
     QAction *showHelpMessageAction;
+
+    QMovie *syncIconMovie;
 
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
