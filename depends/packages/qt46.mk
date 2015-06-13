@@ -19,7 +19,7 @@ $(package)_config_opts += -no-sql-db2 -no-sql-ibase -no-sql-oci -no-sql-tds -no-
 $(package)_config_opts += -no-sql-odbc -no-sql-psql -no-sql-sqlite -no-sql-sqlite2
 $(package)_config_opts += -no-xmlpatterns -no-multimedia -no-phonon -no-scripttools -no-declarative
 $(package)_config_opts += -no-phonon-backend -no-webkit -no-javascript-jit -no-script
-$(package)_config_opts += -no-svg -no-libjpeg -no-libtiff -no-libpng -no-qt3support -no-opengl
+$(package)_config_opts += -no-svg -no-libjpeg -no-libtiff -no-libpng -no-libmng -no-qt3support -no-opengl
 
 $(package)_config_opts_x86_64_linux  += -platform linux-g++-64
 $(package)_config_opts_i686_linux  = -platform linux-g++-32
