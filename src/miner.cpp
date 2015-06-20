@@ -503,7 +503,7 @@ void static DobbscoinMiner(CWallet *pwallet)
                     {
                         // Found a solution
                         pblock->nNonce = nNonce;
-                        assert(hash == pblock->GetHash());
+                        assert(hash == pblock->GetPoWHash());
 
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
                         LogPrintf("DobbscoinMiner:\n");
