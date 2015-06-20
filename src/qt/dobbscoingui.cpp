@@ -99,7 +99,8 @@ DobbscoinGUI::DobbscoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     spinnerFrame(0)
 {
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
-
+    //also .OverviewPage is useful fro some stuff
+    this->setStyleSheet(".WalletFrame {background-image: url(\":images/bgtile\"); }");
     QString windowTitle = tr("Dobbscoin Core") + " - ";
 #ifdef ENABLE_WALLET
     /* if compiled with wallet support, -disablewallet can still disable the wallet */
