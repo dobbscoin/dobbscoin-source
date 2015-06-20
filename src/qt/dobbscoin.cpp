@@ -528,7 +528,7 @@ int main(int argc, char *argv[])
     QApplication::setOrganizationDomain(QAPP_ORG_DOMAIN);
     QApplication::setApplicationName(QAPP_APP_NAME_DEFAULT);
     GUIUtil::SubstituteFonts(GetLangTerritory());
-
+    qApp->setStyleSheet(" background-image: url(\":res/images/bgtile.png\");");
     /// 4. Initialization of translations, so that intro dialog is in user's language
     // Now that QSettings are accessible, initialize translations
     QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
