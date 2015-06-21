@@ -62,7 +62,7 @@ void OptionsModel::Init()
     nDisplayUnit = settings.value("nDisplayUnit").toInt();
 
     if (!settings.contains("strThirdPartyTxUrls"))
-        settings.setValue("strThirdPartyTxUrls", "");
+        settings.setValue("strThirdPartyTxUrls", "http://explorer.dobbscoin.info/tx/%s");
     strThirdPartyTxUrls = settings.value("strThirdPartyTxUrls", "").toString();
 
     if (!settings.contains("fCoinControlFeatures"))
