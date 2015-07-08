@@ -183,6 +183,7 @@ void Shutdown()
         delete pblocktree;
         pblocktree = NULL;
     }
+    ShutdownRPCMining();
 #ifdef ENABLE_WALLET
     if (pwalletMain)
         bitdb.Flush(true);
@@ -1281,7 +1282,8 @@ bool AppInit2(boost::thread_group& threadGroup)
 #endif
 
     StartNode(threadGroup);
-
+    // InitRPCMining is needed here so getwork/getblocktemplate in the GUI debug console works properly.
+    InitRPCMining();
 #ifdef ENABLE_WALLET
     // Generate coins in the background
     if (pwalletMain)
