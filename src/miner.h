@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 
+
 class CBlock;
 class CBlockHeader;
 class CBlockIndex;
@@ -27,6 +28,7 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 /** Check mined block */
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
+bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 
 extern double dHashesPerSec;
 extern int64_t nHPSTimerStart;
