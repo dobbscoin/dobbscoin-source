@@ -915,7 +915,7 @@ unsigned int GetNextWorkRequired_V4(const CBlockIndex* pindexLast, const CBlockH
         bnNew = Params().ProofOfWorkLimit();
 
     /// debug print
-    LogPrintf("GetNextWorkRequired DIGISHIELD RETARGET 1 MINUTE\n");
+    LogPrintf("GetNextWorkRequired DIGISHIELD RETARGET 2 MINUTES\n");
     LogPrintf("Params().TargetTimespan() = %d    nActualTimespan = %d\n", Params().TargetTimespan(), nActualTimespan);
     LogPrintf("Before: %08x  %s\n", pindexLast->nBits, bnOld.ToString());
     LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.ToString());
@@ -926,10 +926,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 {
     int DiffMode = 1;
     if (Params().AllowMinDifficultyBlocks()) {
-        if (pindexLast->nHeight+1 >= 50) { DiffMode = 2; }
-        if (pindexLast->nHeight+1 >= 100) { DiffMode = 3; }
-        if(pindexLast->nHeight+1 >= 350) { DiffMode=4; }
-
+        if (pindexLast->nHeight+1 >= 20) { DiffMode = 2; }
+        if (pindexLast->nHeight+1 >= 50) { DiffMode = 3; }
+        if(pindexLast->nHeight+1 >= 200) { DiffMode=4; }
     }
     else 
     {
