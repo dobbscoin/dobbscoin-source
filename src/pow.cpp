@@ -838,8 +838,8 @@ unsigned int GetNextWorkRequired_V3(const CBlockIndex* pindexLast, const CBlockH
 unsigned int GetNextWorkRequired_V4(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
 
-    static const int64_t nTargetTimespan_V4 = 1*60 ; // dobbscoin: every 1 minute
-    static const int64_t nTargetSpacing_V4 = 1*60; // dobbscoin: 1 minute
+    static const int64_t nTargetTimespan_V4 = 2*60 ; // dobbscoin: every 2 minute
+    static const int64_t nTargetSpacing_V4 = 2*60; // dobbscoin: 2 minute
     static const int64_t nInterval_V4 = nTargetTimespan_V4 / nTargetSpacing_V4;
 
     unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
@@ -877,7 +877,7 @@ unsigned int GetNextWorkRequired_V4(const CBlockIndex* pindexLast, const CBlockH
         return pindexLast->nBits;
     }
 
-    // Fractalcoin: This fixes an issue where a 51% attack can change difficulty at will.
+    // This fixes an issue where a 51% attack can change difficulty at will.
     // Go back the full period unless it's the first retarget after genesis. Code courtesy of Art Forz
     int blockstogoback = retargetInterval-1;
     if ((pindexLast->nHeight+1) != retargetInterval)
@@ -907,7 +907,6 @@ unsigned int GetNextWorkRequired_V4(const CBlockIndex* pindexLast, const CBlockH
     bnOld = bnNew;
     //scale up for millisecond granularity
     bnNew *= nActualTimespan;
-    //slingshield effectively works by making the target block time longer temporarily
     bnNew /= (retargetTimespan); 
 
 

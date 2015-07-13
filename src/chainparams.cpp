@@ -76,6 +76,8 @@ static const Checkpoints::CCheckpointData data = {
 static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
         boost::assign::map_list_of
         ( 0, uint256("0d44ae9be7f13a64253c9b61dbbddc37304e1c359fd593565caf356e4fd597c7"))
+        //temporary checkpoint, for preserving already mined testnet but testing new fork
+        ( 200, uint256("4c86dc1cc243905fe0e5d0134ac8bf86ba926eba478724311a2bff4bebe2c2ae"))
         ;
 static const Checkpoints::CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
