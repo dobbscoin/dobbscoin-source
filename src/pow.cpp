@@ -928,12 +928,13 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     if (Params().AllowMinDifficultyBlocks()) {
         if (pindexLast->nHeight+1 >= 20) { DiffMode = 2; }
         if (pindexLast->nHeight+1 >= 50) { DiffMode = 3; }
-        if(pindexLast->nHeight+1 >= 200) { DiffMode=4; }
+        if(pindexLast->nHeight+1 >= 200) { DiffMode = 4; }
     }
     else 
     {
         if (pindexLast->nHeight+1 >= 13579) { DiffMode = 2; } // KGW @ Block 13579
         if(pindexLast->nHeight+1 >= 31597) { DiffMode = 3; } //switch to dobbshield @ block 31597
+        if(pindexLast->nHeight+1 >= 68425) {DiffMode = 4; } //switch to 2 minute blocks with dobbshield
     }
     if      (DiffMode == 1) { return GetNextWorkRequired_V1(pindexLast, pblock); }
     else if (DiffMode == 2) { return GetNextWorkRequired_V2(pindexLast, pblock); }
