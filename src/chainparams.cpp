@@ -76,8 +76,6 @@ static const Checkpoints::CCheckpointData data = {
 static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
         boost::assign::map_list_of
         ( 0, uint256("0d44ae9be7f13a64253c9b61dbbddc37304e1c359fd593565caf356e4fd597c7"))
-        //temporary checkpoint, for preserving already mined testnet but testing new fork
-       // ( 200, uint256("4c86dc1cc243905fe0e5d0134ac8bf86ba926eba478724311a2bff4bebe2c2ae"))
         ;
 static const Checkpoints::CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
@@ -114,9 +112,9 @@ public:
         vAlertPubKey = ParseHex("048D0BCFA9D2B74DE677EBDC9A369C398D9A4CBFCF7F8873E17EAAAE1CD340D127E871CAA0CD9F58CBB31A6D439BBA26559B6B5F03F6A309CD3C962694A8DA2F3E");
         nDefaultPort = 19985;
         bnProofOfWorkLimit = ~uint256(0) >> 20;
-        nEnforceBlockUpgradeMajority = 750;
-        nRejectBlockOutdatedMajority = 950;
-        nToCheckBlockUpgradeMajority = 1000;
+        nEnforceBlockUpgradeMajority = 2750;
+        nRejectBlockOutdatedMajority = 2950;
+        nToCheckBlockUpgradeMajority = 9000;
         nMinerThreads = 0;
 
         //incompatible variables below..
