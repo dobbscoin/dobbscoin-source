@@ -882,7 +882,7 @@ public:
         if (!IsFinalTx(*this))
             return false;
         int nDepth = GetDepthInMainChain();
-        if (nDepth >= 1)
+        if (nDepth >= 2)
             return true;
         if (nDepth < 0)
             return false;

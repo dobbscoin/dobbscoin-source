@@ -232,7 +232,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         {
             status.status = TransactionStatus::Offline;
         }
-        else if (status.depth == 0)
+        else if (status.depth < 2) //for 2 minute blocks, don't allow spending for 2 blocks as it can be more dangerous than with 10 minute blocks
         {
             status.status = TransactionStatus::Unconfirmed;
         }
