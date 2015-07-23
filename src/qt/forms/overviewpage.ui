@@ -444,7 +444,7 @@
          </property>
         </spacer>
        </item>
-       
+
        <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
@@ -561,6 +561,18 @@
          </property>
         </spacer>
        </item>
+       
+              <item>
+        <widget class="QLabel" name="label_8">
+         <property name="pixmap">
+          <pixmap resource="../bitcoin.qrc">:/images/overviewRight</pixmap>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading</set>
+         </property>
+        </widget>
+       </item>
+
       </layout>
      </item>
     </layout>
