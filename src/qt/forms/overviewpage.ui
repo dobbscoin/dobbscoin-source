@@ -373,6 +373,7 @@
               </property>
              </widget>
             </item>
+
             <item row="2" column="0">
              <widget class="QLabel" name="labelPendingText">
               <property name="text">
@@ -392,9 +393,58 @@
             </item>
            </layout>
           </item>
+
          </layout>
         </widget>
        </item>
+
+       <item>
+        <widget class="QLabel" name="label_6">
+         <property name="pixmap">
+          <pixmap resource="../bitcoin.qrc">:/images/overviewLeftTop</pixmap>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_7">
+         <property name="pixmap">
+          <pixmap resource="../bitcoin.qrc">:/images/overviewLeftBottom</pixmap>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       
        <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
