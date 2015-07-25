@@ -398,6 +398,7 @@ std::string LicenseInfo()
            FormatParagraph(_("Copyright (C) 1953-2015 The SubGenius Foundation")) + "\n\n" +
            FormatParagraph(_("Copyright (C) 2009-2015 The Bitcoin Core Developers")) + "\n" +
            "\n" +
+           FormatParagraph(_("The Graven Image of 'Bob' Dobbs' Face is a registered trademark of The SubGenius Foundation, Inc.")) + "\n\n" +
            FormatParagraph(_("This is experimental software.")) + "\n" +
            "\n" +
            FormatParagraph(_("Distributed under the MIT software license, see the accompanying file COPYING or <http://www.opensource.org/licenses/mit-license.php>.")) + "\n" +
