@@ -394,16 +394,13 @@ std::string HelpMessage(HelpMessageMode mode)
 
 std::string LicenseInfo()
 {
-    return FormatParagraph(strprintf(_("Copyright (C) 2013-%i The Dobbscoin Developers"), COPYRIGHT_YEAR)) + "\n\n" +
+    return FormatParagraph(strprintf(_("Dobbscoin is excremental software, Copyright (C) 2013-%i The Dobbscoin Developers"), COPYRIGHT_YEAR)) + "\n\n" +
            FormatParagraph(_("Copyright (C) 1953-2015 The SubGenius Foundation")) + "\n\n" +
            FormatParagraph(_("Copyright (C) 2009-2015 The Bitcoin Core Developers")) + "\n" +
            "\n" +
-           FormatParagraph(_("The Graven Image of 'Bob' Dobbs' Face is a registered trademark of The SubGenius Foundation, Inc.")) + "\n\n" +
-           FormatParagraph(_("This is experimental software.")) + "\n" +
+           FormatParagraph(_("The Graven Image of 'Bob' Dobbs' Face is a registered trademark of The SubGenius Foundation, Inc. - Praise 'Bob'")) + "\n\n" +
            "\n" +
-           FormatParagraph(_("Distributed under the MIT software license, see the accompanying file COPYING or <http://www.opensource.org/licenses/mit-license.php>.")) + "\n" +
-           "\n" +
-           FormatParagraph(_("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.")) +
+           FormatParagraph(_("Distributed under the MIT software license, see the accompanying file COPYING or <http://www.opensource.org/licenses/mit-license.php>, and includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.")) + "\n" +
            "\n";
 }
 
