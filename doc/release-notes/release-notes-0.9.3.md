@@ -7,7 +7,7 @@ translations. Upgrading to this release is recommended.
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/earlz/dobbscoin-source/issues
+  https://github.com/dobbscoin/dobbscoin-source/issues
 
 Upgrading and downgrading
 ==========================
