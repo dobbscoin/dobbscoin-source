@@ -1,6 +1,7 @@
 Dobbscoin Core integration/staging tree
 =====================================
 The Official CryptoCurrency of the Church of the SubGenius. http://www.subgenius.com
+
 The ONLY crypto-currency accepted on the Pleasure Saucers. https://www.dobbscoin.info
 
 Maybe you've come into a large inheritance, or your income just suddenly popped. 
@@ -8,13 +9,11 @@ Maybe you gave birth to quintuplets or been recently divorced. Or maybe you just
 feel uneasy about your money; where it's going or how far it will take you in the 
 future. Whatever your problem is, Dobbscoin can help you.
 
-Give yourself to (Bob) freely, joyously, without an atom of restraint 
---NOW -- and your worries are over. Get in on the ground floor of this 
-lucrative alt., while difficulty is low. 
+Give yourself to (Bob) freely, joyously, without an atom of restraint --NOW -- and your worries are over. 
 
-Will you join TheConspiracy’s mindless atheistic unknowing servitude to the Elder 
-Bankers of the Universe and their MINIONS in some hideous World Government, or 
-will you GET SLACK and FIGHT FOR FREEDOM as a zeal-crazed Priest-Warrior for ODIN?
+Get in on the ground floor of this lucrative alt., while difficulty is low. 
+
+Will you join TheConspiracy’s mindless atheistic unknowing servitude to the Elder Bankers of the Universe and their MINIONS in some hideous World Government, or will you GET SLACK and FIGHT FOR FREEDOM as a zeal-crazed Priest-Warrior for ODIN?
 
 Eternal Salvation or Triple your Money Back!!
 
