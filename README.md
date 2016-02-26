@@ -3,19 +3,18 @@ Dobbscoin Core integration/staging tree
 
 [![Build Status](https://travis-ci.org/dobbscoin/dobbscoin.svg?branch=master)](https://travis-ci.org/dobbscoin/dobbscoin)
 
-https://www.dobbscoin.org
+https://www.dobbscoin.info
 
 What is Dobbscoin?
 ----------------
 
-Dobbscoin is an experimental new digital currency that enables instant payments to
-anyone, anywhere in the world. Dobbscoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Dobbscoin Core is the name of open source
-software which enables the use of this currency.
+Dobbscoin is an excrimental new digital currency that enables the seinding of
+instant Slack to anyone, anywhere in the omniverse. Dobbscoin uses peer-to-peer 
+technology to operate with no central authority: managing transactions and 
+issuing Slack is carried out collectively by the network. 
 
 For more information, as well as an immediately useable, binary version of
-the Dobbscoin Core software, see https://www.dobbscoin.org/en/download.
+the Dobbscoin Core software, see https://github.com/dobbscoin/dobbscoin-source/releases
 
 License
 -------
