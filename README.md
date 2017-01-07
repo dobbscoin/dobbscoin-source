@@ -20,12 +20,12 @@ Eternal Salvation or Triple your Money Back!!
 What is Dobbscoin?
 ----------------
 
-Dobbscoin is an excrimental new digital currency that enables the seinding of
+Dobbscoin is an excrimental new digital currency that enables the sending of
 instant Slack to anyone, anywhere in the omniverse. Dobbscoin uses peer-to-peer 
 technology to operate with no central authority: managing transactions and 
 issuing Slack is carried out collectively by the network. 
 
-For more information, as well as an immediately useable, binary version of
+For more information, as well as an immediately useable binary version of
 the Dobbscoin Core software, see https://github.com/dobbscoin/dobbscoin-source/releases
 
 License
