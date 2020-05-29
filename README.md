@@ -4,16 +4,16 @@ The Official CryptoCurrency of the Church of the SubGenius. http://www.subgenius
 
 The ONLY crypto-currency accepted on the Pleasure Saucers. https://www.dobbscoin.info
 
-Maybe you've come into a large inheritance, or your income just suddenly popped. 
-Maybe you gave birth to quintuplets or been recently divorced. Or maybe you just 
-feel uneasy about your money; where it's going or how far it will take you in the 
+Maybe you've come into a large inheritance, or your income just suddenly popped.
+Maybe you gave birth to quintuplets or been recently divorced. Or maybe you just
+feel uneasy about your money; where it's going or how far it will take you in the
 future. Whatever your problem is, Dobbscoin can help you.
 
 Will you join TheConspiracy’s mindless atheistic unknowing servitude to the Elder Bankers of the Universe and their MINIONS in some hideous World Government, or will you GET SLACK and FIGHT FOR FREEDOM as a zeal-crazed Priest-Warrior for ODIN?
 
-Give yourself to (Bob) freely, joyously, without an atom of restraint --NOW -- and your worries are over. 
+Give yourself to (Bob) freely, joyously, without an atom of restraint --NOW -- and your worries are over.
 
-Get in on the ground floor of this lucrative alt., while difficulty is low. 
+Get in on the ground floor of this lucrative alt., while difficulty is low.
 
 Eternal Salvation or Triple your Money Back!!
 
@@ -21,9 +21,9 @@ What is Dobbscoin?
 ----------------
 
 Dobbscoin is an excrimental new digital currency that enables the sending of
-instant Slack to anyone, anywhere in the omniverse. Dobbscoin uses peer-to-peer 
-technology to operate with no central authority: managing transactions and 
-issuing Slack is carried out collectively by the network. 
+instant Slack to anyone, anywhere in the omniverse. Dobbscoin uses peer-to-peer
+technology to operate with no central authority: managing transactions and
+issuing Slack is carried out collectively by the network.
 
 For more information, as well as an immediately useable binary version of
 the Dobbscoin Core software, see https://github.com/dobbscoin/dobbscoin-source/releases
@@ -129,3 +129,5 @@ Dobbscoin Core is a multithreaded application, and deadlocks or other multithrea
 can be very difficult to track down. Compiling with -DDEBUG_LOCKORDER (configure
 CXXFLAGS="-DDEBUG_LOCKORDER -g") inserts run-time checks to keep track of which locks
 are held, and adds warnings to the debug.log file if inconsistencies are detected.
+
+Killroy was here.
