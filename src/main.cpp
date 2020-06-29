@@ -1314,7 +1314,7 @@ CAmount GetBlockValue(int nHeight, const CAmount& nFees)
     } 
     
     //!Double check, will force 1.5 as of 10500000 as a failsafe.
-    if (nSubsidy = nBlockRewardMinimumCoin) {nSubsidy = nBlockRewardEndCoin;}
+    if (nSubsidy <= nBlockRewardMinimumCoin) {nSubsidy = nBlockRewardEndCoin;}
     
     return nSubsidy + nFees;
 }
