@@ -1274,6 +1274,9 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex)
     return true;
 }
 
+static const int64_t nBlockRewardMinimumCoin = 0.5 * COIN;
+static const int64_t nBlockRewardEndCoin = 1.5 * COIN;
+
 CAmount GetBlockValue(int nHeight, const CAmount& nFees)
 {
     CAmount nSubsidy = 50 * COIN;
@@ -1295,9 +1298,23 @@ CAmount GetBlockValue(int nHeight, const CAmount& nFees)
     {
         nSubsidy=10*COIN;
     }
-    // Subsidy is cut in half every 210000 blocks, which will occur approximately every 4 years
-    nSubsidy >>= (nHeight / 210000);
 
+    //Subsidy is cut in half every 210000 blocks, which will occur approximately every 4 years
+    //! Require block 951750 or lower to consider halved blocks relevant.
+    if(!Params().AllowMinDifficultyBlocks() && nHeight<=951752)
+    {	
+    	nSubsidy >>= (nHeight / 210000);
+    }
+    
+    //!Hardset the 'hardfork' point at this point we'll only make blocks of 1.5 coins.
+    if(!Params().AllowMinDifficultyBlocks() && nHeight>=951753)
+    {
+        nSubsidy=1.5*COIN;
+    } 
+    
+    //!Double check, will force 1.5 as of 10500000 as a failsafe.
+    if (nSubsidy <= nBlockRewardMinimumCoin) {nSubsidy = nBlockRewardEndCoin;}
+    
     return nSubsidy + nFees;
 }
 
