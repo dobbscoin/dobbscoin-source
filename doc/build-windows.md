@@ -121,7 +121,7 @@ Build using:
     make HOST=x86_64-w64-mingw32
     cd ..
     ./autogen.sh
-    CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
+    CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=$(pwd)/depends/x86_64-w64-mingw32/
     make # use "-j N" for N parallel jobs
     sudo bash -c "echo 1 > /proc/sys/fs/binfmt_misc/status" # Enable WSL support for Win32 applications.
 
