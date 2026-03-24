@@ -1,0 +1,7 @@
+[main]
+host = https://www.transifex.com
+
+[dobbscoin.qt-translation-010x]
+file_filter = src/qt/locale/dobbscoin_<lang>.ts
+source_file = src/qt/locale/dobbscoin_en.ts
+source_lang = en

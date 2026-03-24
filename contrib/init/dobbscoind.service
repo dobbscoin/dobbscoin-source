@@ -1,0 +1,22 @@
+[Unit]
+Description=Dobbscoin's distributed currency daemon
+After=network.target
+
+[Service]
+User=dobbscoin
+Group=dobbscoin
+
+Type=forking
+PIDFile=/var/lib/dobbscoind/dobbscoind.pid
+ExecStart=/usr/bin/dobbscoind -daemon -pid=/var/lib/dobbscoind/dobbscoind.pid \
+-conf=/etc/dobbscoin/dobbscoin.conf -datadir=/var/lib/dobbscoind -disablewallet
+
+Restart=always
+PrivateTmp=true
+TimeoutStopSec=60s
+TimeoutStartSec=2s
+StartLimitInterval=120s
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,27 @@
+# /etc/conf.d/dobbscoind: config file for /etc/init.d/dobbscoind
+
+# Config file location
+#DOBBSCOIND_CONFIGFILE="/etc/dobbscoin/dobbscoin.conf"
+
+# What directory to write pidfile to?  (created and owned by $DOBBSCOIND_USER)
+#DOBBSCOIND_PIDDIR="/var/run/dobbscoind"
+
+# What filename to give the pidfile
+#DOBBSCOIND_PIDFILE="${DOBBSCOIND_PIDDIR}/dobbscoind.pid"
+
+# Where to write dobbscoind data (be mindful that the blockchain is large)
+#DOBBSCOIND_DATADIR="/var/lib/dobbscoind"
+
+# User and group to own dobbscoind process
+#DOBBSCOIND_USER="dobbscoin"
+#DOBBSCOIND_GROUP="dobbscoin"
+
+# Path to dobbscoind executable
+#DOBBSCOIND_BIN="/usr/bin/dobbscoind"
+
+# Nice value to run dobbscoind under
+#DOBBSCOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+DOBBSCOIND_OPTS="-disablewallet"
+

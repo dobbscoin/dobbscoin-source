@@ -1,0 +1,86 @@
+#!/sbin/runscript
+
+# backward compatibility for existing gentoo layout 
+#
+if [ -d "/var/lib/dobbscoin/.dobbscoin" ]; then
+	DOBBSCOIND_DEFAULT_DATADIR="/var/lib/dobbscoin/.dobbscoin"
+else
+	DOBBSCOIND_DEFAULT_DATADIR="/var/lib/dobbscoind"
+fi
+
+DOBBSCOIND_CONFIGFILE=${DOBBSCOIND_CONFIGFILE:-/etc/dobbscoin/dobbscoin.conf}
+DOBBSCOIND_PIDDIR=${DOBBSCOIND_PIDDIR:-/var/run/dobbscoind}
+DOBBSCOIND_PIDFILE=${DOBBSCOIND_PIDFILE:-${DOBBSCOIND_PIDDIR}/dobbscoind.pid}
+DOBBSCOIND_DATADIR=${DOBBSCOIND_DATADIR:-${DOBBSCOIND_DEFAULT_DATADIR}}
+DOBBSCOIND_USER=${DOBBSCOIND_USER:-dobbscoin}
+DOBBSCOIND_GROUP=${DOBBSCOIND_GROUP:-dobbscoin}
+DOBBSCOIND_BIN=${DOBBSCOIND_BIN:-/usr/bin/dobbscoind}
+
+name="Dobbscoin Core Daemon"
+description="Dobbscoin crypto-currency p2p network daemon"
+
+command="/usr/bin/dobbscoind"
+command_args="-pid=\"${DOBBSCOIND_PIDFILE}\" \
+		-conf=\"${DOBBSCOIND_CONFIGFILE}\" \
+		-datadir=\"${DOBBSCOIND_DATADIR}\" \
+		-daemon \
+		${DOBBSCOIND_OPTS}"
+
+required_files="${DOBBSCOIND_CONFIGFILE}"
+start_stop_daemon_args="-u ${DOBBSCOIND_USER} \
+			-N ${DOBBSCOIND_NICE:-0} -w 2000"
+pidfile="${DOBBSCOIND_PIDFILE}"
+retry=60
+
+depend() {
+	need localmount net
+}
+
+# verify
+# 1) that the datadir exists and is writable (or create it)
+# 2) that a directory for the pid exists and is writable
+# 3) ownership and permissions on the config file
+start_pre() {
+	checkpath \
+	-d \
+	--mode 0750 \
+	--owner "${DOBBSCOIND_USER}:${DOBBSCOIND_GROUP}" \
+	"${DOBBSCOIND_DATADIR}"
+
+	checkpath \
+	-d \
+	--mode 0755 \
+	--owner "${DOBBSCOIND_USER}:${DOBBSCOIND_GROUP}" \
+	"${DOBBSCOIND_PIDDIR}"
+
+	checkpath -f \
+	-o ${DOBBSCOIND_USER}:${DOBBSCOIND_GROUP} \
+	-m 0660 \
+	${DOBBSCOIND_CONFIGFILE}
+
+	checkconfig || return 1
+}
+
+checkconfig()
+{
+	if ! grep -qs '^rpcpassword=' "${DOBBSCOIND_CONFIGFILE}" ; then
+		eerror ""
+		eerror "ERROR: You must set a secure rpcpassword to run dobbscoind."
+		eerror "The setting must appear in ${DOBBSCOIND_CONFIGFILE}"
+		eerror ""
+		eerror "This password is security critical to securing wallets "
+		eerror "and must not be the same as the rpcuser setting."
+		eerror "You can generate a suitable random password using the following"
+		eerror "command from the shell:"
+		eerror ""
+		eerror "bash -c 'tr -dc a-zA-Z0-9 < /dev/urandom | head -c32 && echo'"
+		eerror ""
+		eerror "It is also recommended that you also set alertnotify so you are "
+		eerror "notified of problems:"
+		eerror ""
+		eerror "ie: alertnotify=echo %%s | mail -s \"Dobbscoin Alert\"" \
+			"admin@foo.com"
+		eerror ""
+		return 1
+	fi
+}
