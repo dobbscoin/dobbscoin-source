@@ -26,6 +26,8 @@
 
 #include <boost/filesystem/path.hpp>
 #include <boost/thread/exceptions.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 extern std::map<std::string, std::string> mapArgs;
 extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
