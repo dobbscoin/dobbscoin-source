@@ -14,6 +14,9 @@
 
 #include <boost/circular_buffer.hpp>
 
+#include <limits>
+#include <random>
+
 using namespace std;
 
 CTxMemPoolEntry::CTxMemPoolEntry():
@@ -239,7 +242,8 @@ public:
             // Insert at most 10 random entries per bucket, otherwise a single block
             // can dominate an estimate:
             if (e.size() > 10) {
-                std::random_shuffle(e.begin(), e.end());
+                std::mt19937 rng(static_cast<uint32_t>(GetRand(std::numeric_limits<uint32_t>::max())));
+                std::shuffle(e.begin(), e.end(), rng);
                 e.resize(10);
             }
             BOOST_FOREACH(const CTxMemPoolEntry* entry, e)
