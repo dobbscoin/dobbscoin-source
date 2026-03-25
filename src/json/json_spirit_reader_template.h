@@ -15,6 +15,8 @@
 #include <boost/function.hpp>
 #include <boost/version.hpp>
 
+using namespace boost::placeholders;
+
 #if BOOST_VERSION >= 103800
     #include <boost/spirit/include/classic_core.hpp>
     #include <boost/spirit/include/classic_confix.hpp>

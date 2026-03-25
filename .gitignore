@@ -111,3 +111,29 @@ qa/pull-tester/test.*/*
 !src/leveldb*/Makefile
 
 /doc/doxygen/
+
+# --- Runtime / node data (DO NOT COMMIT) ---
+
+# Blockchain data
+blocks/
+chainstate/
+database/
+
+# Wallets
+wallet.dat
+*.wallet
+
+# Node runtime
+*.pid
+*.lock
+
+# Configuration / secrets
+*.conf
+.env
+.wallet_config.php
+
+# Runtime logs directory
+logs/
+
+# Local data directory
+.dobbscoin/
