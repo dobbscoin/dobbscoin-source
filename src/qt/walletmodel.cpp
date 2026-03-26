@@ -205,7 +205,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     int nAddresses = 0;
 
     // Pre-check input data for validity
-    foreach(const SendCoinsRecipient &rcp, recipients)
+    for (const SendCoinsRecipient& rcp : recipients)
     {
         if (rcp.paymentRequest.IsInitialized())
         {   // PaymentRequest...
@@ -297,7 +297,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         CWalletTx *newTx = transaction.getTransaction();
 
         // Store PaymentRequests in wtx.vOrderForm in wallet.
-        foreach(const SendCoinsRecipient &rcp, transaction.getRecipients())
+        for (const SendCoinsRecipient& rcp : transaction.getRecipients())
         {
             if (rcp.paymentRequest.IsInitialized())
             {
@@ -322,7 +322,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 
     // Add addresses / update labels that we've sent to to the address book,
     // and emit coinsSent signal for each recipient
-    foreach(const SendCoinsRecipient &rcp, transaction.getRecipients())
+    for (const SendCoinsRecipient& rcp : transaction.getRecipients())
     {
         // Don't touch the address book when we have a payment request
         if (!rcp.paymentRequest.IsInitialized())

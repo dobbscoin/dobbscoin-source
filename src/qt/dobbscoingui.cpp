@@ -870,7 +870,7 @@ void DobbscoinGUI::dropEvent(QDropEvent *event)
 {
     if(event->mimeData()->hasUrls())
     {
-        foreach(const QUrl &uri, event->mimeData()->urls())
+        for (const QUrl& uri : event->mimeData()->urls())
         {
             emit receivedURI(uri.toString());
         }
@@ -1043,7 +1043,7 @@ void UnitDisplayStatusBarControl::mousePressEvent(QMouseEvent *event)
 void UnitDisplayStatusBarControl::createContextMenu()
 {
     menu = new QMenu();
-    foreach(DobbscoinUnits::Unit u, DobbscoinUnits::availableUnits())
+    for (DobbscoinUnits::Unit u : DobbscoinUnits::availableUnits())
     {
         QAction *menuAction = new QAction(QString(DobbscoinUnits::name(u)), this);
         menuAction->setData(QVariant(u));

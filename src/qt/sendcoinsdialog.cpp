@@ -217,7 +217,7 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     // Format confirmation message
     QStringList formatted;
-    foreach(const SendCoinsRecipient &rcp, recipients)
+    for (const SendCoinsRecipient& rcp : recipients)
     {
         // generate bold amount string
         QString amount = "<b>" + DobbscoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
@@ -300,7 +300,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     questionString.append("<hr />");
     CAmount totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
     QStringList alternativeUnits;
-    foreach(DobbscoinUnits::Unit u, DobbscoinUnits::availableUnits())
+    for (DobbscoinUnits::Unit u : DobbscoinUnits::availableUnits())
     {
         if(u != model->getOptionsModel()->getDisplayUnit())
             alternativeUnits.append(DobbscoinUnits::formatHtmlWithUnit(u, totalAmount));
