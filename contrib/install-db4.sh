@@ -13,28 +13,24 @@ BDB_PREFIX="$HOME/db4"
 BDB_TARBALL="db-$BDB_VERSION.tar.gz"
 BDB_SOURCE_DIR="$HOME/db-$BDB_VERSION"
 
+cd "$HOME"
+
 echo "Installing Berkeley DB $BDB_VERSION"
 echo "Target directory:"
 echo "$BDB_PREFIX"
 echo
 
-cd "$HOME"
-
-# If already installed, exit cleanly
+# Skip if already installed
 if [ -f "$BDB_PREFIX/include/db_cxx.h" ]; then
     echo "Berkeley DB already installed at:"
     echo "$BDB_PREFIX"
-    echo
-    echo "Nothing to do."
     exit 0
 fi
 
-# Download source if missing
+# Download source
 if [ ! -f "$BDB_TARBALL" ]; then
     echo "Downloading Berkeley DB source..."
     wget https://download.oracle.com/berkeley-db/$BDB_TARBALL
-else
-    echo "Source archive already present."
 fi
 
 echo
@@ -43,21 +39,17 @@ echo "Extracting source..."
 rm -rf "$BDB_SOURCE_DIR"
 tar -xzf "$BDB_TARBALL"
 
-cd "$BDB_SOURCE_DIR"
-
-echo
-echo "Applying modern GCC compatibility patch..."
-
-# Fix for __atomic_compare_exchange conflict
-sed -i 's/__atomic_compare_exchange/__atomic_compare_exchange_db/g' dbinc/atomic.h
-
-cd build_unix
+cd "$BDB_SOURCE_DIR/build_unix"
 
 echo
 echo "Configuring build..."
 
-export CFLAGS="-O2 -fPIC"
-export CXXFLAGS="-O2 -fPIC"
+# Critical compatibility flags for modern compilers
+
+export CCFLAGS="-std=gnu89"
+export CFLAGS="-std=gnu89 -fPIC"
+export CXXFLAGS="-std=gnu++98 -fPIC"
+export LDFLAGS="-pthread"
 
 ../dist/configure \
     --enable-cxx \
@@ -67,6 +59,8 @@ export CXXFLAGS="-O2 -fPIC"
 
 echo
 echo "Building Berkeley DB..."
+
+make clean
 
 make -j$(nproc)
 
@@ -80,14 +74,15 @@ echo "=========================================="
 echo " Berkeley DB 4.8 installed successfully"
 echo "=========================================="
 echo
-echo "Location:"
-echo "$BDB_PREFIX"
+
+echo "Verify installation:"
 echo
-echo "Verify installation with:"
-echo
+
 echo "ls $BDB_PREFIX/include/db_cxx.h"
+
 echo
-echo "To build Dobbscoin with compatible BDB:"
+echo "Then build Dobbscoin with:"
 echo
+
 echo "./configure --with-bdb=$BDB_PREFIX"
 echo
