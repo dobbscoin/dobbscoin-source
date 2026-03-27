@@ -43,14 +43,21 @@ echo "Extracting source..."
 rm -rf "$BDB_SOURCE_DIR"
 tar -xzf "$BDB_TARBALL"
 
-cd "$BDB_SOURCE_DIR/build_unix"
+cd "$BDB_SOURCE_DIR"
+
+echo
+echo "Applying modern GCC compatibility patch..."
+
+# Fix for __atomic_compare_exchange conflict
+sed -i 's/__atomic_compare_exchange/__atomic_compare_exchange_db/g' dbinc/atomic.h
+
+cd build_unix
 
 echo
 echo "Configuring build..."
 
-# Fix for modern GCC atomic conflicts
-export CFLAGS="-std=gnu89"
-export CXXFLAGS="-std=gnu++98"
+export CFLAGS="-O2 -fPIC"
+export CXXFLAGS="-O2 -fPIC"
 
 ../dist/configure \
     --enable-cxx \
