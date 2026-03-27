@@ -10,6 +10,8 @@ echo
 
 BDB_VERSION="4.8.30.NC"
 BDB_PREFIX="$HOME/db4"
+BDB_TARBALL="db-$BDB_VERSION.tar.gz"
+BDB_SOURCE_DIR="$HOME/db-$BDB_VERSION"
 
 echo "Installing Berkeley DB $BDB_VERSION"
 echo "Target directory:"
@@ -18,20 +20,37 @@ echo
 
 cd "$HOME"
 
-if [ ! -f "db-$BDB_VERSION.tar.gz" ]; then
-    echo "Downloading Berkeley DB..."
-    wget https://download.oracle.com/berkeley-db/db-$BDB_VERSION.tar.gz
+# If already installed, exit cleanly
+if [ -f "$BDB_PREFIX/include/db_cxx.h" ]; then
+    echo "Berkeley DB already installed at:"
+    echo "$BDB_PREFIX"
+    echo
+    echo "Nothing to do."
+    exit 0
+fi
+
+# Download source if missing
+if [ ! -f "$BDB_TARBALL" ]; then
+    echo "Downloading Berkeley DB source..."
+    wget https://download.oracle.com/berkeley-db/$BDB_TARBALL
+else
+    echo "Source archive already present."
 fi
 
 echo
 echo "Extracting source..."
 
-tar -xzf db-$BDB_VERSION.tar.gz
+rm -rf "$BDB_SOURCE_DIR"
+tar -xzf "$BDB_TARBALL"
 
-cd db-$BDB_VERSION/build_unix
+cd "$BDB_SOURCE_DIR/build_unix"
 
 echo
 echo "Configuring build..."
+
+# Fix for modern GCC atomic conflicts
+export CFLAGS="-std=gnu89"
+export CXXFLAGS="-std=gnu++98"
 
 ../dist/configure \
     --enable-cxx \
@@ -56,6 +75,10 @@ echo "=========================================="
 echo
 echo "Location:"
 echo "$BDB_PREFIX"
+echo
+echo "Verify installation with:"
+echo
+echo "ls $BDB_PREFIX/include/db_cxx.h"
 echo
 echo "To build Dobbscoin with compatible BDB:"
 echo
