@@ -62,15 +62,26 @@ echo
 echo "Installing..."
 
 make install
-
+echo
 echo
 echo "=========================================="
 echo " Berkeley DB 4.8 installed successfully"
 echo "=========================================="
 echo
-echo "Verify with:"
+
+echo "Verify installation:"
+echo
 echo "ls $BDB_PREFIX/include/db_cxx.h"
 echo
-echo "Then build Dobbscoin:"
+
+echo "Next steps to build Dobbscoin:"
 echo
-echo "./configure --with-bdb=$BDB_PREFIX"
+
+echo "cd ~/dobbscoin-source"
+echo
+echo "./autogen.sh"
+echo
+echo "./configure --with-bdb=$HOME/db4"
+echo
+echo "make -j\$(nproc)"
+echo
