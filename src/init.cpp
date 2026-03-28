@@ -395,12 +395,13 @@ std::string HelpMessage(HelpMessageMode mode)
 std::string LicenseInfo()
 {
     return "\n" +
-           FormatParagraph(_("Dobbscoin: Where Culture becomes Capital") + "\n\n" +
-           FormatParagraph(_("Backed By Nothing, Powered By Everything.") + "\n\n" +
+           FormatParagraph(_("Dobbscoin: Where Culture becomes Capital")) + "\n" +
+           FormatParagraph(_("(BOB) Dobbscoin is the official Crypto-Currency of the Church of the SubGenius")) + "\n" +
+           FormatParagraph(_("Backed By Nothing, Powered By Everything.")) + "\n" +
            "\n" +
-           FormatParagraph(_("Copyright (C) 2013-2026 The Dobbscoin Developers") + "\n\n" + 
-		   FormatParagraph(_("\tat SubGenius.Finance -Praise \"BOB\"") + "\n\n" +
-           FormatParagraph(_("Copyright (C) 1953-2026 The SubGenius Foundation")) + "\n" +
+           FormatParagraph(_("Copyright (C) 2013-2026 The Dobbscoin Developers")) + "\n" +
+           "at https://subgenius.finance -Praise \"BOB\"\n" +
+	   FormatParagraph(_("Copyright (C) 1953-2026 The SubGenius Foundation")) + "\n" +
            FormatParagraph(_("Copyright (C) 2009-2026 The Bitcoin Core Developers")) + "\n" +
            "\n" +
            FormatParagraph(_("The Graven Image of 'Bob' Dobbs' Face is a registered trademark of The SubGenius Foundation, Inc. https://subgenius.com -Praise 'Bob'")) + "\n\n" +
