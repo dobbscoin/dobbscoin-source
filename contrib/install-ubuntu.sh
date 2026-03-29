@@ -4,23 +4,16 @@ set -euo pipefail
 
 ##############################################################################
 #
-# Dobbscoin Deterministic Installer
+# Dobbscoin Deterministic Build Script
 #
-# Local install:
-#   ~/dobbscoin
-#
-# System install:
-#   /usr/local/bin
-#
-# Prompts:
-#   Build GUI? (default NO after 15 seconds)
-#   Install location? (default LOCAL after 15 seconds)
+# This script builds Dobbscoin but NEVER installs or overwrites binaries.
+# Operator performs deployment manually.
 #
 ##############################################################################
 
 echo
 echo "=============================================="
-echo " Dobbscoin Deterministic Installer"
+echo " Dobbscoin Build Script"
 echo "=============================================="
 echo
 
@@ -60,10 +53,8 @@ echo
 
 if [ "${GUI_CHOICE:-2}" = "1" ]; then
     BUILD_GUI="yes"
-    echo "GUI build ENABLED"
 else
     BUILD_GUI="no"
-    echo "GUI build DISABLED"
 fi
 
 ##############################################################################
@@ -117,7 +108,7 @@ if [ "$BUILD_GUI" = "yes" ]; then
 fi
 
 ##############################################################################
-# Install Berkeley DB 4.8
+# Install Berkeley DB
 ##############################################################################
 
 echo
@@ -126,7 +117,7 @@ echo "Installing Berkeley DB 4.8..."
 bash contrib/install-db4.sh
 
 ##############################################################################
-# Build Dobbscoin
+# Build
 ##############################################################################
 
 echo
@@ -157,125 +148,67 @@ echo "Building..."
 make -j$(nproc)
 
 ##############################################################################
-# Ask install location
+# Verify build
 ##############################################################################
 
 echo
-echo "----------------------------------------------"
-echo " Install location:"
-echo
-echo " 1) Local user install (~/dobbscoin)"
-echo " 2) System-wide install (/usr/local/bin)"
-echo
-echo "Defaulting to LOCAL install in 15 seconds..."
-echo "----------------------------------------------"
-echo
+echo "Verifying build..."
 
-read -t 15 -p "Select option (1 or 2): " INSTALL_CHOICE || true
+REQUIRED_BINS=(
+    src/dobbscoind
+    src/dobbscoin-cli
+    src/dobbscoin-tx
+)
 
-echo
-
-if [ "${INSTALL_CHOICE:-1}" = "2" ]; then
-
-    echo "Installing system-wide..."
-
-    sudo make install
-
-    INSTALL_PATH="/usr/local/bin"
-
-else
-
-    echo "Installing locally..."
-
-    INSTALL_PATH="$HOME/dobbscoin"
-
-    mkdir -p "$INSTALL_PATH"
-
-    echo
-    echo "Copying binaries..."
-
-    cp src/dobbscoind "$INSTALL_PATH/"
-    cp src/dobbscoin-cli "$INSTALL_PATH/"
-    cp src/dobbscoin-tx "$INSTALL_PATH/"
-
-    if [ "$BUILD_GUI" = "yes" ]; then
-        cp src/qt/dobbscoin-qt "$INSTALL_PATH/"
-    fi
-
-    chmod +x "$INSTALL_PATH"/*
-
-    echo
-    echo "Stripping binaries..."
-
-    strip "$INSTALL_PATH"/dobbscoind || true
-    strip "$INSTALL_PATH"/dobbscoin-cli || true
-    strip "$INSTALL_PATH"/dobbscoin-tx || true
-
-    if [ "$BUILD_GUI" = "yes" ]; then
-        strip "$INSTALL_PATH"/dobbscoin-qt || true
-    fi
-
-fi
-
-##############################################################################
-# Ensure data directory exists
-##############################################################################
-
-mkdir -p "$HOME/.dobbscoin"
-
-##############################################################################
-# Verify required binaries
-##############################################################################
-
-echo
-echo "Verifying installation..."
-
-for BIN in dobbscoind dobbscoin-cli dobbscoin-tx; do
-    if [ ! -f "$INSTALL_PATH/$BIN" ]; then
-        echo "ERROR: $BIN not installed"
+for BIN in "${REQUIRED_BINS[@]}"; do
+    if [ ! -f "$BIN" ]; then
+        echo
+        echo "ERROR: Missing binary:"
+        echo "$BIN"
         exit 1
     fi
 done
 
-##############################################################################
-# PATH guidance for local installs
-##############################################################################
-
-if [ "$INSTALL_PATH" = "$HOME/dobbscoin" ]; then
-
-    echo
-    echo "Optional: add Dobbscoin to your PATH"
-    echo
-    echo "Add this line to ~/.bashrc or ~/.profile:"
-    echo
-    echo 'export PATH="$HOME/dobbscoin:$PATH"'
-    echo
-
+if [ "$BUILD_GUI" = "yes" ]; then
+    if [ ! -f src/qt/dobbscoin-qt ]; then
+        echo
+        echo "ERROR: Missing GUI binary"
+        exit 1
+    fi
 fi
 
 ##############################################################################
-# Final output
+# Success message
 ##############################################################################
 
 echo
 echo "=============================================="
-echo " Installation complete"
+echo " Build complete"
 echo "=============================================="
 echo
 
-echo "Installed to:"
-echo
-echo "  $INSTALL_PATH"
+echo "Binaries are located at:"
 echo
 
-echo "Available binaries:"
+echo "  src/dobbscoind"
+echo "  src/dobbscoin-cli"
+echo "  src/dobbscoin-tx"
+
+if [ "$BUILD_GUI" = "yes" ]; then
+    echo "  src/qt/dobbscoin-qt"
+fi
+
+echo
+echo "No files were installed or overwritten."
 echo
 
-ls -1 "$INSTALL_PATH"
-
-echo
-echo "Test command:"
+echo "Deploy manually when ready:"
 echo
 
-echo "  $INSTALL_PATH/dobbscoind --version"
+echo "  cp src/dobbscoind ~/dobbscoin/"
+echo "  cp src/dobbscoin-cli ~/dobbscoin/"
+echo "  cp src/dobbscoin-tx ~/dobbscoin/"
+echo
+
+echo "=============================================="
 echo
