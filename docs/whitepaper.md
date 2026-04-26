@@ -8,7 +8,7 @@
 
 ## Abstract
 
-Dobbscoin (ticker: **BOB**) is a peer-to-peer cryptocurrency forked from
+Dobbscoin (ticker: **(BOB)**) is a peer-to-peer cryptocurrency forked from
 Bitcoin Core 0.10.x, in operation continuously since **block height zero
 on January 7, 2014**. Its sole purpose is the transfer of **Slack** —
 the One True Currency of the Church of the SubGenius — between sentient
@@ -100,11 +100,11 @@ interaction impossible.
 | BIP32 ext-priv | `0x0488ADE4` (xprv) |
 | Decimals | 8 (satoshis) |
 | Hash function | Double-SHA256 (PoW) |
-| Block reward | 50 BOB initial, halving every 210 000 blocks |
+| Block reward | 50 (BOB) initial, halving every 210 000 blocks |
 | Target block time | 10 minutes |
 | Difficulty retarget | Every 2 016 blocks (~14 days) |
 | PoW difficulty floor | `~uint256(0) >> 20` (intentionally lower than Bitcoin's) |
-| Max supply (asymptotic) | ~21 000 000 BOB |
+| Max supply (asymptotic) | ~21 000 000 (BOB) |
 
 The lower difficulty floor is intentional. Dobbscoin is not optimized
 for the world's largest mining cartel; it is optimized for a hobbyist
@@ -129,23 +129,23 @@ controlled chain conditions.
 Dobbscoin's emission curve is identical in shape to Bitcoin's:
 
 ```
-Era 1 (blocks      0  – 209 999):  50 BOB / block
-Era 2 (blocks 210 000  – 419 999):  25 BOB / block
-Era 3 (blocks 420 000  – 629 999): 12.5 BOB / block
-Era 4 (blocks 630 000  – 839 999): 6.25 BOB / block
-…halving forever, asymptotic to ~21 000 000 BOB total.
+Era 1 (blocks      0  – 209 999):  50 (BOB) / block
+Era 2 (blocks 210 000  – 419 999):  25 (BOB) / block
+Era 3 (blocks 420 000  – 629 999): 12.5 (BOB) / block
+Era 4 (blocks 630 000  – 839 999): 6.25 (BOB) / block
+…halving forever, asymptotic to ~21 000 000 (BOB) total.
 ```
 
 At a 10-minute target, each era spans roughly four years. As of this
 writing (2026, ~12 years post-genesis), Dobbscoin is in its **fourth
-era**, with the per-block reward at 6.25 BOB. The remaining inflation
+era**, with the per-block reward at 6.25 (BOB). The remaining inflation
 through the end of the asymptote is small in absolute terms.
 
 There was **no premine**. There was **no presale**. There were **no
 "strategic partners"**. The genesis block produced one (1) satoshi as a
 ceremonial output, and that satoshi is permanently unspendable due to
 the historical Bitcoin Core peculiarity that the genesis coinbase
-output's UTXO is not added to the database. The first spendable BOB
+output's UTXO is not added to the database. The first spendable (BOB)
 came from the first regular mining reward, available to anyone with a
 working `dobbscoind`.
 
@@ -191,36 +191,36 @@ The chain itself remains exactly as eccentric as the day it launched.
 ## 6. Cross-Chain Expansion: The wBOB Bridge
 
 In 2026 Dobbscoin gained an EVM presence via the **wBOB bridge** — a
-1:1 wrapped representation of BOB on **Gnosis Chain** (chainId 100).
+1:1 wrapped representation of (BOB) on **Gnosis Chain** (chainId 100).
 This is detailed in a separate companion paper (`wbob-bridge` repo,
 `docs/whitepaper.md`); the summary follows.
 
 The bridge consists of:
 
-- A **lock-mint** path: Users send BOB to a watched Dobbscoin address.
+- A **lock-mint** path: Users send (BOB) to a watched Dobbscoin address.
   After 6 confirmations, a 3-of-5 threshold of independent watcher
   EOAs sign an EIP-712 `MintAuthorization`, and any party can submit
   the assembled signatures to mint the equivalent wBOB on Gnosis.
 - A **burn-release** path: Users call `requestWithdrawal()` on the
   Gnosis-side `BridgeController`, which burns their wBOB and emits an
   event. The bridge backend constructs and broadcasts a Dobbscoin
-  payout transaction to the user-specified BOB address. Three Dobbscoin
+  payout transaction to the user-specified (BOB) address. Three Dobbscoin
   confirmations later, the order is `COMPLETED`.
 
 The bridge does **not** alter Dobbscoin's consensus, supply, or wire
 protocol. It is an external system that observes the canonical chain,
-locks BOB into addresses that no single party can spend alone, and mints
+locks (BOB) into addresses that no single party can spend alone, and mints
 a corresponding token on a chain that has actual DeFi rails.
 
-This means BOB holders may now:
+This means (BOB) holders may now:
 
 - Provide liquidity in DEXes (e.g., the live WXDAI/wBOB Balancer CoW AMM
   pool on Gnosis).
-- Use BOB as collateral in Gnosis-native lending markets (when one
+- Use (BOB) as collateral in Gnosis-native lending markets (when one
   emerges that recognizes the asset).
-- Participate in xDAI-denominated yield strategies without selling BOB.
+- Participate in xDAI-denominated yield strategies without selling (BOB).
 
-The bridge's existence is a force multiplier on Slack: BOB no longer has
+The bridge's existence is a force multiplier on Slack: (BOB) no longer has
 to leave the SubGenius cosmology to participate in the broader DeFi
 ecosystem. The Conspiracy's tools, used against the Conspiracy.
 
@@ -238,7 +238,7 @@ applied to a coin that does not pretend to be money. There is:
 - No buybacks, burns, halvening-bonus tax-loss-harvesting yield-flywheel
   governance-token meta-narrative
 
-There is one (1) thing: a chain that produces BOB at a known, schedule-
+There is one (1) thing: a chain that produces (BOB) at a known, schedule-
 gated rate, for whichever miners care enough to point hash power at it.
 That's it. That's the whole monetary policy.
 
@@ -279,7 +279,7 @@ generation of Slack — but in deference to ecosystem expectations:
   and Windows. Reproducible release artifacts.
 - **2026 H2**: Widen wBOB bridge audit and redundancy. Onboard
   independent watcher operators. Verified contracts on Gnosisscan.
-- **2026 H2**: Submission of BOB and wBOB to canonical token registries
+- **2026 H2**: Submission of (BOB) and wBOB to canonical token registries
   (Gnosis tokenlists, CoinGecko, CoinMarketCap).
 - **2027+**: Whatever "Bob" tells us to do. Likely nothing dramatic.
   The chain is the chain.
@@ -299,12 +299,12 @@ no exchange listings to speak of (and the bridge is, deliberately, an
 end-run around the need for them). What it has is uptime, an emission
 schedule that hasn't deviated from spec, a community whose membership
 test is having a working sense of humor, and a ticker symbol that
-spells "BOB."
+spells "Bob."
 
 This is sufficient. The Conspiracy will continue to call it a joke.
 The joke will continue to clear blocks every two minutes.
 
-**PRAISE "BOB".**
+**PRAISE "Bob".**
 
 ---
 
