@@ -137,3 +137,9 @@ logs/
 
 # Local data directory
 .dobbscoin/
+
+# Build artifacts (added 2026-04-26)
+ccache
+configure~
+depends/x86_64-w64-mingw32/
+build-windows-autonomous.log

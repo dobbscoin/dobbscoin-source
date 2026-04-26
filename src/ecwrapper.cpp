@@ -11,6 +11,33 @@
 #include <openssl/ecdsa.h>
 #include <openssl/obj_mac.h>
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+static void ECDSA_SIG_get0_compat(const ECDSA_SIG* sig, const BIGNUM** pr, const BIGNUM** ps)
+{
+    if (pr) {
+        *pr = sig->r;
+    }
+    if (ps) {
+        *ps = sig->s;
+    }
+}
+
+static int ECDSA_SIG_set0_compat(ECDSA_SIG* sig, BIGNUM* r, BIGNUM* s)
+{
+    if (r == NULL || s == NULL) {
+        return 0;
+    }
+    BN_clear_free(sig->r);
+    BN_clear_free(sig->s);
+    sig->r = r;
+    sig->s = s;
+    return 1;
+}
+
+#define ECDSA_SIG_get0 ECDSA_SIG_get0_compat
+#define ECDSA_SIG_set0 ECDSA_SIG_set0_compat
+#endif
+
 namespace {
 
 /**

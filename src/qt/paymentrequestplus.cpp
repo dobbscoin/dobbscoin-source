@@ -15,6 +15,11 @@
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+#define EVP_MD_CTX_new EVP_MD_CTX_create
+#define EVP_MD_CTX_free EVP_MD_CTX_destroy
+#endif
+
 #include <QDateTime>
 #include <QDebug>
 #include <QSslCertificate>

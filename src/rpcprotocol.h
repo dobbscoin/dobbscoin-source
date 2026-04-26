@@ -112,10 +112,14 @@ public:
     {
         using namespace boost::asio::ip;
         tcp::resolver resolver(
-        static_cast<boost::asio::io_context&>(
-            stream.get_executor().context()
-        )
-    );
+#if BOOST_VERSION >= 106600
+            static_cast<boost::asio::io_context&>(
+                stream.get_executor().context()
+            )
+#else
+            stream.get_io_service()
+#endif
+        );
         tcp::resolver::iterator endpoint_iterator;
 #if BOOST_VERSION >= 104300
         try {
