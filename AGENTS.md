@@ -2,6 +2,8 @@
 
 Dobbscoin Autonomous Build and Maintenance Policy
 
+@~/claude/dobbscoin-facts.md
+
 ---
 
 ## Purpose

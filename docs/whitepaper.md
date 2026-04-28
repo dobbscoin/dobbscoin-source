@@ -88,28 +88,61 @@ interaction impossible.
 
 ### 3.1 Mainnet
 
-| Parameter | Value |
-|---|---|
-| Network magic (`pchMessageStart`) | `a0 fb 17 83` |
-| Default P2P port | **19985** |
-| Default RPC port | 19984 |
-| DNS seeds | `seed.dobbscoin.info`, `node1.dobbscoin.info`, `node2.dobbscoin.info` |
-| Address prefix (P2PKH) | `0x00` → `1`-addresses (visually identical to BTC; do not cross the streams) |
-| Address prefix (P2SH) | `0x05` → `3`-addresses |
-| BIP32 ext-pub | `0x0488B21E` (xpub) |
-| BIP32 ext-priv | `0x0488ADE4` (xprv) |
-| Decimals | 8 (satoshis) |
-| Hash function | Double-SHA256 (PoW) |
-| Block reward | 50 (BOB) initial, halving every 210 000 blocks |
-| Target block time | 10 minutes |
-| Difficulty retarget | Every 2 016 blocks (~14 days) |
-| PoW difficulty floor | `~uint256(0) >> 20` (intentionally lower than Bitcoin's) |
-| Max supply (asymptotic) | ~21 000 000 (BOB) |
+| Parameter | Value | Source |
+|---|---|---|
+| Network magic (`pchMessageStart`) | `a0 fb 17 83` | `src/chainparams.cpp:111-114` |
+| Default P2P port | **19985** | `src/chainparams.cpp:116` |
+| Default RPC port | 19984 | — |
+| DNS seeds | `seed.dobbscoin.info`, `earlz.net` | `src/chainparams.cpp:156-157` |
+| Address prefix (P2PKH) | `0x00` → `1`-addresses (visually identical to BTC; do not cross the streams) | `src/chainparams.cpp:159` |
+| Address prefix (P2SH) | `0x05` → `3`-addresses | `src/chainparams.cpp:160` |
+| BIP32 ext-pub | `0x0488B21E` (xpub) | `src/chainparams.cpp:162` |
+| BIP32 ext-priv | `0x0488ADE4` (xprv) | `src/chainparams.cpp:163` |
+| Decimals | 8 (satoshis) | upstream |
+| **Proof-of-work hash** | **scrypt** | `src/primitives/block.cpp:19` (`HashScrypt(...)`) |
+| **Tx version policy** | **v1 only — v2+ rejected at mempool** | `src/main.cpp:643`, `src/primitives/transaction.h:178` |
+| **Target block time** | **2 minutes** (since block 68425) | `src/pow.cpp:477-478, 573` |
+| **Difficulty retarget** | **KGW + DigiShield hybrid, every block** | `src/pow.cpp:561-579` (see §3.4) |
+| **Block subsidy** | **1.5 (BOB) per block, perpetual** since block 951753 | `src/main.cpp:1310-1316` (see §4) |
+| PoW difficulty floor | `~uint256(0) >> 20` (intentionally lower than Bitcoin's) | `src/chainparams.cpp:117` |
+| Money sanity ceiling | `MAX_MONEY = 10,000,000,000 (BOB)` (validation cap, **not** a supply cap) | `src/amount.h:28` |
+| Hard supply cap | **None** — see §4 | — |
 
 The lower difficulty floor is intentional. Dobbscoin is not optimized
 for the world's largest mining cartel; it is optimized for a hobbyist
 with a CPU and a sense of humor to participate without being instantly
 crowded out.
+
+The transaction-version policy is the most consequential of the
+"stayed-in-2014" choices: because version 2 transactions (BIP68 / CSV
+relative timelocks) are rejected at the mempool, Dobbscoin does **not**
+support sequence-based timelocks, payment channels with revocable
+states, or native Lightning. This is not a planned feature gap — it is
+a consequence of consensus rules that were never updated, and updating
+them is not on the roadmap. (BOB) is a settlement-only asset.
+
+### 3.4 Difficulty Retarget — KGW + DigiShield Hybrid
+
+Dobbscoin's difficulty algorithm has switched modes three times by
+height-gated `DiffMode` selection in `src/pow.cpp:561-579`:
+
+| Block range | Mode | Algorithm |
+|---|---|---|
+| 0 – 13 578 | V1 | Bitcoin-style retarget every 2 016 blocks |
+| 13 579 – 31 596 | V2 | **Kimoto Gravity Well** (labeled "BOB's Wormh0le (KGW)" in `src/pow.cpp:298`) |
+| 31 597 – 68 424 | V3 | **DigiShield** with 10-minute target, every-block retarget |
+| 68 425 – present | V4 | **DigiShield** with **2-minute target**, every-block retarget |
+
+The V4 retarget (`src/pow.cpp:443-470, 532-558`) uses DigiShield's
+amplitude-filter / asymmetric-bounds design: the next target is computed
+as `target + (actual − target) / 8`, then clamped so difficulty can drop
+faster than it can rise (the actual-timespan upper bound is `1.5 ×
+target`, the lower bound is `0.75 × target`). The practical effect is
+that a multi-pool driving 10× the network hashrate at the chain for an
+hour will see difficulty climb out of their range within a few blocks,
+and difficulty will drop back to honest-miner range within a few blocks
+of their leaving. The drive-by-hashing exploit that hollowed out the
+2013-2014 altcoin cohort no longer functions against (BOB).
 
 ### 3.2 Testnet
 
@@ -126,31 +159,72 @@ controlled chain conditions.
 
 ## 4. Emission Schedule
 
-Dobbscoin's emission curve is identical in shape to Bitcoin's:
+Dobbscoin's emission schedule is **not** the standard Bitcoin curve.
+It started Bitcoin-shaped, was reshaped by a 2014 hard fork that cut
+the block reward and the block time together, and was capped in 2017
+to settle into a perpetual flat-subsidy regime. The full schedule, as
+implemented in `src/main.cpp:1280-1319`:
 
 ```
-Era 1 (blocks      0  – 209 999):  50 (BOB) / block
-Era 2 (blocks 210 000  – 419 999):  25 (BOB) / block
-Era 3 (blocks 420 000  – 629 999): 12.5 (BOB) / block
-Era 4 (blocks 630 000  – 839 999): 6.25 (BOB) / block
-…halving forever, asymptotic to ~21 000 000 (BOB) total.
+Era            Block range            Subsidy        Cause / Source
+─────────────────────────────────────────────────────────────────────────
+Era 1 (10-min) 0       – 68 424      50 (BOB)/block   genesis params
+                                                      (chainparams.cpp:125)
+Adjustment     68 425  – 69 790      10 (BOB)/block   2-min hardfork — keep
+                                                      total rate consistent
+                                                      (main.cpp:1293-1295)
+Era 2 (2-min)  69 791  – 951 752     starts at 10,    Bitcoin-style halving
+                                     halves every     every 210 000 blocks
+                                     210k blocks      (main.cpp:1297-1306)
+Perpetual      951 753 – ∞           1.5 (BOB)/block  hard-coded floor
+                                     forever          (main.cpp:1310-1312)
 ```
 
-At a 10-minute target, each era spans roughly four years. As of this
-writing (2026, ~12 years post-genesis), Dobbscoin is in its **fourth
-era**, with the per-block reward at 6.25 (BOB). The remaining inflation
-through the end of the asymptote is small in absolute terms.
+Concretely, the per-block subsidy followed this trajectory:
+
+| Block height | Subsidy |
+|---|---|
+| 0 – 68 424 | 50 (BOB) |
+| 68 425 – 69 790 | 10 (BOB) (transitional one-off) |
+| 69 791 – 279 790 | 10 (BOB) |
+| 279 791 – 489 790 | 5 (BOB) |
+| 489 791 – 699 790 | 2.5 (BOB) |
+| 699 791 – 909 790 | 1.25 (BOB) → floored to 1.5 by `nBlockRewardMinimumCoin` guard at `main.cpp:1316` |
+| 909 791 – 951 752 | 1.5 (BOB) (floor active) |
+| **951 753 – ∞** | **1.5 (BOB), hard-coded forever** |
+
+(BOB) is therefore **not a deflationary asset**. After block 951 753 —
+which the chain crossed in 2017 — the supply grows linearly at 1.5
+(BOB) per ~2-minute block, or roughly **394 200 (BOB) per year**, in
+perpetuity. There is no asymptote, no halvening event in the future,
+no terminal supply.
+
+The intent of the perpetual floor is to ensure that miners always
+receive a non-trivial reward for securing the chain, even after
+transaction fees have evolved (in either direction). A coin whose
+miner subsidy goes to zero is a coin whose security model rests on
+fee markets that may or may not materialize. (BOB)'s floor sidesteps
+that question.
+
+The `MAX_MONEY` constant defined in `src/amount.h:28` —
+`10,000,000,000 (BOB)` — is a validation-time sanity ceiling (the
+maximum value any single transaction output may carry), **not** a
+chain supply cap. At the perpetual emission rate, the chain would
+require approximately 25 000 years of uninterrupted mining to even
+brush this number.
 
 There was **no premine**. There was **no presale**. There were **no
-"strategic partners"**. The genesis block produced one (1) satoshi as a
-ceremonial output, and that satoshi is permanently unspendable due to
-the historical Bitcoin Core peculiarity that the genesis coinbase
+"strategic partners"**. The genesis block produced one (1) satoshi as
+a ceremonial output, and that satoshi is permanently unspendable due
+to the historical Bitcoin Core peculiarity that the genesis coinbase
 output's UTXO is not added to the database. The first spendable (BOB)
 came from the first regular mining reward, available to anyone with a
 working `dobbscoind`.
 
 This is the SubGenius position on monetary issuance: equality of
-opportunity to grind, not equality of allocation by committee.
+opportunity to grind, not equality of allocation by committee. (BOB)
+will continue to be issued at the perpetual rate for as long as
+"Bob" continues to want it, and presumably therefore forever.
 
 ---
 
@@ -214,8 +288,9 @@ a corresponding token on a chain that has actual DeFi rails.
 
 This means (BOB) holders may now:
 
-- Provide liquidity in DEXes (e.g., the live WXDAI/wBOB Balancer CoW AMM
-  pool on Gnosis).
+- Provide liquidity in Gnosis-native DEXes (current liquidity is on
+  Oku, with execution available via CoW Swap at
+  `https://swap.cow.fi/#/100/swap/xDAI/wBOB`).
 - Use (BOB) as collateral in Gnosis-native lending markets (when one
   emerges that recognizes the asset).
 - Participate in xDAI-denominated yield strategies without selling (BOB).
@@ -228,22 +303,32 @@ ecosystem. The Conspiracy's tools, used against the Conspiracy.
 
 ## 7. Tokenomics, in So Far As We Refuse to Have Any
 
-Dobbscoin's economic model is the unmodified Bitcoin emission curve
-applied to a coin that does not pretend to be money. There is:
+Dobbscoin's economic model is its perpetual emission curve (see §4)
+applied to a coin that does not pretend to be money. The chain itself
+has:
 
 - No development fund
-- No DAO treasury
+- No consensus-layer treasury
 - No quarterly token unlocks
-- No "ecosystem grant" stash
+- No "ecosystem grant" stash baked into the protocol
 - No buybacks, burns, halvening-bonus tax-loss-harvesting yield-flywheel
-  governance-token meta-narrative
+  governance-token meta-narrative welded to consensus
 
 There is one (1) thing: a chain that produces (BOB) at a known, schedule-
 gated rate, for whichever miners care enough to point hash power at it.
 That's it. That's the whole monetary policy.
 
-Anyone proposing to "add tokenomics" to Dobbscoin is, by definition,
-proposing to make Dobbscoin into a different coin. We're not interested.
+Anyone proposing to "add tokenomics" to Dobbscoin's *consensus layer*
+is, by definition, proposing to make Dobbscoin into a different coin.
+We're not interested. The chain is the chain.
+
+(There is, separately, a community-coordination DAO being chartered on
+Gnosis Chain — the CoSG-DAO — that holds a community treasury, funds
+ecosystem work, and is otherwise opinionated about Slack. That DAO
+sits *alongside* (BOB), funded by donations and opt-in revenue streams,
+and never touches the chain's consensus rules or supply schedule.
+Details in the wBOB Bridge whitepaper, §7.)
+
 "Bob" approves.
 
 ---
