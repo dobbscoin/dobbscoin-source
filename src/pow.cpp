@@ -646,7 +646,12 @@ int EmergencyDiffForkHeight()
                                                : HARDFORK_EMERGENCY_DIFF_MAIN;
 }
 
-bool IsEmergencyDifficultyBlock(const CBlockHeader& block, const CBlockIndex* pindexPrev)
+// Shared height+gap predicate for the emergency-difficulty valve: past the
+// activation height AND strictly more than 6h since the previous block. Used
+// by both the validation exemption (IsEmergencyDifficultyBlock) and the
+// mining-side chooser (GetNextWorkRequiredForMining) so the two sides can
+// never disagree about when the valve window is open.
+static bool EmergencyDifficultyWindow(const CBlockHeader& block, const CBlockIndex* pindexPrev)
 {
     if (pindexPrev == NULL)
         return false;
@@ -655,12 +660,18 @@ bool IsEmergencyDifficultyBlock(const CBlockHeader& block, const CBlockIndex* pi
     if (pindexPrev->nHeight + 1 < EmergencyDiffForkHeight())
         return false;
 
-    // (b) Strict-greater on the timestamp gap. Equality at exactly 6h is not
+    // Strict-greater on the timestamp gap. Equality at exactly 6h is not
     // sufficient — the rule fires only when the chain is genuinely stuck.
     // nTime is unsigned; subtract in signed space to handle moderate clock
     // skew (a header timestamp slightly behind prev) without underflow.
     const int64_t gap = (int64_t)block.nTime - (int64_t)pindexPrev->nTime;
-    if (gap <= EMERGENCY_DIFFICULTY_GAP)
+    return gap > EMERGENCY_DIFFICULTY_GAP;
+}
+
+bool IsEmergencyDifficultyBlock(const CBlockHeader& block, const CBlockIndex* pindexPrev)
+{
+    // (a)+(b): activation height and the >6h stall gap.
+    if (!EmergencyDifficultyWindow(block, pindexPrev))
         return false;
 
     // (c) Min-difficulty only. A miner who can do better than powLimit after
@@ -670,6 +681,21 @@ bool IsEmergencyDifficultyBlock(const CBlockHeader& block, const CBlockIndex* pi
         return false;
 
     return true;
+}
+
+unsigned int GetNextWorkRequiredForMining(const CBlockIndex* pindexLast, const CBlockHeader* pblock)
+{
+    // Mining-side valve (v0.13.3). The consensus rule shipped in v0.13.0
+    // ACCEPTED an emergency min-difficulty block after a >6h stall, but no
+    // code path ever PRODUCED one: templates always carried the retarget
+    // algorithm's stuck difficulty, so the valve could not fire without a
+    // hand-crafted header. Miner policy only — validation is unchanged, old
+    // nodes accept these blocks via the v0.13.0 exemption, so this is not a
+    // fork and needs no activation height of its own.
+    if (EmergencyDifficultyWindow(*pblock, pindexLast))
+        return Params().ProofOfWorkLimit().GetCompact();
+
+    return GetNextWorkRequired(pindexLast, pblock);
 }
 
 bool CheckAuxPowProofOfWork(const CBlockHeader& block)

@@ -85,9 +85,11 @@ void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
 {
     pblock->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
 
-    // Updating time can change work required on testnet:
-    if (Params().AllowMinDifficultyBlocks())
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock);
+    // Updating time can change work required on testnet, and on mainnet a
+    // long-lived template can newly qualify for the emergency-difficulty
+    // valve once the tip gap crosses 6h — recompute through the mining-side
+    // chooser (v0.13.3). Idempotent everywhere else.
+    pblock->nBits = GetNextWorkRequiredForMining(pindexPrev, pblock);
 }
 
 CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
@@ -338,7 +340,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         UpdateTime(pblock, pindexPrev);
-        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
+        pblock->nBits          = GetNextWorkRequiredForMining(pindexPrev, pblock);
         pblock->nNonce         = 0;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
@@ -572,11 +574,10 @@ void static DobbscoinMiner(CWallet *pwallet)
 
                 // Update nTime every few seconds
                 UpdateTime(pblock, pindexPrev);
-                if (Params().AllowMinDifficultyBlocks())
-                {
-                    // Changing pblock->nTime can change work required on testnet:
-                    hashTarget.SetCompact(pblock->nBits);
-                }
+                // Changing pblock->nTime can change work required on testnet,
+                // and on mainnet opens the emergency-difficulty valve if the
+                // tip gap crosses 6h mid-search (v0.13.3):
+                hashTarget.SetCompact(pblock->nBits);
             }
         }
     }

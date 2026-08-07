@@ -150,4 +150,88 @@ BOOST_AUTO_TEST_CASE(emergency_diff_null_prev_safe)
     SelectParams(CBaseChainParams::UNITTEST);
 }
 
+// ---------------------------------------------------------------------------
+// Mining-side valve (v0.13.3). The v0.13.0 tests above prove the ACCEPTANCE
+// predicate; none of them proved a template ever PRODUCES a qualifying block
+// — and in v0.13.0–v0.13.2 none did (the valve was validation-only, same
+// class of bug as OFF's pre-Nodens "welded valve"). These pin the chooser
+// the miner actually calls.
+// ---------------------------------------------------------------------------
+
+// Post-fork, tip gap > 6h: the mining chooser must return min-difficulty so
+// the produced block satisfies IsEmergencyDifficultyBlock. This is the
+// un-weld itself — v0.13.2 returns the retarget value here and can never
+// fire the valve.
+BOOST_AUTO_TEST_CASE(miner_valve_fires_post_fork_after_stall)
+{
+    SelectParams(CBaseChainParams::MAIN);
+
+    CBlockIndex prev = MakePrev(HARDFORK_EMERGENCY_DIFF_MAIN - 1, 1800000000u);
+
+    CBlockHeader header;
+    header.nTime = prev.nTime + 7 * 60 * 60;  // 7h gap
+
+    unsigned int nBits = GetNextWorkRequiredForMining(&prev, &header);
+    BOOST_CHECK_EQUAL(nBits, PowLimitCompact());
+
+    // And the template it yields is exactly what validation exempts.
+    header.nBits = nBits;
+    BOOST_CHECK(IsEmergencyDifficultyBlock(header, &prev));
+
+    SelectParams(CBaseChainParams::UNITTEST);
+}
+
+// Below the activation height the chooser must NOT hand out min-difficulty,
+// no matter how long the stall. (Height chosen inside LWMA-3's bootstrap
+// window so the fallthrough is the deterministic reuse-prev-bits path.)
+BOOST_AUTO_TEST_CASE(miner_valve_gated_below_fork)
+{
+    SelectParams(CBaseChainParams::MAIN);
+
+    CBlockIndex prev = MakePrev(HARDFORK_LWMA3_MAIN + 10, 1800000000u);
+    prev.nBits = 0x1b0404cb;  // arbitrary mid-difficulty, != powLimit
+
+    CBlockHeader header;
+    header.nTime = prev.nTime + 24 * 60 * 60;  // 24h stall, pre-activation
+
+    unsigned int nBits = GetNextWorkRequiredForMining(&prev, &header);
+    BOOST_CHECK_EQUAL(nBits, prev.nBits);        // bootstrap reuse
+    BOOST_CHECK(nBits != PowLimitCompact());
+
+    SelectParams(CBaseChainParams::UNITTEST);
+}
+
+// Post-fork but the gap is NOT strictly greater than 6h: the chooser falls
+// through to the real retarget (LWMA-3 over a healthy 60-block window) and
+// must not hand out min-difficulty. Exercises the genuine LWMA path with a
+// linked 61-index chain.
+BOOST_AUTO_TEST_CASE(miner_valve_closed_at_exact_gap)
+{
+    SelectParams(CBaseChainParams::MAIN);
+
+    enum { CHAIN = 61 };
+    static CBlockIndex chain[CHAIN];
+    uint32_t t = 1800000000u;
+    for (int i = 0; i < CHAIN; ++i) {
+        chain[i].SetNull();
+        chain[i].nHeight = HARDFORK_EMERGENCY_DIFF_MAIN - CHAIN + i;
+        chain[i].nTime   = t; t += 120;           // healthy 2-min cadence
+        chain[i].nBits   = 0x1b0404cb;
+        chain[i].pprev   = (i > 0) ? &chain[i-1] : NULL;
+    }
+    CBlockIndex* tip = &chain[CHAIN-1];           // height = fork - 1
+
+    CBlockHeader header;
+    header.nTime = tip->nTime + EMERGENCY_DIFFICULTY_GAP;  // exactly 6h: closed
+
+    unsigned int nBits = GetNextWorkRequiredForMining(tip, &header);
+    BOOST_CHECK(nBits != PowLimitCompact());
+
+    // One second past the strict boundary: open.
+    header.nTime += 1;
+    BOOST_CHECK_EQUAL(GetNextWorkRequiredForMining(tip, &header), PowLimitCompact());
+
+    SelectParams(CBaseChainParams::UNITTEST);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
