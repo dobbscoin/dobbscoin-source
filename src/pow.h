@@ -77,6 +77,16 @@ bool IsEmergencyDifficultyBlock(const CBlockHeader& block, const CBlockIndex* pi
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
 
+/**
+ * nBits a MINER should put in a new template (v0.13.3). Identical to
+ * GetNextWorkRequired except that, once the emergency-difficulty fork is
+ * active and the template's nTime is already more than
+ * EMERGENCY_DIFFICULTY_GAP past the tip, it returns ProofOfWorkLimit() so the
+ * template qualifies for the v0.13.0 emergency exemption and the valve can
+ * actually fire. Mining policy only — never used in validation.
+ */
+unsigned int GetNextWorkRequiredForMining(const CBlockIndex* pindexLast, const CBlockHeader* pblock);
+
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 
