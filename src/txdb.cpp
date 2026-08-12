@@ -260,8 +260,25 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckProofOfWork(pindexNew->GetBlockHeader().GetPoWHash(), pindexNew->nBits))
-                    return error("LoadBlockIndex() : CheckProofOfWork failed: %s", pindexNew->ToString());
+                // PoW re-verification removed here 2026-08-12.
+                //
+                // Upstream Bitcoin verifies PoW at this point using pindexNew->GetBlockHash(),
+                // which is free -- chain.h returns *phashBlock, an already-cached value. This
+                // fork instead called GetBlockHeader().GetPoWHash(), which reconstructs the
+                // header and recomputes the memory-hard scrypt hash for EVERY index entry on
+                // EVERY startup: ~300-440us per block, i.e. 9-14 minutes at 1.89M blocks, and
+                // growing linearly with the chain. It dominated wallet and daemon start time.
+                //
+                // Safe to remove: this is not consensus code. LoadBlockIndexGuts only reads
+                // index entries that were already fully validated in main.cpp when each block
+                // was first accepted, so removing it cannot change which blocks this node
+                // accepts. It guarded solely against local disk corruption of the block index,
+                // which LevelDB already detects via its per-record CRC32 checksums.
+                //
+                // !! Do NOT "restore" this by passing pindexNew->GetBlockHash() to match
+                // !! upstream. On a scrypt coin the block hash (SHA256d) and the PoW hash are
+                // !! DIFFERENT values, so that form fails on every block and the daemon will
+                // !! refuse to start. See ~/claude/dobbscoin-startup-fix-2026-08-12.md
 
                 pcursor->Next();
             } else {
