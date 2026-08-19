@@ -78,8 +78,6 @@ public slots:
     void setNumConnections(int count);
     /** Set number of blocks shown in the UI */
     void setNumBlocks(int count);
-    /** OFFSIG window guard for the Mining tab — greys solo controls in [999991, 1050666]. */
-    void updateMiningOffsigGuard(int height);
     /** Go forward or back in history */
     void browseHistory(int offset);
     /** Scroll console view to end */

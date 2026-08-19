@@ -23,8 +23,12 @@
 #include <openssl/crypto.h>
 
 // Mining tab live status. dHashesPerSec is the same global the
-// gethashespersec / getmininginfo RPCs read; defined in src/miner.cpp.
+// gethashespersec / getmininginfo RPCs read. It lives inside
+// ENABLE_WALLET in miner.cpp - solo mining needs a wallet to pay the
+// reward into - so it only exists in a wallet build.
+#ifdef ENABLE_WALLET
 extern double dHashesPerSec;
+#endif
 
 static const int kMiningPollMs = 2000;
 
@@ -453,7 +457,6 @@ void RPCConsole::setNumBlocks(int count)
     ui->numberOfBlocks->setText(QString::number(count));
     if(clientModel)
         ui->lastBlockTime->setText(clientModel->getLastBlockDate().toString());
-    updateMiningOffsigGuard(count);
 }
 
 void RPCConsole::on_lineEdit_returnPressed()
@@ -758,7 +761,11 @@ void RPCConsole::updateMiningStatus()
         return;
     }
 
+#ifdef ENABLE_WALLET
     double hps = dHashesPerSec;
+#else
+    double hps = 0.0;
+#endif
     if(hps <= 0.0)
     {
         ui->miningStatus->setText(tr("Mining starting…"));
