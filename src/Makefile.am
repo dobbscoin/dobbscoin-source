@@ -105,6 +105,7 @@ DOBBSCOIN_CORE_H = \
   main.h \
   merkleblock.h \
   miner.h \
+  stratum.h \
   mruset.h \
   netbase.h \
   net.h \
@@ -184,6 +185,7 @@ libdobbscoin_server_a_SOURCES = \
   rpcnet.cpp \
   rpcrawtransaction.cpp \
   rpcserver.cpp \
+  stratum.cpp \
   script/sigcache.cpp \
   timedata.cpp \
   txdb.cpp \

@@ -15,6 +15,7 @@
 #include "compat/sanity.h"
 #include "key.h"
 #include "main.h"
+#include "stratum.h"
 #include "miner.h"
 #include "net.h"
 #include "rpcserver.h"
@@ -149,6 +150,7 @@ void Shutdown()
     /// module was initialized.
     RenameThread("dobbscoin-shutoff");
     mempool.AddTransactionsUpdated(1);
+    StopStratum();
     StopRPCThreads();
 #ifdef ENABLE_WALLET
     if (pwalletMain)
@@ -339,6 +341,9 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += ".\n";
 #ifdef ENABLE_WALLET
     strUsage += "  -gen                   " + strprintf(_("Generate coins (default: %u)"), 0) + "\n";
+    strUsage += "  -stratum=<host:port>   " + _("Mine to a stratum pool at <host:port> on startup (also see setstratum RPC)") + "\n";
+    strUsage += "  -stratumuser=<addr>    " + _("Dobbscoin address the pool pays out to (required with -stratum)") + "\n";
+    strUsage += "  -stratumthreads=<n>    " + _("Number of pool-mining worker threads (default: 1, 0 = protocol only)") + "\n";
     strUsage += "  -genproclimit=<n>      " + strprintf(_("Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)"), 1) + "\n";
 #endif
     strUsage += "  -help-debug            " + _("Show all debugging options (usage: --help -help-debug)") + "\n";
@@ -1308,6 +1313,12 @@ bool AppInit2(boost::thread_group& threadGroup)
         threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
     }
 #endif
+
+    // In-wallet pool mining: -stratum=<host:port> -stratumuser=<address>
+    // -stratumthreads=<n>. Also controllable at runtime via the setstratum RPC.
+    if (!StartStratumIfConfigured())
+        return InitError(_("Invalid -stratum / -stratumuser configuration"));
+
 
     return !fRequestShutdown;
 }
