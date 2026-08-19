@@ -97,10 +97,13 @@ void OptionsModel::Init()
 #endif
 
     // Network
-    if (!settings.contains("fUseUPnP"))
-        settings.setValue("fUseUPnP", DEFAULT_UPNP);
-    if (!SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool()))
-        addOverriddenOption("-upnp");
+    // One setting now drives both NAT-PMP and UPnP. Seed it from the old
+    // UPnP-only key so anyone who already had mapping ticked keeps it.
+    if (!settings.contains("fUseMapPort"))
+        settings.setValue("fUseMapPort",
+            settings.value("fUseUPnP", DEFAULT_UPNP).toBool());
+    if (!SoftSetBoolArg("-mapport", settings.value("fUseMapPort").toBool()))
+        addOverriddenOption("-mapport");
 
     if (!settings.contains("fListen"))
         settings.setValue("fListen", DEFAULT_LISTEN);
@@ -156,8 +159,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case MinimizeToTray:
             return fMinimizeToTray;
         case MapPortUPnP:
-#ifdef USE_UPNP
-            return settings.value("fUseUPnP");
+#if defined(USE_NATPMP) || defined(USE_UPNP)
+            return settings.value("fUseMapPort");
 #else
             return false;
 #endif
@@ -220,7 +223,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             settings.setValue("fMinimizeToTray", fMinimizeToTray);
             break;
         case MapPortUPnP: // core option - can be changed on-the-fly
-            settings.setValue("fUseUPnP", value.toBool());
+            settings.setValue("fUseMapPort", value.toBool());
             MapPort(value.toBool());
             break;
         case MinimizeOnClose:
