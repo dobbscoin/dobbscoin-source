@@ -5,8 +5,10 @@
 
 #include "stratum.h"
 
-#include "core.h"
+#include "primitives/block.h"
 #include "hash.h"
+#include "utilstrencodings.h"
+#include "clientversion.h"
 #include "uint256.h"
 #include "util.h"
 
@@ -414,7 +416,7 @@ bool CStratumClient::SubmitShare(const std::string& strJobId, const std::string&
 }
 
 // Bitcoin difficulty-1 target (0x00000000ffff0000…) as a double; Miningcore's
-// share test for this coin is diff1 / quark(header) >= 0.99 * vardiff
+// share test for this coin is diff1 / scrypt(header) >= 0.99 * vardiff
 // (shareMultiplier is 1 in the pool's coin definition).
 static const double DIFF1_TARGET = 65535.0 * std::pow(2.0, 208.0);
 
@@ -520,13 +522,13 @@ void CStratumClient::ThreadWorker(int nWorkerId)
         header.nBits = ParseHexBE32(job.strNBits);
         header.nNonce = 0;
 
-        // Share bound: quark(header) <= diff1/vardiff. Compared in doubles —
+        // Share bound: scrypt(header) <= diff1/vardiff. Compared in doubles —
         // plenty for share screening; the pool revalidates every submit.
         const double dTargetBound = DIFF1_TARGET / dDiff;
 
         for (uint32_t nNonce = 0; !fShutdown; nNonce++) {
             header.nNonce = nNonce;
-            uint256 hash = header.GetHash(false);
+            uint256 hash = header.GetPoWHash();
             if (hash.getdouble() <= dTargetBound) {
                 LogPrintf("stratum: worker %d found share (job %s, nonce %08x, hash %s)\n",
                           nWorkerId, job.strJobId, nNonce, hash.GetHex().substr(0, 24));

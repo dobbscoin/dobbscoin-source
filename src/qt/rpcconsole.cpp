@@ -247,8 +247,14 @@ RPCConsole::RPCConsole(QWidget *parent) :
     // via -stratum/-stratumuser command-line args.
     {
         QSettings settings;
+        // No default pool endpoint on purpose. Solo is the zero-config path here:
+        // at the current network difficulty a single CPU core solves a block in
+        // minutes and keeps the whole reward. The live pool port (3032) is the
+        // ASIC port at minDiff 512 -- a CPU would need ~14 years per share there,
+        // so defaulting to it would look broken. Pool mode stays opt-in until a
+        // low-difficulty port exists (see (OFF) port 3040, minDiff 0.0001).
         ui->poolMiningEndpoint->setText(
-            settings.value("poolMiningEndpoint", "pool.dobbscoin.info:3032").toString());
+            settings.value("poolMiningEndpoint", "").toString());
         ui->poolMiningAddress->setText(settings.value("poolMiningAddress", "").toString());
         int nSavedThreads = settings.value("poolMiningThreads", 1).toInt();
         ui->poolMiningThreads->setMaximum(idealThreads);

@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "amount.h"
+#include "base58.h"
 #include "chainparams.h"
 #include "core_io.h"
 #include "init.h"
@@ -418,7 +419,7 @@ Value setstratum(const Array& params, bool fHelp)
     // Validate the address part (anything before an optional .worker suffix).
     std::string strUser = params[2].get_str();
     std::string strAddrPart = strUser.substr(0, strUser.find('.'));
-    if (!CBitcoinAddress(strAddrPart).IsValid())
+    if (!CDobbscoinAddress(strAddrPart).IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
                            "Invalid Dobbscoin payout address: " + strAddrPart);
 
