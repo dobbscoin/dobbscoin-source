@@ -93,6 +93,18 @@ AC_ARG_ENABLE([upnp-default],
   [use_upnp_default=$enableval],
   [use_upnp_default=no])
 
+AC_ARG_WITH([natpmp],
+  [AS_HELP_STRING([--with-natpmp],
+  [enable NAT-PMP port mapping (default is yes if libnatpmp is found)])],
+  [use_natpmp=$withval],
+  [use_natpmp=auto])
+
+AC_ARG_ENABLE([natpmp-default],
+  [AS_HELP_STRING([--enable-natpmp-default],
+  [if NAT-PMP is enabled, turn it on at startup (default is no)])],
+  [use_natpmp_default=$enableval],
+  [use_natpmp_default=no])
+
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
     [use_tests=$enableval],
@@ -520,6 +532,19 @@ if test x$use_upnp != xno; then
   )
 fi
 
+dnl Check for libnatpmp (optional)
+if test x$use_natpmp != xno; then
+  natpmp_probe_libs=
+  if test x$TARGET_OS = xwindows; then
+    natpmp_probe_libs="-liphlpapi -lws2_32"
+  fi
+  AC_CHECK_HEADERS(
+    [natpmp.h],
+    [AC_CHECK_LIB([natpmp], [main],[NATPMP_LIBS=-lnatpmp], [have_natpmp=no], [$natpmp_probe_libs])],
+    [have_natpmp=no]
+  )
+fi
+
 DOBBSCOIN_QT_INIT
 
 dnl sets $dobbscoin_enable_qt, $dobbscoin_enable_qt_test, $dobbscoin_enable_qt_dbus
@@ -786,6 +811,35 @@ else
   fi
 fi
 
+dnl enable NAT-PMP support
+AC_MSG_CHECKING([whether to build with support for NAT-PMP])
+if test x$have_natpmp = xno; then
+  if test x$use_natpmp = xyes; then
+     AC_MSG_ERROR("NAT-PMP requested but cannot be built. use --without-natpmp")
+  fi
+  AC_MSG_RESULT(no)
+else
+  if test x$use_natpmp != xno; then
+    AC_MSG_RESULT(yes)
+    AC_MSG_CHECKING([whether to build with NAT-PMP enabled by default])
+    use_natpmp=yes
+    natpmp_setting=0
+    if test x$use_natpmp_default != xno; then
+      use_natpmp_default=yes
+      natpmp_setting=1
+    fi
+    AC_MSG_RESULT($use_natpmp_default)
+    AC_DEFINE_UNQUOTED([USE_NATPMP],[$natpmp_setting],[NAT-PMP support not compiled if undefined, otherwise value (0 or 1) determines default state])
+    if test x$TARGET_OS = xwindows; then
+      dnl natpmp_declspec.h resolves to __declspec(dllimport) unless told the
+      dnl library is static, which breaks linking against the depends build.
+      NATPMP_CPPFLAGS="-DSTATICLIB -DNATPMP_STATICLIB"
+    fi
+  else
+    AC_MSG_RESULT(no)
+  fi
+fi
+
 dnl these are only used when qt is enabled
 if test x$dobbscoin_enable_qt != xno; then
   BUILD_QT=qt
@@ -884,6 +938,8 @@ AC_SUBST(BUILD_QT)
 AC_SUBST(BUILD_TEST_QT)
 AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
+AC_SUBST(NATPMP_LIBS)
+AC_SUBST(NATPMP_CPPFLAGS)
 AC_CONFIG_FILES([Makefile src/Makefile share/setup.nsi share/qt/Info.plist src/test/buildenv.py])
 AC_CONFIG_FILES([qa/pull-tester/run-dobbscoind-for-test.sh],[chmod +x qa/pull-tester/run-dobbscoind-for-test.sh])
 AC_CONFIG_FILES([qa/pull-tester/tests-config.sh],[chmod +x qa/pull-tester/tests-config.sh])

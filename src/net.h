@@ -70,7 +70,8 @@ CNode* FindNode(const std::string& addrName);
 CNode* FindNode(const CService& ip);
 CNode* ConnectNode(CAddress addrConnect, const char *pszDest = NULL);
 bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false);
-void MapPort(bool fUseUPnP);
+void MapPort(bool fUseMapPort);
+std::string GetMapPortStatus();
 unsigned short GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
 void StartNode(boost::thread_group& threadGroup);
@@ -99,6 +100,7 @@ enum
     LOCAL_IF,     // address a local interface listens on
     LOCAL_BIND,   // address explicit bound to
     LOCAL_UPNP,   // address reported by UPnP
+    LOCAL_MAPPED, // address reported by the port-mapping gateway
     LOCAL_MANUAL, // address explicitly specified (-externalip=)
 
     LOCAL_MAX
