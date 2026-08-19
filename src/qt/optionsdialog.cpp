@@ -12,6 +12,7 @@
 #include "dobbscoinunits.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
+#include "net.h"
 
 #include "main.h" // for MAX_SCRIPTCHECK_THREADS
 #include "netbase.h"
@@ -38,6 +39,19 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     fProxyIpValid(true)
 {
     ui->setupUi(this);
+
+    mapPortStatusTimer = NULL;
+#if !defined(USE_NATPMP) && !defined(USE_UPNP)
+    ui->mapPortUpnp->setEnabled(false);
+    ui->mapPortStatus->setText(tr("This build has no port-mapping support."));
+#else
+    // A checkbox that silently does nothing is the failure this is meant to
+    // avoid, so poll the mapper and say what actually happened.
+    mapPortStatusTimer = new QTimer(this);
+    mapPortStatusTimer->setInterval(1000);
+    connect(mapPortStatusTimer, SIGNAL(timeout()), this, SLOT(updateMapPortStatus()));
+    mapPortStatusTimer->start();
+#endif
     GUIUtil::restoreWindowGeometry("nOptionsDialogWindow", this->size(), this);
 
     /* Main elements init */
@@ -287,4 +301,16 @@ bool OptionsDialog::eventFilter(QObject *object, QEvent *event)
         }
     }
     return QDialog::eventFilter(object, event);
+}
+
+void OptionsDialog::updateMapPortStatus()
+{
+#if defined(USE_NATPMP) || defined(USE_UPNP)
+    if (!model || !model->data(model->index(OptionsModel::MapPortUPnP, 0), Qt::EditRole).toBool())
+    {
+        ui->mapPortStatus->setText("");
+        return;
+    }
+    ui->mapPortStatus->setText(QString::fromStdString(GetMapPortStatus()));
+#endif
 }
