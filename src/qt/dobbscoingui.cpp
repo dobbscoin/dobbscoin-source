@@ -88,6 +88,7 @@ DobbscoinGUI::DobbscoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     verifyMessageAction(0),
     aboutAction(0),
     receiveCoinsAction(0),
+    miningAction(0),
     optionsAction(0),
     toggleHideAction(0),
     encryptWalletAction(0),
@@ -268,6 +269,15 @@ void DobbscoinGUI::createActions(const NetworkStyle *networkStyle)
     receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
     tabGroup->addAction(receiveCoinsAction);
 
+    // The Mining page sits between Receive and Transactions. Alt+5 rather than
+    // Alt+4 so Transactions keeps the shortcut people already have in their hands.
+    miningAction = new QAction(QIcon(":/icons/bob"), tr("&Mining"), this);
+    miningAction->setStatusTip(tr("Offer your CPU to the (BOB) network"));
+    miningAction->setToolTip(miningAction->statusTip());
+    miningAction->setCheckable(true);
+    miningAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+    tabGroup->addAction(miningAction);
+
     historyAction = new QAction(QIcon(":/icons/history"), tr("&Transactions"), this);
     historyAction->setStatusTip(tr("Browse transaction history"));
     historyAction->setToolTip(historyAction->statusTip());
@@ -284,6 +294,8 @@ void DobbscoinGUI::createActions(const NetworkStyle *networkStyle)
     connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
+    connect(miningAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(miningAction, SIGNAL(triggered()), this, SLOT(gotoMiningPage()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
 #endif // ENABLE_WALLET
@@ -410,6 +422,7 @@ void DobbscoinGUI::createToolBars()
         toolbar->addAction(overviewAction);
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
+        toolbar->addAction(miningAction);
         toolbar->addAction(historyAction);
         overviewAction->setChecked(true);
     }
@@ -486,6 +499,7 @@ void DobbscoinGUI::setWalletActionsEnabled(bool enabled)
     overviewAction->setEnabled(enabled);
     sendCoinsAction->setEnabled(enabled);
     receiveCoinsAction->setEnabled(enabled);
+    miningAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
@@ -609,6 +623,12 @@ void DobbscoinGUI::gotoReceiveCoinsPage()
 {
     receiveCoinsAction->setChecked(true);
     if (walletFrame) walletFrame->gotoReceiveCoinsPage();
+}
+
+void DobbscoinGUI::gotoMiningPage()
+{
+    miningAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoMiningPage();
 }
 
 void DobbscoinGUI::gotoSendCoinsPage(QString addr)

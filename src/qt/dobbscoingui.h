@@ -96,6 +96,7 @@ private:
     QAction *verifyMessageAction;
     QAction *aboutAction;
     QAction *receiveCoinsAction;
+    QAction *miningAction;
     QAction *optionsAction;
     QAction *toggleHideAction;
     QAction *encryptWalletAction;
@@ -174,6 +175,8 @@ private slots:
     void gotoHistoryPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
+    /** Switch to mining page */
+    void gotoMiningPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
 

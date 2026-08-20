@@ -12,10 +12,6 @@
 
 #include <QDialog>
 
-QT_BEGIN_NAMESPACE
-class QTimer;
-QT_END_NAMESPACE
-
 class ClientModel;
 
 namespace Ui {
@@ -49,15 +45,6 @@ protected:
     virtual bool eventFilter(QObject* obj, QEvent *event);
 
 private slots:
-    /** Mining tab — solo mode */
-    void on_miningEnable_toggled(bool checked);
-    void on_miningThreads_valueChanged(int value);
-    /** Polled from a QTimer while the tab is visible; refreshes the live status line. */
-    void updateMiningStatus();
-    /** Mining tab — pool mode (in-wallet stratum client) */
-    void on_poolMiningToggle_clicked(bool checked);
-    void updatePoolMiningStatus();
-
     void on_lineEdit_returnPressed();
     void on_tabWidget_currentChanged(int index);
     /** open the debug.log from the current datadir */
@@ -93,8 +80,6 @@ signals:
     void cmdRequest(const QString &command);
 
 private:
-    /** Mining tab — polls getmininginfo every 2 s while the tab is visible. */
-    QTimer *miningPollTimer;
     static QString FormatBytes(quint64 bytes);
     void startExecutor();
     void setTrafficGraphRange(int mins);
