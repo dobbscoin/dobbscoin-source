@@ -1082,7 +1082,7 @@
        <item>
         <widget class="QLabel" name="miningHelp">
          <property name="text">
-          <string>The Slumbering Lord does not need your CPU. He simply notices when you offer it. Solo CPU mining at current network hashrate will earn fractional OFF per hour; the offering matters more than the size.</string>
+          <string>&quot;Bob&quot; does not need your CPU. He notices that you offered it. The whole (BOB) network is currently a few hundred hashes a second, so one core is genuinely enough to find blocks — this is the rare stretch where a laptop competes with the Conspiracy. Slack accrues to whoever bothers to show up.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -1099,7 +1099,7 @@
        <item>
         <widget class="QCheckBox" name="miningEnable">
          <property name="text">
-          <string>Mine Offerings</string>
+          <string>Mine (BOB)</string>
          </property>
         </widget>
        </item>
@@ -1164,7 +1164,7 @@
           <string notr="true">QLabel { background-color: #4a2020; color: #e0d0d0; padding: 6px; border: 1px solid #602020; border-radius: 3px; }</string>
          </property>
          <property name="text">
-          <string>Solo mining is locked during the Codex inscription window (heights 999,991 – 1,050,666). The chain is Conclave-signed; outsider blocks would be rejected. Resumes automatically at block 1,050,667.</string>
+          <string></string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -1187,14 +1187,14 @@
           </font>
          </property>
          <property name="text">
-          <string>Pool Mining — The Communal Rite</string>
+          <string>Pool Mining</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QLabel" name="poolMiningHelp">
          <property name="text">
-          <string>The pool is a congregation: many small offerings folded into one, tallied in shares, paid to the address you name. The congregation's blocks carry the Conclave's voice, so the communal rite continues even when solo mining is barred.</string>
+          <string>A pool folds many small contributions into one, tallies them as shares, and pays out to the address you name. Fair warning from the Church of Slack: the live (BOB) pool port is sized for ASICs, so a CPU will connect, work honestly, and never land a share. Solo above is the one that pays you today.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -1213,7 +1213,7 @@
          <item>
           <widget class="QLineEdit" name="poolMiningEndpoint">
            <property name="text">
-            <string>pool.23skidoo.info:3040</string>
+            <string></string>
            </property>
            <property name="placeholderText">
             <string>host:port</string>
@@ -1234,7 +1234,7 @@
          <item>
           <widget class="QLineEdit" name="poolMiningAddress">
            <property name="placeholderText">
-            <string>Your OFF address (starts with Q)</string>
+            <string>Your (BOB) address</string>
            </property>
           </widget>
          </item>
