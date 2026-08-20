@@ -385,29 +385,32 @@ int64_t nHPSTimerStart = 0;
 // nonce is 0xffff0000 or above, the block is rebuilt and nNonce starts over at
 // zero.
 //
-bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phash)
+bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phash, const uint256& hashTarget)
 {
+    // Serialize the header once. Only the nonce -- the last 4 of the 80 bytes --
+    // changes per iteration, so it is patched in place rather than reserialized.
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << *pblock;
     assert(ss.size() == 80);
+    unsigned char* pheader = (unsigned char*)&ss[0];
 
     while (true) {
         nNonce++;
+        memcpy(pheader + 76, &nNonce, 4);
+        CHashScrypt().Write(pheader, 80).Finalize((unsigned char*)phash);
 
-        // Write the last 4 bytes of the block header (the nonce) to a copy of
-        // the double-SHA256 state, and compute the result.
-        CHashScrypt().Write((unsigned char*)&pblock, 76).Write((unsigned char*)&nNonce, 4).Finalize((unsigned char*)phash);
-
-        // Return the nonce if the hash has at least some zero bits,
-        // caller will check if it has enough to reach the target
-        //if (((uint16_t*)phash)[15] == 0)
+        // Test the target here rather than in the caller: scrypt is far too slow
+        // to afford upstream's leading-zero prefilter, and at the (BOB) floor the
+        // target is high enough that such a filter would discard real solutions.
+        if (*phash <= hashTarget)
             return true;
 
-        // If nothing found after trying for a while, return -1
-        if ((nNonce & 0xffff) == 0)
-            return false;
-        if ((nNonce & 0xfff) == 0)
+        // Hand control back periodically so the caller can refresh nTime, notice
+        // a new tip, and honour an interrupt.
+        if ((nNonce & 0xfff) == 0) {
             boost::this_thread::interruption_point();
+            return false;
+        }
     }
 }
 
@@ -504,7 +507,7 @@ void static DobbscoinMiner(CWallet *pwallet)
             uint32_t nNonce = 0;
             uint32_t nOldNonce = 0;
             while (true) {
-                bool fFound = ScanHash(pblock, nNonce, &hash);
+                bool fFound = ScanHash(pblock, nNonce, &hash, hashTarget);
                 uint32_t nHashesDone = nNonce - nOldNonce;
                 nOldNonce = nNonce;
 
