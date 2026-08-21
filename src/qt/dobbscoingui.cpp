@@ -248,7 +248,7 @@ void DobbscoinGUI::createActions(const NetworkStyle *networkStyle)
 {
     QActionGroup *tabGroup = new QActionGroup(this);
 
-    overviewAction = new QAction(QIcon(":/icons/overview"), tr("&Overview"), this);
+    overviewAction = new QAction(QIcon(":/icons/bob"), tr("&Overview"), this);
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
     overviewAction->setToolTip(overviewAction->statusTip());
     overviewAction->setCheckable(true);
@@ -271,7 +271,7 @@ void DobbscoinGUI::createActions(const NetworkStyle *networkStyle)
 
     // The Mining page sits between Receive and Transactions. Alt+5 rather than
     // Alt+4 so Transactions keeps the shortcut people already have in their hands.
-    miningAction = new QAction(QIcon(":/icons/bob"), tr("&Mining"), this);
+    miningAction = new QAction(QIcon(":/icons/overview"), tr("&Mining"), this);
     miningAction->setStatusTip(tr("Offer your CPU to the (BOB) network"));
     miningAction->setToolTip(miningAction->statusTip());
     miningAction->setCheckable(true);
