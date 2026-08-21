@@ -466,15 +466,24 @@ void static DobbscoinMiner(CWallet *pwallet)
     try {
         while (true) {
             if (Params().MiningRequiresPeers()) {
-                // Busy-wait for the network to come online so we don't waste time mining
-                // on an obsolete chain. In regtest mode we expect to fly solo.
+                // Wait for peers before mining, so we build on the real chain rather
+                // than a private fork that gets reorged away on reconnect.
+                //
+                // NOTE: upstream also waits on !IsInitialBlockDownload() here. That
+                // test is wrong for this chain and is deliberately omitted. IBD is
+                // true whenever the best header is more than 24h old
+                // (main.cpp: pindexBestHeader->GetBlockTime() < GetTime() - 24*60*60),
+                // and (BOB) routinely sits idle for days because nobody is mining.
+                // So the IBD test would be permanently true and mining could never
+                // start -- including the block that would make the tip fresh again.
+                // Requiring peers keeps the guard that matters without that deadlock.
                 do {
                     bool fvNodesEmpty;
                     {
                         LOCK(cs_vNodes);
                         fvNodesEmpty = vNodes.empty();
                     }
-                   // if (!fvNodesEmpty && !IsInitialBlockDownload())
+                    if (!fvNodesEmpty)
                         break;
                     MilliSleep(1000);
                 } while (true);
