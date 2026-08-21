@@ -189,10 +189,20 @@
        <item>
         <widget class="QCheckBox" name="mapPortUpnp">
          <property name="toolTip">
-          <string>Automatically open the Dobbscoin client port on the router. This only works when your router supports UPnP and it is enabled.</string>
+          <string>Ask your router to open the Dobbscoin port automatically. Tries NAT-PMP first, then UPnP. Your router must support one of them and have it enabled.</string>
          </property>
          <property name="text">
-          <string>Map port using &amp;UPnP</string>
+          <string>Open my port on the router &amp;automatically</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="mapPortStatus">
+         <property name="styleSheet">
+          <string notr="true">QLabel { color: #808080; margin-left: 20px; }</string>
+         </property>
+         <property name="text">
+          <string/>
          </property>
         </widget>
        </item>

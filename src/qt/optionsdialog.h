@@ -11,6 +11,7 @@ class OptionsModel;
 class QValidatedLineEdit;
 
 QT_BEGIN_NAMESPACE
+class QTimer;
 class QDataWidgetMapper;
 QT_END_NAMESPACE
 
@@ -34,6 +35,8 @@ protected:
     bool eventFilter(QObject *object, QEvent *event);
 
 private slots:
+    /* Port mapping: report what the mapper actually did. */
+    void updateMapPortStatus();
     /* enable OK button */
     void enableOkButton();
     /* disable OK button */
@@ -52,6 +55,7 @@ signals:
     void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPort);
 
 private:
+    QTimer *mapPortStatusTimer;
     Ui::OptionsDialog *ui;
     OptionsModel *model;
     QDataWidgetMapper *mapper;

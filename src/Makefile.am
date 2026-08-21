@@ -161,7 +161,7 @@ obj/build.h: FORCE
 libdobbscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
 # server: shared between dobbscoind and dobbscoin-qt
-libdobbscoin_server_a_CPPFLAGS = $(DOBBSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS)
+libdobbscoin_server_a_CPPFLAGS = $(DOBBSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS)
 libdobbscoin_server_a_SOURCES = \
   addrman.cpp \
   alert.cpp \
@@ -318,7 +318,7 @@ if TARGET_WINDOWS
 dobbscoind_SOURCES += dobbscoind-res.rc
 endif
 
-dobbscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
+dobbscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS)
 dobbscoind_CPPFLAGS = $(DOBBSCOIN_INCLUDES)
 dobbscoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
