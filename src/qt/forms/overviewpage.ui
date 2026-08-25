@@ -399,6 +399,95 @@
        </item>
 
        <item>
+        <widget class="QWidget" name="widgetVitals" native="true">
+         <layout class="QVBoxLayout" name="verticalLayoutVitals">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>10</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="labelVitalsTitle">
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>The Pipe</string>
+            </property>
+            <property name="toolTip">
+             <string>What the Conspiracy is up against, and what it is costing them.</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QFormLayout" name="formLayoutVitals">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelVitalsHeightText">
+              <property name="text">
+               <string>Slack Accrued:</string>
+              </property>
+              <property name="toolTip">
+               <string>Blocks piled up since "Bob" started counting.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="labelVitalsHeight">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelVitalsDiffText">
+              <property name="text">
+               <string>Conspiracy:</string>
+              </property>
+              <property name="toolTip">
+               <string>How hard the Normals are making it right now, against the recent average.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="labelVitalsDiff">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="labelVitalsHashText">
+              <property name="text">
+               <string>The Grind:</string>
+              </property>
+              <property name="toolTip">
+               <string>Total effort every machine on the network is throwing at it.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="labelVitalsHash">
+              <property name="text">
+               <string>0 H/s</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QLabel" name="label_6">
          <property name="pixmap">
           <pixmap resource="../bitcoin.qrc">:/images/overviewLeftTop</pixmap>
