@@ -48,6 +48,13 @@ public:
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
     int getNumBlocks() const;
+
+    //! Chain vitals for the Overview panel (all local; no network I/O)
+    double getDifficulty() const;
+    //! Mean difficulty over the last nBlocks headers (in-memory block index walk)
+    double getAvgDifficulty(int nBlocks) const;
+    //! Estimated network hashes/sec over the last nBlocks (getnetworkhashps-style estimator)
+    double getNetworkHashPS(int nBlocks = 120) const;
     int getNumBlocksAtStartup();
 
     quint64 getTotalBytesRecv() const;

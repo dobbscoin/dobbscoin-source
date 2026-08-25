@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "overviewpage.h"
+#include "main.h"
+#include <QLocale>
 #include "ui_overviewpage.h"
 
 #include "dobbscoinunits.h"
@@ -191,6 +193,11 @@ void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
 
 void OverviewPage::setClientModel(ClientModel *model)
 {
+    if (model) {
+        // The Pipe: chain vitals refresh on every new block
+        connect(model, SIGNAL(numBlocksChanged(int)), this, SLOT(updateChainVitals(int)));
+        updateChainVitals(model->getNumBlocks());
+    }
     this->clientModel = model;
     if(model)
     {
@@ -257,4 +264,34 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 {
     ui->labelWalletStatus->setVisible(fShow);
     ui->labelTransactionsStatus->setVisible(fShow);
+}
+
+static QString formatHashRate(double hps)
+{
+    static const char* units[] = {"H/s", "kH/s", "MH/s", "GH/s", "TH/s", "PH/s"};
+    int i = 0;
+    while (hps >= 1000.0 && i < 5) {
+        hps /= 1000.0;
+        i++;
+    }
+    return QString("%1 %2").arg(QString::number(hps, 'f', hps < 10 ? 2 : (hps < 100 ? 1 : 0))).arg(units[i]);
+}
+
+static QString formatDifficulty(double d)
+{
+    return QString::number(d, 'f', d >= 100 ? 0 : (d >= 1 ? 2 : 4));
+}
+
+void OverviewPage::updateChainVitals(int count)
+{
+    if (!clientModel)
+        return;
+    QLocale loc = QLocale::system();
+    ui->labelVitalsHeight->setText(loc.toString(count));
+    // current against a one-week mean, so a retarget spike reads as a spike
+    ui->labelVitalsDiff->setText(QString("%1 / %2 %3")
+        .arg(formatDifficulty(clientModel->getDifficulty()))
+        .arg(formatDifficulty(clientModel->getAvgDifficulty(7 * 1440)))
+        .arg(tr("avg")));
+    ui->labelVitalsHash->setText(formatHashRate(clientModel->getNetworkHashPS(120)));
 }

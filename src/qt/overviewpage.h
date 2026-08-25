@@ -57,6 +57,7 @@ private:
     TransactionFilterProxy *filter;
 
 private slots:
+    void updateChainVitals(int count);
     void updateDisplayUnit();
     void handleTransactionClicked(const QModelIndex &index);
     void updateAlerts(const QString &warnings);
