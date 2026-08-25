@@ -1,8 +1,8 @@
 # Dobbscoin Core — (BOB)
 
-[![Release](https://img.shields.io/github/v/release/SubGeniusFinance/dobbscoin-source?label=release)](https://github.com/SubGeniusFinance/dobbscoin-source/releases)
+[![Release](https://img.shields.io/github/v/release/dobbscoin/dobbscoin-source?label=release)](https://github.com/dobbscoin/dobbscoin-source/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](COPYING)
-[![CI](https://github.com/SubGeniusFinance/dobbscoin-source/actions/workflows/release.yml/badge.svg)](https://github.com/SubGeniusFinance/dobbscoin-source/actions/workflows/release.yml)
+[![CI](https://github.com/dobbscoin/dobbscoin-source/actions/workflows/release.yml/badge.svg)](https://github.com/dobbscoin/dobbscoin-source/actions/workflows/release.yml)
 
 > # **MONETIZED SLACK.**
 > ### Backed By Nothing. Powered By Everything.
@@ -53,14 +53,14 @@ It is **scrypt** under the hood, **flat 1.5 (BOB) per block forever**, and **NOT
 
 Pre-built binaries for Linux (daemon, Qt5, AppImage) and Windows 64-bit live on the releases page:
 
-→ **<https://github.com/SubGeniusFinance/dobbscoin-source/releases>**
+→ **<https://github.com/dobbscoin/dobbscoin-source/releases>**
 
 ---
 
 ## Quick start
 
 ```bash
-git clone https://github.com/SubGeniusFinance/dobbscoin-source.git
+git clone https://github.com/dobbscoin/dobbscoin-source.git
 cd dobbscoin-source
 ./contrib/install-db4.sh                       # builds BDB 4.8 into $HOME/db4 (no root)
 ./autogen.sh
