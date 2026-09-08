@@ -417,8 +417,17 @@ bool CStratumClient::SubmitShare(const std::string& strJobId, const std::string&
 
 // Bitcoin difficulty-1 target (0x00000000ffff0000…) as a double; Miningcore's
 // share test for this coin is diff1 / scrypt(header) >= 0.99 * vardiff
-// (shareMultiplier is 1 in the pool's coin definition).
+// (see SHARE_MULTIPLIER below).
 static const double DIFF1_TARGET = 65535.0 * std::pow(2.0, 208.0);
+
+// Miningcore scores a share as (DIFF1_TARGET / scrypt(header)) * shareMultiplier
+// >= 0.99 * vardiff, where shareMultiplier comes from the pool coin template.
+// For (BOB) scrypt it is 65536, NOT 1 as the comment above previously asserted.
+// That error made the client bar 65536x stricter than the pool bar, so the miner
+// hashed at full rate and never submitted a share on any port. Verified against
+// the live pool 2026-09-08: with the bound corrected, shares are accepted at D=2.
+// (OFF)/quark uses 256 -- change this if pointing the client at that pool.
+static const double SHARE_MULTIPLIER = 65536.0;
 
 //! Stratum prevhash (dword-order-reversed RPC hash) → uint256 (internal LE),
 //! per research/stratum-dialect-probe-2026-08-07.md: reversing the 8 words
@@ -524,7 +533,7 @@ void CStratumClient::ThreadWorker(int nWorkerId)
 
         // Share bound: scrypt(header) <= diff1/vardiff. Compared in doubles —
         // plenty for share screening; the pool revalidates every submit.
-        const double dTargetBound = DIFF1_TARGET / dDiff;
+        const double dTargetBound = DIFF1_TARGET * SHARE_MULTIPLIER / dDiff;
 
         for (uint32_t nNonce = 0; !fShutdown; nNonce++) {
             header.nNonce = nNonce;
