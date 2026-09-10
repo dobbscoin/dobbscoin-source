@@ -1,3 +1,12 @@
+<!-- home-banner -->
+> ### 🏠 Home is [git.subgenius.finance](https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source).
+>
+> The GitHub copy is a **mirror, pushed from here** — issues and pull requests opened there are not watched.
+> Builds and downloads: **[dobbscoin.info](https://dobbscoin.info)** — Dobbscoin (BOB) wallet downloads.
+>
+> **Have a fork or a clone?** Point it home with `git remote set-url origin https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source.git`
+
+---
 # Dobbscoin Core — (BOB)
 
 [![Release](https://img.shields.io/github/v/release/dobbscoin/dobbscoin-source?label=release)](https://github.com/dobbscoin/dobbscoin-source/releases)
