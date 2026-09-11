@@ -63,14 +63,22 @@ MiningPage::MiningPage(QWidget *parent) :
     // via -stratum/-stratumuser command-line args.
     {
         QSettings settings;
-        // No default pool endpoint on purpose. Solo is the zero-config path here:
-        // at the current network difficulty a single CPU core solves a block in
-        // minutes and keeps the whole reward. The live pool port (3032) is the
-        // ASIC port at minDiff 512 -- a CPU would need ~14 years per share there,
-        // so defaulting to it would look broken. Pool mode stays opt-in until a
-        // low-difficulty port exists (see (OFF) port 3040, minDiff 0.0001).
+        // Default to the low-difficulty pool port. This REVERSES the earlier
+        // "no default on purpose" decision, whose own stated condition was
+        // "pool mode stays opt-in until a low-difficulty port exists". It now
+        // exists: 3033 starts at difficulty 4 with varDiff minDiff 2, where a
+        // ~8 kH/s CPU lands its first share in about a minute. The old note
+        // also said solo was the zero-config path because a CPU solved a block
+        // in minutes -- that stopped being true when network difficulty went
+        // from 3.3 to the hundreds, so solo got harder as pool got easier.
+        //
+        // Leaving this blank sent people to 3032, which starts at difficulty
+        // 15000 for ASICs and rented hashrate. There the wallet hashes, reports
+        // a healthy rate, and the pool never sees a share -- indistinguishable
+        // from the stratum bug fixed in v0.13.7, and the reason that bug hid
+        // for as long as it did. A saved value always wins over this default.
         ui->poolMiningEndpoint->setText(
-            settings.value("poolMiningEndpoint", "").toString());
+            settings.value("poolMiningEndpoint", "pool.dobbscoin.info:3033").toString());
         ui->poolMiningAddress->setText(settings.value("poolMiningAddress", "").toString());
         int nSavedThreads = settings.value("poolMiningThreads", 1).toInt();
         ui->poolMiningThreads->setMaximum(idealThreads);
