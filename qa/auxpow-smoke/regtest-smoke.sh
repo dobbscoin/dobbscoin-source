@@ -58,8 +58,8 @@ ADDR=$("$CLI" "${CLI_ARGS[@]}" getnewaddress)
 ok "got test address $ADDR"
 
 echo "==> Test 1: createauxblock refused before AuxPoW activation"
-# Regtest AuxPoW activation = HARDFORK_AUXPOW_TESTNET = 200.
-# At height 0, next block is 1, well below 200.
+# Regtest AuxPoW activation = HARDFORK_AUXPOW_TESTNET = 10.
+# At height 0, next block is 1, well below 10.
 if RESPONSE=$("$CLI" "${CLI_ARGS[@]}" createauxblock "$ADDR" 2>&1); then
     fail "createauxblock should refuse pre-activation, got: $RESPONSE"
 fi
