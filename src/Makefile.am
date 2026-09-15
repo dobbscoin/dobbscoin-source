@@ -258,6 +258,8 @@ libdobbscoin_common_a_SOURCES = \
   netbase.cpp \
   protocol.cpp \
   pubkey.cpp \
+  secp256k1/contrib/lax_der_parsing.c \
+  secp256k1/contrib/lax_der_privatekey_parsing.c \
   script/interpreter.cpp \
   script/script.cpp \
   script/sign.cpp \
@@ -372,6 +374,7 @@ libdobbscoinconsensus_la_SOURCES = \
   ecwrapper.cpp \
   hash.cpp \
   pubkey.cpp \
+  secp256k1/contrib/lax_der_parsing.c \
   script/script.cpp \
   script/interpreter.cpp \
   script/dobbscoinconsensus.cpp \
