@@ -53,10 +53,14 @@ static const int AUXPOW_CHAIN_ID = 0x00B0;
 // block reads 11,534,339 and IsSuperMajority(4, ...) would be true
 // unconditionally. A version-gated BIP65 would therefore activate on no
 // real support at all.
-// Testnet/regtest: block 20 -- past the AuxPoW fork at 10, so a regtest
-// chain exercises both boundaries separately.
+// Testnet/regtest: block 150 -- past the AuxPoW fork at 10 so a regtest chain
+// crosses each boundary separately, and deliberately past COINBASE_MATURITY
+// (100) so there is a reachable window in which coins are spendable but CLTV
+// is NOT yet active. Without that window the soft-fork property -- that a
+// pre-activation spend which violates a lock is still accepted -- cannot be
+// tested on chain at all, because nothing is spendable before height 101.
 static const int HARDFORK_CLTV_MAIN    = 2000000;
-static const int HARDFORK_CLTV_TESTNET = 20;
+static const int HARDFORK_CLTV_TESTNET = 150;
 
 // Emergency-difficulty hard-fork activation heights.
 // Mainnet: block 1,888,888 — 80 blocks past LWMA-3, so the new LWMA window
