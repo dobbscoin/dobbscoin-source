@@ -1800,6 +1800,17 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         flags |= SCRIPT_VERIFY_DERSIG;
     }
 
+    // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) by HEIGHT rather than by a
+    // version supermajority. IsSuperMajority compares the raw nVersion, and
+    // from the AuxPoW fork the chain ID sits in the upper half of that field,
+    // so every post-fork block reads 11,534,339 and IsSuperMajority(4, ...)
+    // is unconditionally true. A version-gated BIP65 would activate on no real
+    // support at all. Height activation has no such failure mode, and matches
+    // how the AuxPoW, LWMA-3 and emergency-difficulty forks here already work.
+    if (pindex->nHeight >= CLTVForkHeight()) {
+        flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+    }
+
     CBlockUndo blockundo;
 
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);

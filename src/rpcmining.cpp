@@ -548,7 +548,11 @@ Value getblocktemplate(const Array& params, bool fHelp)
     if (strMode != "template")
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
-    if (vNodes.empty())
+    // Upstream guards this with MiningRequiresPeers() so that regtest, which
+    // has no peers by design, can still hand out templates. Without that test
+    // getblocktemplate is unusable on regtest, which makes the whole
+    // build-a-block-and-submit-it path untestable.
+    if (vNodes.empty() && Params().MiningRequiresPeers())
         throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Dobbscoin is not connected!");
 
    // if (IsInitialBlockDownload())

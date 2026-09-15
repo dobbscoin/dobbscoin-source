@@ -14,6 +14,8 @@
 #include "script/script.h"
 #include "uint256.h"
 
+#include <limits>
+
 using namespace std;
 
 typedef vector<unsigned char> valtype;
@@ -337,7 +339,34 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 case OP_NOP:
                 break;
 
-                case OP_NOP1: case OP_NOP2: case OP_NOP3: case OP_NOP4: case OP_NOP5:
+                case OP_CHECKLOCKTIMEVERIFY:
+                {
+                    if (!(flags & SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)) {
+                        // Not enabled yet: behave exactly like OP_NOP2 did,
+                        // which is what makes activation a soft fork.
+                        if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
+                            return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                        break;
+                    }
+
+                    if (stack.size() < 1)
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+
+                    // 5-byte operand: a block height fits in 4, a post-2038
+                    // UNIX timestamp does not. BIP65 specifies 5.
+                    const CScriptNum nLockTime(stacktop(-1), fRequireMinimal, 5);
+
+                    if (nLockTime < 0)
+                        return set_error(serror, SCRIPT_ERR_NEGATIVE_LOCKTIME);
+
+                    if (!checker.CheckLockTime(nLockTime))
+                        return set_error(serror, SCRIPT_ERR_UNSATISFIED_LOCKTIME);
+
+                    // Leaves the argument on the stack, per BIP65.
+                }
+                break;
+
+                case OP_NOP1: case OP_NOP3: case OP_NOP4: case OP_NOP5:
                 case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
                 {
                     if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
@@ -1055,6 +1084,34 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     CHashWriter ss(SER_GETHASH, 0);
     ss << txTmp << nHashType;
     return ss.GetHash();
+}
+
+// Threshold for nLockTime: below this it is a block height, at or above
+// it a UNIX timestamp. Same value as LOCKTIME_THRESHOLD in main.h, repeated
+// here so the script layer keeps no dependency on main.
+static const unsigned int SCRIPT_LOCKTIME_THRESHOLD = 500000000;
+
+bool TransactionSignatureChecker::CheckLockTime(const CScriptNum& nLockTime) const
+{
+    // Both must be the same kind of locktime -- comparing a height against a
+    // timestamp is meaningless, and letting it through would allow a spender
+    // to satisfy a height lock with a timestamp.
+    if (!((txTo->nLockTime <  SCRIPT_LOCKTIME_THRESHOLD && nLockTime <  (int64_t)SCRIPT_LOCKTIME_THRESHOLD) ||
+          (txTo->nLockTime >= SCRIPT_LOCKTIME_THRESHOLD && nLockTime >= (int64_t)SCRIPT_LOCKTIME_THRESHOLD)))
+        return false;
+
+    // The transaction may not claim to be spendable earlier than the output
+    // it is spending requires.
+    if (nLockTime > (int64_t)txTo->nLockTime)
+        return false;
+
+    // A final input makes nLockTime irrelevant -- the transaction could be
+    // mined immediately regardless. Requiring a non-final sequence is what
+    // gives the lock any force.
+    if (std::numeric_limits<uint32_t>::max() == txTo->vin[nIn].nSequence)
+        return false;
+
+    return true;
 }
 
 bool TransactionSignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const

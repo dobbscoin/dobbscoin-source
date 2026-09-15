@@ -14,6 +14,7 @@
 #include <string>
 
 class CPubKey;
+class CScriptNum;
 class CScript;
 class CTransaction;
 class uint256;
@@ -68,7 +69,12 @@ enum
     // discouraged NOPs fails the script. This verification flag will never be
     // a mandatory flag applied to scripts in a block. NOPs that are not
     // executed, e.g.  within an unexecuted IF ENDIF block, are *not* rejected.
-    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS  = (1U << 7)
+    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS  = (1U << 7),
+
+    // Enable CHECKLOCKTIMEVERIFY (BIP65). Bit 9 matches Bitcoin Core so
+    // the flag numbering stays comparable across trees; bit 8 is left
+    // free for CHECKSEQUENCEVERIFY should it ever land.
+    SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY         = (1U << 9)
 
 };
 
@@ -78,6 +84,11 @@ class BaseSignatureChecker
 {
 public:
     virtual bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const
+    {
+        return false;
+    }
+
+    virtual bool CheckLockTime(const CScriptNum& nLockTime) const
     {
         return false;
     }
@@ -97,6 +108,7 @@ protected:
 public:
     TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn) : txTo(txToIn), nIn(nInIn) {}
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const;
+    bool CheckLockTime(const CScriptNum& nLockTime) const;
 };
 
 class MutableTransactionSignatureChecker : public TransactionSignatureChecker

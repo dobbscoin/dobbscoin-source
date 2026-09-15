@@ -43,6 +43,25 @@ static const int HARDFORK_AUXPOW_TESTNET = 10;
 // LottoCoin=0x004C, etc).
 static const int AUXPOW_CHAIN_ID = 0x00B0;
 
+// CHECKLOCKTIMEVERIFY (BIP65) activation heights.
+// Mainnet: block 2,000,000 -- deliberately the same height as the AuxPoW
+// fork, so the network upgrades once rather than twice, and while the
+// audience for an upgrade request is still people who care about (BOB)
+// rather than foreign pools merge-mining us incidentally.
+// Activated by HEIGHT, not by version supermajority: from the AuxPoW fork
+// the chain ID occupies the upper half of nVersion, so every post-fork
+// block reads 11,534,339 and IsSuperMajority(4, ...) would be true
+// unconditionally. A version-gated BIP65 would therefore activate on no
+// real support at all.
+// Testnet/regtest: block 150 -- past the AuxPoW fork at 10 so a regtest chain
+// crosses each boundary separately, and deliberately past COINBASE_MATURITY
+// (100) so there is a reachable window in which coins are spendable but CLTV
+// is NOT yet active. Without that window the soft-fork property -- that a
+// pre-activation spend which violates a lock is still accepted -- cannot be
+// tested on chain at all, because nothing is spendable before height 101.
+static const int HARDFORK_CLTV_MAIN    = 2000000;
+static const int HARDFORK_CLTV_TESTNET = 150;
+
 // Emergency-difficulty hard-fork activation heights.
 // Mainnet: block 1,888,888 — 80 blocks past LWMA-3, so the new LWMA window
 // has had a chance to stabilize before the emergency predicate becomes
@@ -63,6 +82,7 @@ static const int64_t EMERGENCY_DIFFICULTY_GAP    = 6 * 60 * 60;  // 21600 s
 
 int64_t LWMA3ForkHeight();
 int AuxPowForkHeight();
+int CLTVForkHeight();
 int EmergencyDiffForkHeight();
 
 /**

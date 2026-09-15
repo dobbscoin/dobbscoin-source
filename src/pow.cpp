@@ -634,6 +634,12 @@ int64_t LWMA3ForkHeight()
                                                : HARDFORK_LWMA3_MAIN;
 }
 
+int CLTVForkHeight()
+{
+    return Params().AllowMinDifficultyBlocks() ? HARDFORK_CLTV_TESTNET
+                                               : HARDFORK_CLTV_MAIN;
+}
+
 int AuxPowForkHeight()
 {
     return Params().AllowMinDifficultyBlocks() ? HARDFORK_AUXPOW_TESTNET
