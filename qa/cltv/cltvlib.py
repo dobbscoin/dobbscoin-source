@@ -112,13 +112,21 @@ class Key(object):
         regtest does not require standard scripts."""
         return push(self.pubkey) + bytes([OP_CHECKSIG])
 
-    def sign(self, sighash):
-        """Strict-DER, low-S signature. BIP66 is enforced on this chain, so a
-        sloppy encoding would be rejected for the wrong reason."""
+    def sign(self, sighash, high_s=False):
+        """Strict-DER signature. BIP66 is enforced on this chain, so a sloppy
+        encoding would be rejected for the wrong reason.
+
+        high_s=True deliberately emits the HIGH-S form. Low-S is not a consensus
+        rule here -- it lives in the standard flags only -- so a high-S signature
+        is valid on this chain and MUST verify. libsecp256k1 accepts only low-S,
+        so this is the case that catches a missing
+        secp256k1_ecdsa_signature_normalize() in CPubKey::Verify, which would
+        reject blocks an OpenSSL node accepts.
+        """
         order = ecdsa.SECP256k1.order
         sig = self.sk.sign_digest(sighash, sigencode=ecdsa.util.sigencode_der)
         r, s = ecdsa.util.sigdecode_der(sig, order)
-        if s > order // 2:
+        if (s > order // 2) != high_s:
             s = order - s
         return ecdsa.util.sigencode_der(r, s, order)
 
@@ -157,12 +165,12 @@ def signature_hash(vin, vout, nlocktime, in_index, script_code):
 
 
 def spend(prev_txid, prev_index, script_code, key, out_script, value,
-          nlocktime=0, nsequence=0):
+          nlocktime=0, nsequence=0, high_s=False):
     """Build a 1-in 1-out transaction spending prev under script_code."""
     vin = [(prev_txid, prev_index, b"", nsequence)]
     vout = [(value, out_script)]
     sighash = signature_hash(vin, vout, nlocktime, 0, script_code)
-    sig = key.sign(sighash) + bytes([SIGHASH_ALL])
+    sig = key.sign(sighash, high_s=high_s) + bytes([SIGHASH_ALL])
     vin[0] = (prev_txid, prev_index, push(sig), nsequence)
     return ser_tx(vin, vout, nlocktime)
 
