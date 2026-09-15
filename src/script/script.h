@@ -149,6 +149,7 @@ enum opcodetype
     // expansion
     OP_NOP1 = 0xb0,
     OP_NOP2 = 0xb1,
+    OP_CHECKLOCKTIMEVERIFY = OP_NOP2,
     OP_NOP3 = 0xb2,
     OP_NOP4 = 0xb3,
     OP_NOP5 = 0xb4,
@@ -189,14 +190,17 @@ class CScriptNum
  */
 public:
 
+    static const size_t nMaxNumSize = 4;
+
     explicit CScriptNum(const int64_t& n)
     {
         m_value = n;
     }
 
-    explicit CScriptNum(const std::vector<unsigned char>& vch, bool fRequireMinimal)
+    explicit CScriptNum(const std::vector<unsigned char>& vch, bool fRequireMinimal,
+                        const size_t nMaxNumSizeIn = nMaxNumSize)
     {
-        if (vch.size() > nMaxNumSize) {
+        if (vch.size() > nMaxNumSizeIn) {
             throw scriptnum_error("script number overflow");
         }
         if (fRequireMinimal && vch.size() > 0) {
@@ -316,8 +320,6 @@ public:
 
         return result;
     }
-
-    static const size_t nMaxNumSize = 4;
 
 private:
     static int64_t set_vch(const std::vector<unsigned char>& vch)

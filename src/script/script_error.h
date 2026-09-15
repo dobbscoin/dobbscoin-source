@@ -47,6 +47,10 @@ typedef enum ScriptError_t
     /* softfork safeness */
     SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS,
 
+    /* CHECKLOCKTIMEVERIFY (BIP65) */
+    SCRIPT_ERR_NEGATIVE_LOCKTIME,
+    SCRIPT_ERR_UNSATISFIED_LOCKTIME,
+
     SCRIPT_ERR_ERROR_COUNT
 } ScriptError;
 
