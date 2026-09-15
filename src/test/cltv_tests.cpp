@@ -9,6 +9,7 @@
 #include "script/interpreter.h"
 #include "script/script.h"
 #include "script/script_error.h"
+#include "script/standard.h"
 
 #include <limits>
 
@@ -195,6 +196,30 @@ BOOST_AUTO_TEST_CASE(cltv_fork_height_per_network)
     BOOST_CHECK(CLTVForkHeight() > AuxPowForkHeight());
 
     SelectParams(CBaseChainParams::UNITTEST);
+}
+
+// ---------------------------------------------------------------------------
+// Relay policy. DISCOURAGE_UPGRADABLE_NOPS is in the standard flags, so before
+// this change a CLTV transaction was non-standard and would not relay at all --
+// the opcode would have been consensus-valid and simply undeliverable.
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(cltv_is_relayable_under_standard_flags)
+{
+    BOOST_CHECK(STANDARD_SCRIPT_VERIFY_FLAGS & SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY);
+
+    // Under the full standard flag set -- which still includes
+    // DISCOURAGE_UPGRADABLE_NOPS -- a satisfied CLTV must pass, not be rejected
+    // as a discouraged NOP.
+    ScriptError err = SCRIPT_ERR_UNKNOWN_ERROR;
+    const CTransaction tx = SpendingTx(500, SEQ_NONFINAL);
+    BOOST_CHECK(Eval(500, tx, STANDARD_SCRIPT_VERIFY_FLAGS, &err));
+    BOOST_CHECK_EQUAL(err, SCRIPT_ERR_OK);
+
+    // And an unsatisfied one is still refused by the mempool, so a node does not
+    // relay what its own ConnectBlock would later reject.
+    BOOST_CHECK(!Eval(501, tx, STANDARD_SCRIPT_VERIFY_FLAGS, &err));
+    BOOST_CHECK_EQUAL(err, SCRIPT_ERR_UNSATISFIED_LOCKTIME);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
