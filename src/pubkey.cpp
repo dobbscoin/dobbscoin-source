@@ -6,26 +6,60 @@
 
 #include "eccryptoverify.h"
 
-#ifdef USE_SECP256K1
 #include <secp256k1.h>
-#else
+#include "secp256k1/contrib/lax_der_parsing.h"
+
+#ifndef USE_SECP256K1
 #include "ecwrapper.h"
 #endif
+
+namespace {
+
+/**
+ * Verification context for consensus signature checking.
+ *
+ * Built once and never mutated, which is what makes it safe to share across
+ * the nScriptCheckThreads workers that call CPubKey::Verify concurrently.
+ * Since libsecp256k1 0.2 no precomputed table is needed for verification, so
+ * SECP256K1_CONTEXT_NONE is the correct flag.
+ */
+class CSecp256k1VerifyContext
+{
+public:
+    CSecp256k1VerifyContext() : ctx(secp256k1_context_create(SECP256K1_CONTEXT_NONE)) {}
+    ~CSecp256k1VerifyContext() { secp256k1_context_destroy(ctx); ctx = NULL; }
+    secp256k1_context* ctx;
+};
+
+static CSecp256k1VerifyContext verifyContext;
+
+} // namespace
 
 bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) const {
     if (!IsValid())
         return false;
-#ifdef USE_SECP256K1
-    if (secp256k1_ecdsa_verify((const unsigned char*)&hash, 32, &vchSig[0], vchSig.size(), begin(), size()) != 1)
+    if (vchSig.empty())
         return false;
-#else
-    CECKey key;
-    if (!key.SetPubKey(begin(), size()))
+
+    secp256k1_pubkey pubkey;
+    if (!secp256k1_ec_pubkey_parse(verifyContext.ctx, &pubkey, begin(), size()))
         return false;
-    if (!key.Verify(hash, vchSig))
+
+    // Parse leniently on purpose. Signatures mined before BIP66 was enforced
+    // may carry non-canonical DER that OpenSSL accepted, and rejecting them
+    // here would be a consensus change rather than a cleanup. Strictness is
+    // BIP66's job, applied separately via SCRIPT_VERIFY_DERSIG.
+    secp256k1_ecdsa_signature sig;
+    if (!ecdsa_signature_parse_der_lax(verifyContext.ctx, &sig, &vchSig[0], vchSig.size()))
         return false;
-#endif
-    return true;
+
+    // libsecp256k1 accepts only low-S signatures; OpenSSL accepted both, and
+    // high-S signatures are valid under this chain's consensus rules. Without
+    // this normalisation a libsecp256k1 build would reject blocks an OpenSSL
+    // build accepts -- a chain split, not a stricter node.
+    secp256k1_ecdsa_signature_normalize(verifyContext.ctx, &sig, &sig);
+
+    return secp256k1_ecdsa_verify(verifyContext.ctx, &sig, hash.begin(), &pubkey) == 1;
 }
 
 bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig) {
@@ -33,52 +67,33 @@ bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned cha
         return false;
     int recid = (vchSig[0] - 27) & 3;
     bool fComp = ((vchSig[0] - 27) & 4) != 0;
-#ifdef USE_SECP256K1
-    int pubkeylen = 65;
-    if (!secp256k1_ecdsa_recover_compact((const unsigned char*)&hash, 32, &vchSig[1], (unsigned char*)begin(), &pubkeylen, fComp, recid))
-        return false;
-    assert((int)size() == pubkeylen);
-#else
     CECKey key;
     if (!key.Recover(hash, &vchSig[1], recid))
         return false;
     std::vector<unsigned char> pubkey;
     key.GetPubKey(pubkey, fComp);
     Set(pubkey.begin(), pubkey.end());
-#endif
     return true;
 }
 
 bool CPubKey::IsFullyValid() const {
     if (!IsValid())
         return false;
-#ifdef USE_SECP256K1
-    if (!secp256k1_ecdsa_pubkey_verify(begin(), size()))
-        return false;
-#else
     CECKey key;
     if (!key.SetPubKey(begin(), size()))
         return false;
-#endif
     return true;
 }
 
 bool CPubKey::Decompress() {
     if (!IsValid())
         return false;
-#ifdef USE_SECP256K1
-    int clen = size();
-    int ret = secp256k1_ecdsa_pubkey_decompress((unsigned char*)begin(), &clen);
-    assert(ret);
-    assert(clen == (int)size());
-#else
     CECKey key;
     if (!key.SetPubKey(begin(), size()))
         return false;
     std::vector<unsigned char> pubkey;
     key.GetPubKey(pubkey, false);
     Set(pubkey.begin(), pubkey.end());
-#endif
     return true;
 }
 
@@ -89,17 +104,12 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, unsigned char ccChild[32], unsigned i
     unsigned char out[64];
     BIP32Hash(cc, nChild, *begin(), begin()+1, out);
     memcpy(ccChild, out+32, 32);
-#ifdef USE_SECP256K1
-    pubkeyChild = *this;
-    bool ret = secp256k1_ecdsa_pubkey_tweak_add((unsigned char*)pubkeyChild.begin(), pubkeyChild.size(), out);
-#else
     CECKey key;
     bool ret = key.SetPubKey(begin(), size());
     ret &= key.TweakPublic(out);
     std::vector<unsigned char> pubkey;
     key.GetPubKey(pubkey, true);
     pubkeyChild.Set(pubkey.begin(), pubkey.end());
-#endif
     return ret;
 }
 
