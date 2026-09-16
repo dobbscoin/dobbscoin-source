@@ -158,6 +158,16 @@ public:
         assert(hashGenesisBlock == HASHGENESISBLOCK);
 
         vSeeds.push_back(CDNSSeedData("dobbscoin.info", "seed.dobbscoin.info"));
+        vSeeds.push_back(CDNSSeedData("seed1.dobbscoin.info", "seed1.dobbscoin.info"));
+        vSeeds.push_back(CDNSSeedData("seed2.dobbscoin.info", "seed2.dobbscoin.info"));
+        vSeeds.push_back(CDNSSeedData("seed3.dobbscoin.info", "seed3.dobbscoin.info"));
+        vSeeds.push_back(CDNSSeedData("seed4.dobbscoin.info", "seed4.dobbscoin.info"));
+        vSeeds.push_back(CDNSSeedData("seed5.dobbscoin.info", "seed5.dobbscoin.info"));
+        vSeeds.push_back(CDNSSeedData("seed6.dobbscoin.info", "seed6.dobbscoin.info"));
+        vSeeds.push_back(CDNSSeedData("seed7.dobbscoin.info", "seed7.dobbscoin.info"));
+        vSeeds.push_back(CDNSSeedData("seed8.dobbscoin.info", "seed8.dobbscoin.info"));
+        vSeeds.push_back(CDNSSeedData("seed9.dobbscoin.info", "seed9.dobbscoin.info"));
+        vSeeds.push_back(CDNSSeedData("seed10.dobbscoin.info", "seed10.dobbscoin.info"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
