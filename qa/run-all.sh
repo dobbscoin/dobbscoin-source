@@ -6,22 +6,21 @@
 #
 # There is no CI here on purpose (Forgejo Actions is off, GitHub is a push
 # mirror), so this is the "run it before a release" option made real. It exits
-# non-zero on any UNEXPECTED failure. The four functional tests that are known
-# to fail are listed below by name rather than skipped, so the list stays
-# visible and shrinks as they are fixed.
+# non-zero on any UNEXPECTED failure. Tests that are known to fail are listed by
+# name in KNOWN_FAIL rather than skipped, so the list stays visible and shrinks
+# as they are fixed.
 #
-# Why those four fail: three of them mine 50-100 blocks in a single RPC call,
-# and regtest slows from instant to about 33 s/block once the difficulty
-# retarget engages above height 10. The fourth, getblocktemplate_proposals,
-# hits the template-vs-recomputed-target trap written up in qa/cltv/README.md.
+# KNOWN_FAIL is empty and should stay that way. It was four tests until regtest
+# stopped retargeting; all four were the same difficulty problem wearing
+# different hats, getblocktemplate_proposals' bad-diffbits included.
 set -u
 
-SRC="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../src" && pwd)}"
+SRC="$(cd "${1:-$(dirname "${BASH_SOURCE[0]}")/../src}" && pwd)"  # absolute: the sub-suites cd elsewhere
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOBBSCOIND="$SRC/dobbscoind"
 CLI="$SRC/dobbscoin-cli"
 
-KNOWN_FAIL="bipdersig.py getblocktemplate_proposals.py wallet.py walletbackup.py"
+KNOWN_FAIL=""
 
 for b in "$DOBBSCOIND" "$CLI"; do
     [[ -x "$b" ]] || { echo "not built: $b"; exit 2; }
