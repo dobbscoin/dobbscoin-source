@@ -70,6 +70,8 @@ public:
     bool AllowMinDifficultyBlocks() const { return fAllowMinDifficultyBlocks; }
     /** Skip proof-of-work check: allow mining of any difficulty block */
     bool SkipProofOfWorkCheck() const { return fSkipProofOfWorkCheck; }
+    /** Never retarget: nBits stays where it starts. Regtest only. */
+    bool PowNoRetargeting() const { return fPowNoRetargeting; }
     /** Make standard checks */
     bool RequireStandard() const { return fRequireStandard; }
     int64_t TargetTimespan() const { return nTargetTimespan; }
@@ -115,6 +117,7 @@ protected:
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
     bool fSkipProofOfWorkCheck;
+    bool fPowNoRetargeting;
     bool fTestnetToBeDeprecatedFieldRPC;
 };
 

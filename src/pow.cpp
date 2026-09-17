@@ -718,6 +718,16 @@ bool CheckAuxPowProofOfWork(const CBlockHeader& block)
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
+    // Regtest: hold whatever nBits the previous block carried, which is the
+    // genesis powLimit unless a test set something else deliberately. Without
+    // this, regtest mines 19 blocks at 207fffff in a few milliseconds each and
+    // then hits the first KGW retarget at height 20, where the target hardens
+    // from 207fffff to 1f061172 in one step and keeps ratcheting. Measured:
+    // 12-71 ms per block through height 19, 1.6 s at 20, 18.9 s at 23.
+    // Upstream regtest does not retarget either.
+    if (pindexLast != NULL && Params().PowNoRetargeting())
+        return pindexLast->nBits;
+
     int DiffMode = 1;
     if (Params().AllowMinDifficultyBlocks()) {
         if (pindexLast->nHeight+1 >= 20) { DiffMode = 2; }

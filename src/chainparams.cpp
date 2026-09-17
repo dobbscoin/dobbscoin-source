@@ -194,6 +194,7 @@ public:
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
         fSkipProofOfWorkCheck = false;
+        fPowNoRetargeting = false;
         fTestnetToBeDeprecatedFieldRPC = false;
     }
 
@@ -250,6 +251,7 @@ public:
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
+        fPowNoRetargeting = false;
         fTestnetToBeDeprecatedFieldRPC = true;
     }
     const Checkpoints::CCheckpointData& Checkpoints() const 
@@ -296,6 +298,11 @@ public:
         fDefaultConsistencyChecks = true;
         fRequireStandard = false;
         fMineBlocksOnDemand = true;
+        //! Regtest never retargets. Blocks arrive with ~0 s solvetimes, which the
+        //! real retarget reads as a chain running far too fast: KGW engages at
+        //! height 20 and hardens the target by three orders of magnitude, which
+        //! makes a network of one process on one box unmineable on demand.
+        fPowNoRetargeting = true;
         fTestnetToBeDeprecatedFieldRPC = false;
     }
     const Checkpoints::CCheckpointData& Checkpoints() const 
