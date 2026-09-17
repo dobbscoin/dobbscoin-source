@@ -210,6 +210,14 @@ public:
         return block;
     }
 
+    // Base version with the AuxPoW chain ID stripped from the high bits, so
+    // version comparisons stay correct once merge mining sets the chain ID
+    // (from HARDFORK_AUXPOW_MAIN). Mirrors CPureBlockHeader::GetBaseVersion.
+    int32_t GetBaseVersion() const
+    {
+        return CPureBlockHeader::GetBaseVersion(nVersion);
+    }
+
     uint256 GetBlockHash() const
     {
         return *phashBlock;
