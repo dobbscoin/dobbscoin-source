@@ -140,6 +140,8 @@ extern CFeeRate minRelayTxFee;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;
+/** Block whose ancestors we assume to have valid scripts (-assumevalid); 0 = verify all. */
+extern uint256 hashAssumeValid;
 
 /** Minimum disk space required - used in CheckDiskSpace() */
 static const uint64_t nMinDiskSpace = 52428800;

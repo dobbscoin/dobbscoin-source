@@ -243,6 +243,7 @@ std::string HelpMessage(HelpMessageMode mode)
     string strUsage = _("Options:") + "\n";
     strUsage += "  -?                     " + _("This help message") + "\n";
     strUsage += "  -alertnotify=<cmd>     " + _("Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)") + "\n";
+    strUsage += "  -assumevalid=<hex>     " + strprintf(_("If this block is in the chain, assume that it and its ancestors have valid scripts and skip verifying them (0 to verify everything, default: %s)"), Params(CBaseChainParams::MAIN).DefaultAssumeValid().GetHex()) + "\n";
     strUsage += "  -blocknotify=<cmd>     " + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n";
     strUsage += "  -checkblocks=<n>       " + strprintf(_("How many blocks to check at startup (default: %u, 0 = all)"), 288) + "\n";
     strUsage += "  -checklevel=<n>        " + strprintf(_("How thorough the block verification of -checkblocks is (0-4, default: %u)"), 3) + "\n";
@@ -793,6 +794,23 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("Using config file %s\n", GetConfigFile().string());
     LogPrintf("Using at most %i connections (%i file descriptors available)\n", nMaxConnections, nFD);
     std::ostringstream strErrors;
+
+    // -assumevalid=<hex>: block whose ancestors' scripts we take on trust.
+    // "0" (or an empty value) turns it off and verifies every signature.
+    std::string strAssumeValid = GetArg("-assumevalid", Params().DefaultAssumeValid().GetHex());
+    if (strAssumeValid.size() > 2 && strAssumeValid[0] == '0' &&
+        (strAssumeValid[1] == 'x' || strAssumeValid[1] == 'X'))
+        strAssumeValid = strAssumeValid.substr(2);
+    if (strAssumeValid.empty() || strAssumeValid == "0") {
+        hashAssumeValid = uint256(0);
+        LogPrintf("Verifying scripts for all blocks.\n");
+    } else if (strAssumeValid.size() != 64 ||
+               strAssumeValid.find_first_not_of("0123456789abcdefABCDEF") != std::string::npos) {
+        return InitError(strprintf(_("Invalid block hash for -assumevalid: '%s'"), strAssumeValid));
+    } else {
+        hashAssumeValid = uint256(strAssumeValid);
+        LogPrintf("Assuming ancestors of block %s have valid scripts.\n", hashAssumeValid.GetHex());
+    }
 
     LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
     if (nScriptCheckThreads) {
