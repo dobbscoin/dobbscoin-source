@@ -37,7 +37,7 @@ class WalletTest (DobbscoinTestFramework):
         self.sync_all()
 
     def run_test (self):
-        print "Mining blocks..."
+        print("Mining blocks...")
 
         self.nodes[0].setgenerate(True, 1)
 

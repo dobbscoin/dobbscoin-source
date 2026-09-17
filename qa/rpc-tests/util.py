@@ -171,7 +171,11 @@ def start_node(i, dirname, extra_args=None, rpchost=None):
                           _rpchost_to_args(rpchost)  +
                           ["-rpcwait", "getblockcount"], stdout=devnull)
     devnull.close()
-    url = "http://rt:rt@%s:%d" % (rpchost or '127.0.0.1', rpc_port(i))
+    host = rpchost or '127.0.0.1'
+    # rpchost may already carry a port ("127.0.0.1:32171"). Python 2's urlparse
+    # tolerated a second one being appended; Python 3 raises when .port is read.
+    has_port = ':' in host.rsplit(']', 1)[-1]  # ignore an IPv6 bracket group
+    url = "http://rt:rt@%s" % host if has_port else "http://rt:rt@%s:%d" % (host, rpc_port(i))
     proxy = AuthServiceProxy(url)
     proxy.url = url # store URL on proxy for info
     return proxy
