@@ -44,6 +44,7 @@ CCriticalSection cs_main;
 BlockMap mapBlockIndex;
 CChain chainActive;
 CBlockIndex *pindexBestHeader = NULL;
+uint256 hashAssumeValid;
 int64_t nTimeBestReceived = 0;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
@@ -1764,6 +1765,25 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     }
 
     bool fScriptChecks = pindex->nHeight >= Checkpoints::GetTotalBlocksEstimate();
+
+    // -assumevalid: if someone named a block whose history they have already
+    // vetted, and the block we are connecting is an ancestor of it on the header
+    // chain we are actually following, its signatures do not need checking again.
+    // Local speedup only -- no consensus rule is relaxed, every non-script check
+    // still runs, and a block that fails one is still rejected. Upstream also
+    // gates this on nMinimumChainWork, which this tree does not have; requiring
+    // the best header chain to carry at least the assumevalid block's work stands
+    // in for it, so a low-work header chain cannot talk us out of verifying.
+    if (fScriptChecks && hashAssumeValid != uint256(0)) {
+        BlockMap::const_iterator it = mapBlockIndex.find(hashAssumeValid);
+        if (it != mapBlockIndex.end() && pindexBestHeader != NULL &&
+            it->second->GetAncestor(pindex->nHeight) == pindex &&
+            pindexBestHeader->GetAncestor(pindex->nHeight) == pindex &&
+            pindexBestHeader->nChainWork >= it->second->nChainWork) {
+            LogPrint("assumevalid", "assumevalid: skipping script checks for block %d\n", pindex->nHeight);
+            fScriptChecks = false;
+        }
+    }
 
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
     // unless those are already completely spent.

@@ -46,6 +46,8 @@ public:
     };
 
     const uint256& HashGenesisBlock() const { return hashGenesisBlock; }
+    /** Block whose ancestors are assumed to have valid scripts; 0 disables. */
+    const uint256& DefaultAssumeValid() const { return hashAssumeValid; }
     const MessageStartChars& MessageStart() const { return pchMessageStart; }
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
@@ -87,6 +89,7 @@ protected:
     CChainParams() {}
 
     uint256 hashGenesisBlock;
+    uint256 hashAssumeValid;
     MessageStartChars pchMessageStart;
     //! Raw pub key bytes for the broadcast alert signing key.
     std::vector<unsigned char> vAlertPubKey;

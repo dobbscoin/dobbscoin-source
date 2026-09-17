@@ -157,6 +157,16 @@ public:
         hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == HASHGENESISBLOCK);
 
+        /**
+         * Default -assumevalid: block 1,890,000 (2026-08-20 UTC), which was
+         * buried 16,318 blocks deep when it was chosen, and whose hash was read
+         * back from two independent nodes. Scripts in its ancestors are not
+         * re-verified. This is a local sync-speed setting only: it relaxes no
+         * consensus rule, every non-script check still runs on every block, and
+         * -assumevalid=0 restores full verification.
+         */
+        hashAssumeValid = uint256("0x179ef9bac5e0a36e4163c893378086fe779045183ceb581106408de43090df3b");
+
         vSeeds.push_back(CDNSSeedData("dobbscoin.info", "seed.dobbscoin.info"));
         vSeeds.push_back(CDNSSeedData("seed1.dobbscoin.info", "seed1.dobbscoin.info"));
         vSeeds.push_back(CDNSSeedData("seed2.dobbscoin.info", "seed2.dobbscoin.info"));
@@ -224,6 +234,7 @@ public:
         vSeeds.clear();
         vSeeds.push_back(CDNSSeedData("testnet-seed.dobbscoin.info", "testnet-seed.dobbscoin.info"));
 
+        hashAssumeValid = uint256(0); //! testnet is cheap to verify in full
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
@@ -277,6 +288,7 @@ public:
 
         vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();  //! Regtest mode doesn't have any DNS seeds.
+        hashAssumeValid = uint256(0); //! regtest always verifies every script
 
         fRequireRPCPassword = false;
         fMiningRequiresPeers = false;
