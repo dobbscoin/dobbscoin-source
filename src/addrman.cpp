@@ -331,6 +331,12 @@ void CAddrMan::Attempt_(const CService& addr, int64_t nTime)
     info.nAttempts++;
 }
 
+//! Cap on the number of random slot draws Select_() makes before giving up and
+//! returning an empty address. With few addresses almost every draw hits an
+//! empty slot; the old unbounded loop pinned a core on cryptographic RNG calls
+//! (issue #39). ThreadOpenConnections retries on an invalid address next pass.
+static const int ADDRMAN_SELECT_MAX_TRIES = 10000;
+
 CAddress CAddrMan::Select_()
 {
     if (size() == 0)
@@ -340,9 +346,9 @@ CAddress CAddrMan::Select_()
     if (nTried > 0 && (nNew == 0 || GetRandInt(2) == 0)) {
         // use a tried node
         double fChanceFactor = 1.0;
-        while (1) {
-            int nKBucket = GetRandInt(ADDRMAN_TRIED_BUCKET_COUNT);
-            int nKBucketPos = GetRandInt(ADDRMAN_BUCKET_SIZE);
+        for (int nTries = 0; nTries < ADDRMAN_SELECT_MAX_TRIES; nTries++) {
+            int nKBucket = insecure_rand() % ADDRMAN_TRIED_BUCKET_COUNT;
+            int nKBucketPos = insecure_rand() % ADDRMAN_BUCKET_SIZE;
             if (vvTried[nKBucket][nKBucketPos] == -1)
                 continue;
             int nId = vvTried[nKBucket][nKBucketPos];
@@ -355,9 +361,9 @@ CAddress CAddrMan::Select_()
     } else {
         // use a new node
         double fChanceFactor = 1.0;
-        while (1) {
-            int nUBucket = GetRandInt(ADDRMAN_NEW_BUCKET_COUNT);
-            int nUBucketPos = GetRandInt(ADDRMAN_BUCKET_SIZE);
+        for (int nTries = 0; nTries < ADDRMAN_SELECT_MAX_TRIES; nTries++) {
+            int nUBucket = insecure_rand() % ADDRMAN_NEW_BUCKET_COUNT;
+            int nUBucketPos = insecure_rand() % ADDRMAN_BUCKET_SIZE;
             if (vvNew[nUBucket][nUBucketPos] == -1)
                 continue;
             int nId = vvNew[nUBucket][nUBucketPos];
@@ -368,6 +374,9 @@ CAddress CAddrMan::Select_()
             fChanceFactor *= 1.2;
         }
     }
+
+    // Both tables were too sparse to land on a filled slot within the cap.
+    return CAddress();
 }
 
 #ifdef DEBUG_ADDRMAN
