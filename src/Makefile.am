@@ -22,6 +22,12 @@ DOBBSCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_C
 
 DOBBSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 
+# We link libsecp256k1 statically. Since v0.5.x its header decorates every
+# function with __declspec(dllimport) on Windows unless SECP256K1_STATIC is
+# defined, so without this a mingw build compiles cleanly and then fails to
+# link with undefined __imp_secp256k1_* references. No effect off Windows.
+DOBBSCOIN_INCLUDES += -DSECP256K1_STATIC
+
 LIBDOBBSCOIN_SERVER=libdobbscoin_server.a
 LIBDOBBSCOIN_WALLET=libdobbscoin_wallet.a
 LIBDOBBSCOIN_COMMON=libdobbscoin_common.a
@@ -387,11 +393,18 @@ if GLIBC_BACK_COMPAT
 endif
 
 libdobbscoinconsensus_la_LDFLAGS = -no-undefined $(RELDFLAGS)
-libdobbscoinconsensus_la_LIBADD = $(CRYPTO_LIBS)
-libdobbscoinconsensus_la_CPPFLAGS = $(CRYPTO_CFLAGS) -I$(builddir)/obj -DBUILD_DOBBSCOIN_INTERNAL
-if USE_LIBSECP256K1
-libdobbscoinconsensus_la_LIBADD += secp256k1/libsecp256k1.la
-endif
+# Unconditionally, because pubkey.cpp calls into libsecp256k1 unconditionally.
+# This used to sit behind if USE_LIBSECP256K1, whose variable configure.ac
+# never assigns, so the conditional has always been false and this library has
+# never linked libsecp256k1 on any platform. It only surfaced when signature
+# verification moved onto it.
+libdobbscoinconsensus_la_LIBADD = $(CRYPTO_LIBS) $(LIBSECP256K1)
+# pubkey.cpp and lax_der_parsing.c include <secp256k1.h> unconditionally, and a
+# per-target _CPPFLAGS replaces AM_CPPFLAGS, so DOBBSCOIN_INCLUDES does not reach
+# them here. Without this the bundled header is invisible to this target: mingw
+# fails outright, and a Linux box with libsecp256k1-dev installed silently
+# compiles against /usr/include/secp256k1.h while linking the bundled library.
+libdobbscoinconsensus_la_CPPFLAGS = $(CRYPTO_CFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DSECP256K1_STATIC -DBUILD_DOBBSCOIN_INTERNAL
 endif
 
 CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
