@@ -179,6 +179,19 @@ public:
         vSeeds.push_back(CDNSSeedData("seed9.dobbscoin.info", "seed9.dobbscoin.info"));
         vSeeds.push_back(CDNSSeedData("seed10.dobbscoin.info", "seed10.dobbscoin.info"));
 
+        /**
+         * A second domain, because ten names on one domain is one failure and not
+         * ten. dobbscoin.info renews 2027-01-18, six days before the block
+         * 2,000,000 fork; if that renewal is ever missed, every name above stops
+         * resolving at once and a new node cannot find the network by name at all.
+         * Same six nodes behind these, named for the pantheon.
+         */
+        vSeeds.push_back(CDNSSeedData("jhvh1.23skidoo.info", "jhvh1.23skidoo.info")); // JHVH-1
+        vSeeds.push_back(CDNSSeedData("dobbs.23skidoo.info", "dobbs.23skidoo.info")); // "Bob" Dobbs
+        vSeeds.push_back(CDNSSeedData("eris.23skidoo.info", "eris.23skidoo.info")); // Eris
+        vSeeds.push_back(CDNSSeedData("connie.23skidoo.info", "connie.23skidoo.info")); // Connie Dobbs
+        vSeeds.push_back(CDNSSeedData("nheeghee.23skidoo.info", "nheeghee.23skidoo.info")); // the Nhee Ghee
+
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
