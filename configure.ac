@@ -99,6 +99,12 @@ AC_ARG_WITH([natpmp],
   [use_natpmp=$withval],
   [use_natpmp=auto])
 
+AC_ARG_ENABLE([static-portmap],
+  [AS_HELP_STRING([--enable-static-portmap],
+  [link libnatpmp and libminiupnpc statically, so a distributed binary does not need them installed on the target machine (default is no)])],
+  [use_static_portmap=$enableval],
+  [use_static_portmap=no])
+
 AC_ARG_ENABLE([natpmp-default],
   [AS_HELP_STRING([--enable-natpmp-default],
   [if NAT-PMP is enabled, turn it on at startup (default is no)])],
@@ -543,6 +549,30 @@ if test x$use_natpmp != xno; then
     [AC_CHECK_LIB([natpmp], [main],[NATPMP_LIBS=-lnatpmp], [have_natpmp=no], [$natpmp_probe_libs])],
     [have_natpmp=no]
   )
+fi
+
+dnl Link the two port-mapping libraries into the binary rather than against them.
+dnl Every other library we link is either present on any desktop (OpenSSL, boost) or
+dnl already static (BDB, secp256k1). These two are not: a published Linux build fails
+dnl in the loader with "libnatpmp.so.1: cannot open shared object file" on a machine
+dnl that never installed them, before it can print anything of its own. Opt-in, so an
+dnl ordinary build from source is unchanged; the release build passes it.
+dnl Windows is excluded: the depends system already links everything statically there,
+dnl and natpmp needs -liphlpapi -lws2_32 alongside.
+if test x$use_static_portmap = xyes; then
+  if test x$TARGET_OS = xwindows; then
+    AC_MSG_WARN([--enable-static-portmap ignored: the Windows build is already static])
+  else
+    if test x$have_natpmp != xno && test x"$NATPMP_LIBS" != x; then
+      NATPMP_LIBS="-l:libnatpmp.a"
+      AC_MSG_NOTICE([linking libnatpmp statically])
+    fi
+    if test x$have_miniupnpc != xno && test x"$MINIUPNPC_LIBS" != x; then
+      MINIUPNPC_LIBS="-l:libminiupnpc.a"
+      MINIUPNPC_CPPFLAGS="$MINIUPNPC_CPPFLAGS -DSTATICLIB -DMINIUPNP_STATICLIB"
+      AC_MSG_NOTICE([linking libminiupnpc statically])
+    fi
+  fi
 fi
 
 DOBBSCOIN_QT_INIT
