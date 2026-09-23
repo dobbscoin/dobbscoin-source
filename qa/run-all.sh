@@ -3,6 +3,7 @@
 # Run every test suite in this tree, in one command.
 #
 #   ./qa/run-all.sh [path/to/src]
+#   ./qa/run-all.sh build/src      # CMake build (cmake -B build); "build" works too
 #
 # There is no CI here on purpose (Forgejo Actions is off, GitHub is a push
 # mirror), so this is the "run it before a release" option made real. It exits
@@ -15,7 +16,11 @@
 # different hats, getblocktemplate_proposals' bad-diffbits included.
 set -u
 
+# In a CMake build the binaries sit where Autotools puts them, under build/src.
 SRC="$(cd "${1:-$(dirname "${BASH_SOURCE[0]}")/../src}" && pwd)"  # absolute: the sub-suites cd elsewhere
+if [[ ! -x "$SRC/dobbscoind" && -x "$SRC/src/dobbscoind" ]]; then
+    SRC="$SRC/src"
+fi
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOBBSCOIND="$SRC/dobbscoind"
 CLI="$SRC/dobbscoin-cli"
