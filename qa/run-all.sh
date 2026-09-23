@@ -69,11 +69,18 @@ for suite in "cltv/run-cltv-chain-tests.sh" \
 done
 
 echo "== functional tests (qa/rpc-tests)"
+# The framework keeps a prebuilt 200-block chain, wallets included, in ./cache and
+# reuses it whenever it exists. A cache left by an earlier build is not what this
+# build would make: after the SQLite wallet landed, a cache from the Berkeley DB
+# build fed walletmigration.py a wallet it then migrated. So every run starts from
+# a fresh working directory and builds its own cache once, for all the tests.
+WORK=$(mktemp -d /tmp/run-all-cwd.XXXXXX)
+trap 'rm -rf "$WORK"' EXIT
 for t in "$HERE"/rpc-tests/*.py; do
     name=$(basename "$t")
     case $name in netutil.py|util.py|test_framework.py) continue;; esac
     log=/tmp/run-all-$name.log
-    timeout 300 python3 "$t" --srcdir "$SRC" > "$log" 2>&1
+    (cd "$WORK" && timeout 300 python3 "$t" --srcdir "$SRC") > "$log" 2>&1
     if grep -q "Tests successful" "$log"; then
         report "$name" PASS
     elif [[ " $KNOWN_FAIL " == *" $name "* ]]; then
