@@ -1,17 +1,21 @@
 package=qrencode
-$(package)_version=3.4.3
-# The 20141007 snapshot 404s, and upstream fukuchi.org no longer serves 3.4.3
-# or 3.4.4 either. This snapshot still carries the identical tarball -- the
-# sha256 below is unchanged and verifies. Debian names it *.orig.tar.bz2,
-# hence download_file differing from file_name.
-$(package)_download_path=https://snapshot.debian.org/archive/debian/20150101T000000Z/pool/main/q/qrencode
-$(package)_download_file=qrencode_$(qrencode_version).orig.tar.bz2
-$(package)_file_name=qrencode-$(qrencode_version).tar.bz2
-$(package)_sha256_hash=dfd71487513c871bad485806bfd1fdb304dedc84d2b01a8fb8e0940b50597a98
+# Same release and sha256 as Bitcoin Core's depends (v22 onward). Upstream
+# fukuchi.org no longer serves the tarball (404), so fetch Core's pinned copy;
+# the sha256 check makes the mirror's identity irrelevant.
+$(package)_version=4.1.1
+$(package)_download_path=https://bitcoincore.org/depends-sources
+$(package)_file_name=$(package)-$($(package)_version).tar.gz
+$(package)_sha256_hash=da448ed4f52aba6bcb0cd48cac0dd51b8692bccc4cd127431402fca6f8171e8e
 
 define $(package)_set_vars
-$(package)_config_opts=--disable-shared --without-tools --disable-sdltest
+$(package)_config_opts=--disable-shared --without-tools --without-tests --without-png
+$(package)_config_opts+=--disable-gprof --disable-gcov --disable-mudflap
+$(package)_config_opts+=--disable-dependency-tracking --enable-option-checking
 $(package)_config_opts_linux=--with-pic
+endef
+
+define $(package)_preprocess_cmds
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub use
 endef
 
 define $(package)_config_cmds
@@ -24,4 +28,8 @@ endef
 
 define $(package)_stage_cmds
   $(MAKE) DESTDIR=$($(package)_staging_dir) install
+endef
+
+define $(package)_postprocess_cmds
+  rm -f lib/*.la
 endef
