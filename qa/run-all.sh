@@ -27,6 +27,19 @@ for b in "$DOBBSCOIND" "$CLI"; do
 done
 
 pass=0; fail=0; expected=0
+
+# Stop whatever a functional test left running and WAIT until it has exited.
+# pkill only sends SIGTERM; a node flushing its chainstate on the way out can
+# hold its ports for seconds, and the next test used to start straight away.
+reap_test_nodes() {
+    pkill -f '[d]atadir=/tmp/test' 2>/dev/null || return 0
+    for _ in $(seq 30); do
+        pgrep -f '[d]atadir=/tmp/test' >/dev/null || return 0
+        sleep 1
+    done
+    pkill -9 -f '[d]atadir=/tmp/test' 2>/dev/null
+    sleep 1
+}
 report() { # name verdict
     case "$2" in
         PASS) pass=$((pass+1));   printf "  %-40s PASS\n" "$1" ;;
@@ -69,7 +82,7 @@ for t in "$HERE"/rpc-tests/*.py; do
         report "$name" FAIL
         grep -iE "Unexpected exception|Assertion failed|Error:" "$log" | head -3
     fi
-    pkill -f '[d]atadir=/tmp/test' 2>/dev/null
+    reap_test_nodes
 done
 
 echo

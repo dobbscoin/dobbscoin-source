@@ -85,38 +85,56 @@ class NodeB(object):
             f.write("regtest=1\nrpcuser=av\nrpcpassword=test\nrpcport=%d\n" % self.rpcport)
 
     def start(self, assumevalid, wait_height=None, expect_fail=False):
-        """Start B from an empty datadir. Returns an Rpc on success, or the
-        daemon's startup output as a string if it never came up.
+        """Start B from an empty datadir. Returns an Rpc on success, or (with
+        expect_fail) the daemon's output as a string once it has refused to
+        start, or None if it came up anyway.
 
         dobbscoind -daemon forks without closing the stdio it inherited, so a
         subprocess pipe here would never see EOF and would block forever. The
-        daemon gets a file instead, which is also where a failed AppInit2 leaves
-        its message: the fork happens before AppInit2, so the parent exits 0
-        whatever the child decides.
+        daemon gets a file instead.
         """
         subprocess.call(["rm", "-rf", self.datadir])
         self.conf()
-        startlog = os.path.join(self.datadir, "start.out")
-        args = [self.daemon, "-regtest", "-datadir=" + self.datadir, "-daemon",
+        args = [self.daemon, "-regtest", "-datadir=" + self.datadir,
                 "-rpcuser=av", "-rpcpassword=test", "-rpcport=%d" % self.rpcport,
                 "-listen=0", "-discover=0", "-debug=assumevalid",
                 "-connect=127.0.0.1:%d" % self.portA] + list(self.extra)
         if assumevalid is not None:
             args.append("-assumevalid=" + assumevalid)
+        if expect_fail:
+            return self.start_refused(args)
+        startlog = os.path.join(self.datadir, "start.out")
         with open(startlog, "w") as out:
-            subprocess.call(args, stdout=out, stderr=subprocess.STDOUT)
+            subprocess.call(args + ["-daemon"], stdout=out, stderr=subprocess.STDOUT)
         rpc = Rpc(os.path.join(self.datadir, "dobbscoin.conf"))
-        deadline = time.time() + (20 if expect_fail else 180)
+        deadline = time.time() + 180
         while time.time() < deadline:
             try:
                 h = rpc("getblockcount")
                 if wait_height is None or h >= wait_height:
                     return rpc
             except Exception:
-                if expect_fail and os.path.getsize(startlog) > 0:
-                    break
+                pass
             time.sleep(1)
         return open(startlog).read() or "(node never answered RPC)"
+
+    def start_refused(self, args, timeout=60):
+        """Run the daemon in the foreground and wait for it to exit.
+
+        Not -daemon: the -daemon parent prints "Dobbscoin server starting" and
+        exits 0 before the forked child has even reached AppInit2, so the start
+        log is non-empty long before the child writes its InitError. Polling
+        that file for "anything written yet" raced the child and, whenever the
+        poll won, read only the "starting" line (the intermittent "non-hex
+        rejected" failure). In the foreground the process exits after
+        InitError, so its whole output is in hand when run() returns.
+        """
+        try:
+            p = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                               text=True, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            return None  # still running: it accepted the argument (run() killed it)
+        return p.stdout or "(exited %d with no output)" % p.returncode
 
     def stop(self):
         pidfile = os.path.join(self.datadir, "regtest", "dobbscoind.pid")
