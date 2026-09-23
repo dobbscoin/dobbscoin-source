@@ -323,7 +323,6 @@ std::string HelpMessage(HelpMessageMode mode)
     if (GetBoolArg("-help-debug", false))
     {
         strUsage += "  -checkpoints           " + strprintf(_("Only accept block chain matching built-in checkpoints (default: %u)"), 1) + "\n";
-        strUsage += "  -dblogsize=<n>         " + strprintf(_("Flush database activity from memory pool to disk log every <n> megabytes (default: %u)"), 100) + "\n";
         strUsage += "  -disablesafemode       " + strprintf(_("Disable safemode, override a real safe mode event (default: %u)"), 0) + "\n";
         strUsage += "  -testsafemode          " + strprintf(_("Force safe mode (default: %u)"), 0) + "\n";
         strUsage += "  -dropmessagestest=<n>  " + _("Randomly drop 1 of every <n> network messages") + "\n";
@@ -359,7 +358,6 @@ std::string HelpMessage(HelpMessageMode mode)
     if (GetBoolArg("-help-debug", false))
     {
         strUsage += "  -printpriority         " + strprintf(_("Log transaction priority and fee per kB when mining blocks (default: %u)"), 0) + "\n";
-        strUsage += "  -privdb                " + strprintf(_("Sets the DB_PRIVATE flag in the wallet db environment (default: %u)"), 1) + "\n";
         strUsage += "  -regtest               " + _("Enter regression test mode, which uses a special chain in which blocks can be solved instantly.") + "\n";
         strUsage += "                         " + _("This is intended for regression testing tools and app development.") + "\n";
         strUsage += "                         " + _("In this mode -genproclimit controls how many blocks are generated immediately.") + "\n";
@@ -785,7 +783,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("Dobbscoin version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
     LogPrintf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
 #ifdef ENABLE_WALLET
-    LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
+    LogPrintf("Using SQLite version %s\n", WalletDBVersion());
 #endif
     if (!fLogTimestamps)
         LogPrintf("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
@@ -839,44 +837,35 @@ bool AppInit2(boost::thread_group& threadGroup)
 
         if (!bitdb.Open(GetDataDir()))
         {
-            // try moving the database env out of the way
-            boost::filesystem::path pathDatabase = GetDataDir() / "database";
-            boost::filesystem::path pathDatabaseBak = GetDataDir() / strprintf("database.%d.bak", GetTime());
-            try {
-                boost::filesystem::rename(pathDatabase, pathDatabaseBak);
-                LogPrintf("Moved old %s to %s. Retrying.\n", pathDatabase.string(), pathDatabaseBak.string());
-            } catch(boost::filesystem::filesystem_error &error) {
-                 // failure is ok (well, not really, but it's not worse than what we started with)
-            }
-
-            // try again
-            if (!bitdb.Open(GetDataDir())) {
-                // if it still fails, it probably means we can't even create the database env
-                string msg = strprintf(_("Error initializing wallet database environment %s!"), strDataDir);
-                return InitError(msg);
-            }
+            string msg = strprintf(_("Error initializing wallet database environment %s!"), strDataDir);
+            return InitError(msg);
         }
 
         if (GetBoolArg("-salvagewallet", false))
         {
-            // Recover readable keypairs:
-            if (!CWalletDB::Recover(bitdb, strWalletFile, true))
-                return false;
+            // Recover readable keypairs (from a Berkeley DB or an SQLite wallet):
+            std::string strError;
+            if (!CWalletDB::Recover(bitdb, strWalletFile, true, strError))
+                return InitError(strprintf(_("-salvagewallet failed: %s"), strError));
         }
 
         if (filesystem::exists(GetDataDir() / strWalletFile))
         {
-            CDBEnv::VerifyResult r = bitdb.Verify(strWalletFile, CWalletDB::Recover);
-            if (r == CDBEnv::RECOVER_OK)
+            // A wallet written by v0.13.x or earlier is a Berkeley DB file. Convert
+            // it once; the original is kept beside it, and nothing is changed if
+            // the conversion cannot be completed and verified.
+            std::string strError;
+            if (!bitdb.MigrateFromBerkeley(strWalletFile, strError))
             {
-                string msg = strprintf(_("Warning: wallet.dat corrupt, data salvaged!"
-                                         " Original wallet.dat saved as wallet.{timestamp}.bak in %s; if"
-                                         " your balance or transactions are incorrect you should"
-                                         " restore from a backup."), strDataDir);
-                InitWarning(msg);
+                LogPrintf("Wallet migration failed: %s\n", strError);
+                return InitError(strprintf(_("%s is a Berkeley DB wallet from an earlier version and could not be "
+                                             "converted to the new wallet format: %s. The file has not been changed. "
+                                             "If it is damaged, -salvagewallet can recover its keys."),
+                                           strWalletFile, strError));
             }
-            if (r == CDBEnv::RECOVER_FAIL)
-                return InitError(_("wallet.dat corrupt, salvage failed"));
+
+            if (bitdb.Verify(strWalletFile, strError) != CDBEnv::VERIFY_OK)
+                return InitError(strprintf(_("%s is not a readable wallet: %s"), strWalletFile, strError));
         }
     } // (!fDisableWallet)
 #endif // ENABLE_WALLET

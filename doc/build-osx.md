@@ -38,29 +38,10 @@ Instructions: Homebrew
 
 #### Install dependencies using Homebrew
 
-        brew install autoconf automake libtool boost miniupnpc openssl pkg-config protobuf qt
+        brew install autoconf automake libtool boost miniupnpc openssl pkg-config protobuf qt sqlite
 
-#### Installing berkeley-db4 using Homebrew
-
-The homebrew package for berkeley-db4 has been broken for some time.  It will install without Java though.
-
-Running this command takes you into brew's interactive mode, which allows you to configure, make, and install by hand:
-```
-$ brew install https://raw.github.com/mxcl/homebrew/master/Library/Formula/berkeley-db4.rb -–without-java 
-```
-
-The rest of these commands are run inside brew interactive mode:
-```
-/private/tmp/berkeley-db4-UGpd0O/db-4.8.30 $ cd ..
-/private/tmp/berkeley-db4-UGpd0O $ db-4.8.30/dist/configure --prefix=/usr/local/Cellar/berkeley-db4/4.8.30 --mandir=/usr/local/Cellar/berkeley-db4/4.8.30/share/man --enable-cxx
-/private/tmp/berkeley-db4-UGpd0O $ make
-/private/tmp/berkeley-db4-UGpd0O $ make install
-/private/tmp/berkeley-db4-UGpd0O $ exit
-```
-
-After exiting, you'll get a warning that the install is keg-only, which means it wasn't symlinked to `/usr/local`.  You don't need it to link it to build dobbscoin, but if you want to, here's how:
-
-    $ brew link --force berkeley-db4
+The wallet is stored in SQLite (`sqlite` above; configure finds Homebrew's keg-only copy
+through `brew --prefix sqlite`). Berkeley DB is no longer needed.
 
 
 ### Building `dobbscoind`

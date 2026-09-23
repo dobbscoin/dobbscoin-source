@@ -1732,6 +1732,31 @@ bool CWallet::SetDefaultKey(const CPubKey &vchPubKey)
 }
 
 /**
+ * Keypool writes are batched into one transaction. The wallet file runs with
+ * synchronous=FULL, so every commit is an fsync; one commit per key made
+ * "keypoolrefill 1000" take seconds (far longer on a spinning disk).
+ *
+ * Every CWalletDB on a file shares that file's single SQLite connection, so the
+ * key records GenerateNewKey writes through its own handle (WriteKey, or
+ * WriteCryptedKey via AddCryptedKey for an encrypted wallet) land in the same
+ * transaction as the pool records written here.
+ *
+ * If a transaction cannot be started (a caller on this thread already holds
+ * one), the writes simply join the open transaction, as they did before.
+ * On failure the transaction is rolled back and setKeyPool is left without the
+ * new indexes, so no in-memory pool entry ever lacks its record on disk. The
+ * generated keys stay in the in-memory keystore until restart; none of them
+ * has been handed out.
+ */
+static bool BeginKeyPoolTxn(CWalletDB& walletdb, const char* pszFunc)
+{
+    if (walletdb.TxnBegin())
+        return true;
+    LogPrintf("%s : no transaction of its own, writing inside the open one\n", pszFunc);
+    return false;
+}
+
+/**
  * Mark old keypool keys as used,
  * and generate all new keys 
  */
@@ -1740,21 +1765,37 @@ bool CWallet::NewKeyPool()
     {
         LOCK(cs_wallet);
         CWalletDB walletdb(strWalletFile);
-        BOOST_FOREACH(int64_t nIndex, setKeyPool)
-            walletdb.ErasePool(nIndex);
-        setKeyPool.clear();
+        bool fTxn = BeginKeyPoolTxn(walletdb, "CWallet::NewKeyPool");
+        std::vector<int64_t> vNew;
+        try {
+            BOOST_FOREACH(int64_t nIndex, setKeyPool)
+                if (!walletdb.ErasePool(nIndex))
+                    throw runtime_error("CWallet::NewKeyPool() : erasing old key failed");
+            setKeyPool.clear();
 
-        if (IsLocked())
-            return false;
+            if (IsLocked()) {
+                if (fTxn && !walletdb.TxnCommit())
+                    throw runtime_error("CWallet::NewKeyPool() : committing erased keys failed");
+                return false;
+            }
 
-        int64_t nKeys = max(GetArg("-keypool", 100), (int64_t)0);
-        for (int i = 0; i < nKeys; i++)
-        {
-            int64_t nIndex = i+1;
-            walletdb.WritePool(nIndex, CKeyPool(GenerateNewKey()));
-            setKeyPool.insert(nIndex);
+            int64_t nKeys = max(GetArg("-keypool", 100), (int64_t)0);
+            for (int i = 0; i < nKeys; i++)
+            {
+                int64_t nIndex = i+1;
+                if (!walletdb.WritePool(nIndex, CKeyPool(GenerateNewKey())))
+                    throw runtime_error("CWallet::NewKeyPool() : writing generated key failed");
+                vNew.push_back(nIndex);
+            }
+            if (fTxn && !walletdb.TxnCommit())
+                throw runtime_error("CWallet::NewKeyPool() : committing new keys failed");
+        } catch (...) {
+            if (fTxn)
+                walletdb.TxnAbort(); // no-op if TxnCommit already rolled back
+            throw;
         }
-        LogPrintf("CWallet::NewKeyPool wrote %d new keys\n", nKeys);
+        setKeyPool.insert(vNew.begin(), vNew.end());
+        LogPrintf("CWallet::NewKeyPool wrote %d new keys\n", vNew.size());
     }
     return true;
 }
@@ -1767,8 +1808,6 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
         if (IsLocked())
             return false;
 
-        CWalletDB walletdb(strWalletFile);
-
         // Top up key pool
         unsigned int nTargetSize;
         if (kpSize > 0)
@@ -1776,15 +1815,33 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
         else
             nTargetSize = max(GetArg("-keypool", 100), (int64_t) 0);
 
-        while (setKeyPool.size() < (nTargetSize + 1))
-        {
-            int64_t nEnd = 1;
-            if (!setKeyPool.empty())
-                nEnd = *(--setKeyPool.end()) + 1;
-            if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey())))
-                throw runtime_error("TopUpKeyPool() : writing generated key failed");
-            setKeyPool.insert(nEnd);
-            LogPrintf("keypool added key %d, size=%u\n", nEnd, setKeyPool.size());
+        if (setKeyPool.size() >= (nTargetSize + 1))
+            return true; // full: no write transaction for the common case
+
+        CWalletDB walletdb(strWalletFile);
+        bool fTxn = BeginKeyPoolTxn(walletdb, "CWallet::TopUpKeyPool");
+        std::vector<int64_t> vAdded;
+        try {
+            while (setKeyPool.size() < (nTargetSize + 1))
+            {
+                int64_t nEnd = 1;
+                if (!setKeyPool.empty())
+                    nEnd = *(--setKeyPool.end()) + 1;
+                if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey())))
+                    throw runtime_error("TopUpKeyPool() : writing generated key failed");
+                setKeyPool.insert(nEnd);
+                vAdded.push_back(nEnd);
+                LogPrintf("keypool added key %d, size=%u\n", nEnd, setKeyPool.size());
+            }
+            if (fTxn && !walletdb.TxnCommit())
+                throw runtime_error("TopUpKeyPool() : committing generated keys failed");
+        } catch (...) {
+            if (fTxn) {
+                walletdb.TxnAbort(); // no-op if TxnCommit already rolled back
+                BOOST_FOREACH(int64_t nIndex, vAdded)
+                    setKeyPool.erase(nIndex);
+            }
+            throw;
         }
     }
     return true;

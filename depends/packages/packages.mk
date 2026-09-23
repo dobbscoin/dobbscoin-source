@@ -14,7 +14,7 @@ qt_linux_$(USE_LINUX_STATIC_QT5):=$(qt5_linux_packages)
 qt_linux_:=$(qt46_linux_packages)
 qt_linux_packages:=$(qt_linux_$(USE_LINUX_STATIC_QT5))
 
-wallet_packages=bdb
+wallet_packages=sqlite
 
 upnp_packages=miniupnpc natpmp
 

@@ -51,7 +51,7 @@ EXTRA_LIBRARIES = \
   libdobbscoin_server.a \
   libdobbscoin_cli.a
 if ENABLE_WALLET
-DOBBSCOIN_INCLUDES += $(BDB_CPPFLAGS)
+DOBBSCOIN_INCLUDES += $(SQLITE_CFLAGS)
 EXTRA_LIBRARIES += libdobbscoin_wallet.a
 endif
 
@@ -99,6 +99,7 @@ DOBBSCOIN_CORE_H = \
   primitives/transaction.h \
   core_io.h \
   crypter.h \
+  bdbro.h \
   db.h \
   eccryptoverify.h \
   ecwrapper.h \
@@ -203,6 +204,7 @@ libdobbscoin_server_a_SOURCES = \
 # when wallet enabled
 libdobbscoin_wallet_a_CPPFLAGS = $(DOBBSCOIN_INCLUDES)
 libdobbscoin_wallet_a_SOURCES = \
+  bdbro.cpp \
   db.cpp \
   crypter.cpp \
   rpcdump.cpp \
@@ -328,7 +330,7 @@ if TARGET_WINDOWS
 dobbscoind_SOURCES += dobbscoind-res.rc
 endif
 
-dobbscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS)
+dobbscoind_LDADD += $(BOOST_LIBS) $(SQLITE_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS)
 dobbscoind_CPPFLAGS = $(DOBBSCOIN_INCLUDES)
 dobbscoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 

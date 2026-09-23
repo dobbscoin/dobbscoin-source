@@ -297,15 +297,15 @@ case $host in
          dnl the user (--without-wallet or --without-gui for example).
 
          openssl_prefix=`$BREW --prefix openssl 2>/dev/null`
-         bdb_prefix=`$BREW --prefix berkeley-db4 2>/dev/null`
+         sqlite_prefix=`$BREW --prefix sqlite 2>/dev/null`
          qt5_prefix=`$BREW --prefix qt5 2>/dev/null`
          if test x$openssl_prefix != x; then
            PKG_CONFIG_PATH="$openssl_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
            export PKG_CONFIG_PATH
          fi
-         if test x$bdb_prefix != x; then
-           CPPFLAGS="$CPPFLAGS -I$bdb_prefix/include"
-           LIBS="$LIBS -L$bdb_prefix/lib"
+         if test x$sqlite_prefix != x; then
+           PKG_CONFIG_PATH="$sqlite_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
+           export PKG_CONFIG_PATH
          fi
          if test x$qt5_prefix != x; then
            PKG_CONFIG_PATH="$qt5_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
@@ -524,11 +524,6 @@ AC_SUBST(LEVELDB_CPPFLAGS)
 AC_SUBST(LIBLEVELDB)
 AC_SUBST(LIBMEMENV)
 
-if test x$enable_wallet != xno; then
-    dnl Check for libdb_cxx only if wallet enabled
-    DOBBSCOIN_FIND_BDB48
-fi
-
 dnl Check for libminiupnpc (optional)
 if test x$use_upnp != xno; then
   AC_CHECK_HEADERS(
@@ -553,7 +548,7 @@ fi
 
 dnl Link the two port-mapping libraries into the binary rather than against them.
 dnl Every other library we link is either present on any desktop (OpenSSL, boost) or
-dnl already static (BDB, secp256k1). These two are not: a published Linux build fails
+dnl already static (SQLite from depends, secp256k1). These two are not: a published Linux build fails
 dnl in the loader with "libnatpmp.so.1: cannot open shared object file" on a machine
 dnl that never installed them, before it can print anything of its own. Opt-in, so an
 dnl ordinary build from source is unchanged; the release build passes it.
@@ -742,6 +737,11 @@ if test x$use_pkgconfig = xyes; then
       if test x$use_qr != xno; then
         DOBBSCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
+      if test x$enable_wallet != xno; then
+        dnl The wallet keeps its records in SQLite (it used Berkeley DB 4.8 until v0.13.x)
+        PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.7.17],,
+          [AC_MSG_ERROR([sqlite3 not found. The wallet needs it: install libsqlite3-dev (Debian/Ubuntu) or build depends/, or configure with --disable-wallet])])
+      fi
     ]
   )
 else
@@ -755,6 +755,11 @@ else
   if test x$use_qr != xno; then
     DOBBSCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
     DOBBSCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
+  fi
+
+  if test x$enable_wallet != xno; then
+    AC_CHECK_HEADER([sqlite3.h],, [AC_MSG_ERROR([sqlite3.h not found; the wallet needs SQLite, or configure with --disable-wallet])])
+    AC_CHECK_LIB([sqlite3], [sqlite3_backup_init], [SQLITE_LIBS=-lsqlite3], [AC_MSG_ERROR([libsqlite3 not found; the wallet needs SQLite, or configure with --disable-wallet])])
   fi
 fi
 
@@ -969,6 +974,8 @@ AC_SUBST(BUILD_TEST_QT)
 AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
 AC_SUBST(NATPMP_LIBS)
+AC_SUBST(SQLITE_CFLAGS)
+AC_SUBST(SQLITE_LIBS)
 AC_SUBST(NATPMP_CPPFLAGS)
 AC_CONFIG_FILES([Makefile src/Makefile share/setup.nsi share/qt/Info.plist src/test/buildenv.py])
 AC_CONFIG_FILES([qa/pull-tester/run-dobbscoind-for-test.sh],[chmod +x qa/pull-tester/run-dobbscoind-for-test.sh])

@@ -169,10 +169,10 @@ def initialize_chain(test_dir):
         stop_nodes(rpcs)
         wait_dobbscoinds()
         for i in range(4):
-            os.remove(log_filename("cache", i, "debug.log"))
-            os.remove(log_filename("cache", i, "db.log"))
-            os.remove(log_filename("cache", i, "peers.dat"))
-            os.remove(log_filename("cache", i, "fee_estimates.dat"))
+            # db.log was Berkeley DB's error log; an SQLite wallet has none
+            for f in ("debug.log", "db.log", "peers.dat", "fee_estimates.dat"):
+                if os.path.exists(log_filename("cache", i, f)):
+                    os.remove(log_filename("cache", i, f))
 
     for i in range(4):
         from_dir = os.path.join("cache", "node"+str(i))

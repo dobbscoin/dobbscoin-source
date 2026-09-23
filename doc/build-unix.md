@@ -4,13 +4,7 @@ Some notes on how to build Dobbscoin in Unix.
 
 Note
 ---------------------
-Always use absolute paths to configure and compile dobbscoin and the dependencies,
-for example, when specifying the the path of the dependency:
-
-	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
-
-Here BDB_PREFIX must absolute path - it is defined using $(pwd) which ensures
-the usage of the absolute path.
+Always use absolute paths to configure and compile dobbscoin and the dependencies.
 
 To Build
 ---------------------
@@ -33,13 +27,13 @@ These dependencies are required:
  ------------|------------------|----------------------
  libssl      | SSL Support      | Secure communications
  libboost    | Boost            | C++ Library
+ libsqlite3  | SQLite           | Wallet storage (only needed when wallet enabled)
 
 Optional dependencies:
 
  Library     | Purpose          | Description
  ------------|------------------|----------------------
  miniupnpc   | UPnP Support     | Firewall-jumping support
- libdb4.8    | Berkeley DB      | Wallet storage (only needed when wallet enabled)
  qt          | GUI              | GUI toolkit (only needed when GUI enabled)
  protobuf    | Payments in GUI  | Data interchange format used for payment protocol (only needed when GUI enabled)
  libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
@@ -57,35 +51,16 @@ Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 Build requirements:
 
-	sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev
+	sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev libsqlite3-dev
 	
 for Ubuntu 12.04 and later or Debian 7 and later libboost-all-dev has to be installed:
 
 	sudo apt-get install libboost-all-dev
 
- db4.8 packages are available [here](https://launchpad.net/~dobbscoin/+archive/dobbscoin).
- You can add the repository using the following command:
-
-        sudo add-apt-repository ppa:dobbscoin/dobbscoin
-        sudo apt-get update
-
- Ubuntu 12.04 and later have packages for libdb5.1-dev and libdb5.1++-dev,
- but using these will break binary wallet compatibility, and is not recommended.
-
-for Debian 7 (Wheezy) and later:
- The oldstable repository contains db4.8 packages.
- Add the following line to /etc/apt/sources.list,
- replacing [mirror] with any official debian mirror.
-
-	deb http://[mirror]/debian/ oldstable main
-
-To enable the change run
-
-	sudo apt-get update
-
-for other Debian & Ubuntu (with ppa):
-
-	sudo apt-get install libdb4.8-dev libdb4.8++-dev
+The wallet is stored in SQLite; the distribution's `libsqlite3-dev` (any 3.7.17 or
+later) is all it needs. Berkeley DB is no longer used: wallets written by v0.13.x and
+earlier are converted to SQLite the first time the node starts, without libdb. See
+*Wallet storage* in the top-level README.md.
 
 Optional:
 
@@ -140,35 +115,12 @@ To build:
 	make install
 
 
-Berkeley DB
------------
-It is recommended to use Berkeley DB 4.8. If you have to build it yourself:
-
-```bash
-DOBBSCOIN_ROOT=$(pwd)
-
-# Pick some path to install BDB to, here we create a directory within the dobbscoin directory
-BDB_PREFIX="${DOBBSCOIN_ROOT}/db4"
-mkdir -p $BDB_PREFIX
-
-# Fetch the source and verify that it is not tampered with
-wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
-echo '12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz' | sha256sum -c
-# -> db-4.8.30.NC.tar.gz: OK
-tar -xzvf db-4.8.30.NC.tar.gz
-
-# Build the library and install to our prefix
-cd db-4.8.30.NC/build_unix/
-#  Note: Do a static build so that it can be embedded into the exectuable, instead of having to find a .so at runtime
-../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
-make install
-
-# Configure Dobbscoin Core to use our own-built instance of BDB
-cd $DOBBSCOIN_ROOT
-./configure (other args...) LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/"
-```
-
-**Note**: You only need Berkeley DB if the wallet is enabled (see the section *Disable-Wallet mode* below).
+SQLite
+------
+The distribution package is fine (`libsqlite3-dev` on Debian/Ubuntu, `sqlite-devel` on
+Fedora). A static build for distribution comes from `depends/` (package `sqlite`, the same
+3.38.5 release and hash Bitcoin Core pins). You only need SQLite if the wallet is enabled
+(see *Disable-wallet mode* below).
 
 Boost
 -----
@@ -234,7 +186,7 @@ disable-wallet mode with:
 
     ./configure --disable-wallet
 
-In this case there is no dependency on Berkeley DB 4.8.
+In this case there is no dependency on SQLite.
 
 Mining is also possible in disable-wallet mode, but only using the `getblocktemplate` RPC
 call not `getwork`.

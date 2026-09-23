@@ -45,7 +45,7 @@ The Conspiracy wants you mediocre, taxable, and on autopay. (BOB) wants you free
 - [What is (BOB)?](#what-is-bob)
 - [Quick start](#quick-start)
 - [Building from source](#building-from-source-linux)
-- [Wallet builds — Berkeley DB 4.8](#wallet-builds--berkeley-db-48)
+- [Wallet storage — SQLite](#wallet-storage--sqlite)
 - [Network parameters](#network-parameters)
 - [Ecosystem](#ecosystem)
 - [Contributing](#contributing)
@@ -71,9 +71,8 @@ Pre-built binaries for Linux (daemon, Qt5, AppImage) and Windows 64-bit live on 
 ```bash
 git clone https://github.com/dobbscoin/dobbscoin-source.git
 cd dobbscoin-source
-./contrib/install-db4.sh                       # builds BDB 4.8 into $HOME/db4 (no root)
 ./autogen.sh
-./configure --with-bdb=$HOME/db4
+./configure
 make -j$(nproc)
 ./src/dobbscoind --version                     # should say 0.13.0
 ```
@@ -87,7 +86,7 @@ That's it. You now have a working (BOB) node and wallet. Praise "Bob".
 Tested on Ubuntu 22.04 / 24.04 and recent Debian. Install build deps:
 
 ```bash
-sudo apt install build-essential libssl-dev libboost-all-dev libevent-dev \
+sudo apt install build-essential libssl-dev libboost-all-dev libevent-dev libsqlite3-dev \
                  libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev-tools \
                  libprotobuf-dev protobuf-compiler libqrencode-dev
 ```
@@ -98,23 +97,15 @@ For Windows, macOS, and cross-compile, see [`doc/build-*.md`](doc/).
 
 ---
 
-## Wallet builds — Berkeley DB 4.8
+## Wallet storage — SQLite
 
-If `configure` says:
+The wallet keeps its records in **SQLite** (the distro's `libsqlite3-dev`, or `depends/` for release builds). Up to v0.13.x it used Berkeley DB 4.8, which every builder had to fetch from Oracle and compile by hand; that is gone (issue #44). The records themselves did not change: every key, label and transaction is stored exactly as before, only the file around them is different.
 
-> `Found Berkeley DB other than 4.8, required for portable wallets`
+**Your existing `wallet.dat` is converted once, the first time this version starts.** The node reads it without Berkeley DB, writes the same records to a new SQLite file, reads them back and compares them byte for byte, keeps the original as `wallet.dat.bdb-<unixtime>`, and only then puts the new file in place. If anything goes wrong it stops with an error and leaves `wallet.dat` exactly as it was. Encrypted wallets convert without the passphrase.
 
-…**this is not a bug.** (BOB) inherits the Bitcoin Core 0.10 wallet format, which requires **Berkeley DB 4.8.30** for `wallet.dat` portability. Modern distros ship 5.x / 6.x, which cannot open the legacy format. Every serious Bitcoin-family fork still does this.
-
-The helper script installs a local copy into `$HOME/db4` — no root, no system-library tampering:
-
-```bash
-./contrib/install-db4.sh
-./configure --with-bdb=$HOME/db4
-make -j$(nproc)
-```
-
-Skip BDB only if you are running a **node-only** install with no wallet. If you need to hold or move (BOB), you need 4.8. End of debate.
+- A wallet the old version did not shut down cleanly is refused, because some of its data may still be in the `database/` log directory: start the old version once, stop it normally, then start this one.
+- **There is no way back in place.** v0.13.x and earlier cannot open the new file (they refuse to start; they do not damage it). To go back, either restore `wallet.dat.bdb-<unixtime>` (it does not know about anything that happened after the conversion), or `dumpwallet` here and `importwallet` into a fresh wallet on the old version.
+- `-salvagewallet` works on both kinds of file.
 
 ---
 
