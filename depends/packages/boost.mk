@@ -1,10 +1,14 @@
 package=boost
-# 1.74.0 is what Ubuntu 22.04 ships and what the Linux release binaries are
-# already built against, so the tree is known to compile with it unchanged.
-$(package)_version=1_74_0
-$(package)_download_path=https://archives.boost.io/release/1.74.0/source
+# 1.83.0 is the newest Boost this tree compiles against unchanged, and what
+# Debian 13 and Ubuntu 24.04 ship. (The Linux release currently builds against
+# Ubuntu 22.04's 1.74.) 1.86 does not compile: Boost.Filesystem dropped the
+# deprecated v3 calls the tree still uses (path::is_complete, basename,
+# extension), and 1.87 also drops asio::io_service. Going further needs
+# source changes.
+$(package)_version=1_83_0
+$(package)_download_path=https://archives.boost.io/release/1.83.0/source
 $(package)_file_name=$(package)_$($(package)_version).tar.bz2
-$(package)_sha256_hash=83bfc1507731a0906e387fc28b7ef5417d591429e51e788417fe9ff025e116b1
+$(package)_sha256_hash=6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e
 
 define $(package)_set_vars
 $(package)_config_opts_release=variant=release

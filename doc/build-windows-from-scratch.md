@@ -11,7 +11,7 @@ Toolchain: `x86_64-w64-mingw32-g++ (GCC) 12-posix` (Debian 12; Ubuntu 22.04's 10
 Dependency versions (`depends/packages/*.mk`, issue #43):
 
 - Qt: `5.15.19` (static, OpenSSL linked)
-- Boost: `1.74.0`
+- Boost: `1.83.0`
 - OpenSSL: `3.5.8` (LTS)
 - SQLite: `3.38.5` (wallet storage; replaced Berkeley DB 4.8.30)
 - miniupnpc: `2.3.3`
