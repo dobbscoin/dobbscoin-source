@@ -8,7 +8,7 @@
 # which breaks Qt 5.7's direct2d plugin. Lesson learned from OFF PR#1.
 #
 # Build times (first run, cold caches):
-#   build-linux   ~10 min  (BDB 4.8 build dominates)
+#   build-linux   ~8 min
 #   build-win64   ~30 min  (depends/ tree build dominates)
 #   build-appimage ~3 min  (downloads linuxdeploy, packages output of build-linux)
 #   release       <1 min   (uploads + gh release create)
@@ -25,10 +25,6 @@ on:
         description: "Build artifacts only; do not create a GitHub release"
         type: boolean
         default: true
-
-env:
-  # SHA256 of db-4.8.30.NC.tar.gz — verified Oracle download.
-  BDB_TARBALL_SHA256: "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef"
 
 jobs:
   build-linux:
@@ -56,51 +52,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             build-essential libtool autotools-dev automake pkg-config \
-            libssl-dev libevent-dev bsdmainutils python3 \
+            libssl-dev libevent-dev bsdmainutils python3 libsqlite3-dev sqlite3 \
             libboost-system-dev libboost-filesystem-dev libboost-chrono-dev \
             libboost-program-options-dev libboost-test-dev libboost-thread-dev \
             qtbase5-dev qttools5-dev qttools5-dev-tools libqt5gui5 libqt5core5a \
             libqt5dbus5 libqrencode-dev libprotobuf-dev protobuf-compiler \
             ccache file
 
-      - name: Cache BDB 4.8
-        id: cache-bdb
-        uses: actions/cache@v4
-        with:
-          path: db4
-          # v2: v0.13.2 added an encrypt-wallet smoke step that shells out to
-          # db4/bin/db_dump. The v1 cache from earlier runs only preserved
-          # lib/ and include/ (utilities weren't being installed). Bumping
-          # forces a full rebuild that captures bin/ too.
-          key: bdb-4.8.30.NC-ubuntu-22.04-v2
-
-      - name: Build BDB 4.8 (if cache miss)
-        if: steps.cache-bdb.outputs.cache-hit != 'true'
-        run: |
-          BDB_PREFIX="$PWD/db4"
-          mkdir -p "$BDB_PREFIX"
-          curl -fsSL -o db-4.8.30.NC.tar.gz \
-            'https://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
-          echo "${BDB_TARBALL_SHA256}  db-4.8.30.NC.tar.gz" | sha256sum -c
-          tar -xzf db-4.8.30.NC.tar.gz
-          # gcc-11+ has its own __atomic_compare_exchange builtin which collides
-          # with BDB 4.8's static inline of the same name. Rename BDB's copy.
-          # Standard altcoin-community fix; safe because all in-tree call sites
-          # go through the atomic_compare_exchange (no underscore) macro.
-          sed -i 's/__atomic_compare_exchange/__atomic_compare_exchange_db/g' \
-            db-4.8.30.NC/dbinc/atomic.h
-          cd db-4.8.30.NC/build_unix
-          ../dist/configure --enable-cxx --disable-shared --with-pic --prefix="$BDB_PREFIX"
-          # BDB 4.8 install rules race under -j; build parallel, install serial.
-          make -j"$(nproc)"
-          make install
-
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure \
-            LDFLAGS="-L$PWD/db4/lib/" CPPFLAGS="-I$PWD/db4/include/" \
-            --disable-bench
+          ./configure --disable-bench
 
       - name: Build
         run: make -j"$(nproc)"
@@ -119,16 +81,12 @@ jobs:
       - name: Encrypt-wallet round-trip smoke test
         run: |
           # Catches the 8f34d639 class of regression: encryptwallet must persist
-          # encrypted keys to BDB AND the resulting wallet.dat must unlock with
-          # the same passphrase after a clean restart.
+          # encrypted keys to the wallet file AND the resulting wallet.dat must
+          # unlock with the same passphrase after a clean restart. The wallet is
+          # SQLite now (issue #44), so the sqlite3 shell reads it; no db_dump.
+          # qa/rpc-tests/walletmigration.py runs the same check and also looks
+          # for leaked private-key bytes.
           set -euxo pipefail
-          DB_DUMP="$PWD/db4/bin/db_dump"
-          if [ ! -x "$DB_DUMP" ]; then
-            echo "FAIL: $DB_DUMP missing; the BDB cache is stale (no utilities). Bump the cache key."
-            ls -la "$PWD/db4" || true
-            ls -la "$PWD/db4/bin" 2>/dev/null || true
-            exit 1
-          fi
           DD="$RUNNER_TEMP/encrypt-roundtrip"
           mkdir -p "$DD"
           cat > "$DD/dobbscoin.conf" <<EOF
@@ -147,13 +105,12 @@ jobs:
           ./src/dobbscoin-cli -datadir="$DD" -rpcport=18555 encryptwallet "ci-smoke-pass" \
             | grep -q "wallet encrypted" || { echo "FAIL: encryptwallet did not return success message"; exit 1; }
           sleep 6
-          # On-disk shape: must have ckey records and zero leaked cleartext key records
-          # grep can return 1 on zero matches under set -e; pipe through wc to
-          # normalize to a count. Pipefail won't fire because grep returns 0 OR 1
-          # (both "expected" outcomes here) and wc always returns 0.
-          CKEY=$("$DB_DUMP" -p "$DD/regtest/wallet.dat" | { grep -E '^ \\0[0-9a-f]ckey' || true; } | wc -l)
-          KEY=$("$DB_DUMP" -p "$DD/regtest/wallet.dat" | { grep -E '^ \\0[0-9a-f]key$' || true; } | wc -l)
-          MKEY=$("$DB_DUMP" -p "$DD/regtest/wallet.dat" | { grep -E '^ \\0[0-9a-f]mkey' || true; } | wc -l)
+          # On-disk shape: must have ckey records and zero leaked cleartext key records.
+          # A record's key starts with its serialized type: a length byte, then the name.
+          W="$DD/regtest/wallet.dat"
+          CKEY=$(sqlite3 -readonly "$W" "SELECT count(*) FROM main WHERE hex(substr(key,1,5)) = '04636B6579'")
+          KEY=$(sqlite3 -readonly "$W" "SELECT count(*) FROM main WHERE hex(substr(key,1,4)) = '036B6579'")
+          MKEY=$(sqlite3 -readonly "$W" "SELECT count(*) FROM main WHERE hex(substr(key,1,5)) = '046D6B6579'")
           echo "post-encrypt wallet.dat: ckey=$CKEY key=$KEY mkey=$MKEY"
           test "$CKEY" -gt 0 || { echo "FAIL: no ckey records"; exit 1; }
           test "$KEY" -eq 0 || { echo "FAIL: $KEY leaked cleartext key records"; exit 1; }

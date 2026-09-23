@@ -1,12 +1,13 @@
 Used in 0.8.0
 ---------------------
-* wallet.dat: personal wallet (BDB) with keys and transactions
+* wallet.dat: personal wallet with keys and transactions; SQLite in releases after 0.13.8, Berkeley DB (BDB) up to 0.13.8
+* wallet.dat.bdb-<unixtime>: the Berkeley DB wallet as it was before the one-time conversion to SQLite; after 0.13.8
 * peers.dat: peer IP address database (custom format); since 0.7.0
 * blocks/blk000??.dat: block data (custom, 128 MiB per file); since 0.8.0
 * blocks/rev000??.dat; block undo data (custom); since 0.8.0 (format changed since pre-0.8)
 * blocks/index/*; block index (LevelDB); since 0.8.0
 * chainstate/*; block chain state database (LevelDB); since 0.8.0
-* database/*: BDB database environment; only used for wallet since 0.8.0
+* database/*: BDB database environment; only used for wallet from 0.8.0 to 0.13.8
 
 Only used in pre-0.8.0
 ---------------------

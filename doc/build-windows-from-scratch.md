@@ -13,7 +13,7 @@ Dependency versions:
 - Qt: `5.2.1`
 - Boost: `1.55.0`
 - OpenSSL: `1.0.1k`
-- Berkeley DB: `4.8.30`
+- SQLite: `3.38.5` (wallet storage; replaced Berkeley DB 4.8.30)
 - miniupnpc: `1.9.20140701`
 - Protobuf: `2.5.0`
 - qrencode: `3.4.3`

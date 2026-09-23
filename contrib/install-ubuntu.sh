@@ -75,6 +75,7 @@ BASE_PACKAGES=(
     libtool
     pkg-config
     libssl-dev
+    libsqlite3-dev
     libevent-dev
     bsdmainutils
     curl
@@ -108,15 +109,6 @@ if [ "$BUILD_GUI" = "yes" ]; then
 fi
 
 ##############################################################################
-# Install Berkeley DB
-##############################################################################
-
-echo
-echo "Installing Berkeley DB 4.8..."
-
-bash contrib/install-db4.sh
-
-##############################################################################
 # Build
 ##############################################################################
 
@@ -129,17 +121,9 @@ echo
 echo "Configuring..."
 
 if [ "$BUILD_GUI" = "yes" ]; then
-
-    CPPFLAGS="-I$HOME/db4/include" \
-    LDFLAGS="-L$HOME/db4/lib" \
     ./configure
-
 else
-
-    CPPFLAGS="-I$HOME/db4/include" \
-    LDFLAGS="-L$HOME/db4/lib" \
     ./configure --without-gui
-
 fi
 
 echo
