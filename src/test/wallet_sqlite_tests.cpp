@@ -416,6 +416,26 @@ BOOST_AUTO_TEST_CASE(cdb_semantics)
             BOOST_CHECK(db3.Put("gone", "x"));
         }
         BOOST_CHECK(!db.Has("gone"));
+
+        // Another handle on the same file, same thread, writes inside the open
+        // transaction (one connection per file). CWallet's keypool batch relies
+        // on this: GenerateNewKey writes the key through its own CWalletDB.
+        BOOST_CHECK(db.TxnBegin());
+        {
+            TestDB db4(strFile);
+            BOOST_CHECK(db4.Put("nested", "x"));
+        }
+        BOOST_CHECK(db.Has("nested"));
+        BOOST_CHECK(db.TxnAbort());
+        BOOST_CHECK(!db.Has("nested"));
+        BOOST_CHECK(db.TxnBegin());
+        {
+            TestDB db4(strFile);
+            BOOST_CHECK(db4.Put("nested", "x"));
+        }
+        BOOST_CHECK(db.TxnCommit());
+        BOOST_CHECK(db.Has("nested"));
+        BOOST_CHECK(db.Del("nested"));
     }
 
     // Rewrite drops records by prefix ("\x01b" = the serialized key "b").
