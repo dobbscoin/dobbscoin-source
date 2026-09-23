@@ -6,17 +6,23 @@ Build host OS: `Ubuntu 22.04.5 LTS`
 
 Target host: `x86_64-w64-mingw32`
 
-Toolchain: `x86_64-w64-mingw32-g++ (GCC) 10-win32 20220113`
+Toolchain: `x86_64-w64-mingw32-g++ (GCC) 12-posix` (Debian 12; Ubuntu 22.04's 10-posix also works)
 
-Dependency versions:
+Dependency versions (`depends/packages/*.mk`, issue #43):
 
-- Qt: `5.2.1`
-- Boost: `1.55.0`
-- OpenSSL: `1.0.1k`
+- Qt: `5.15.19` (static, OpenSSL linked)
+- Boost: `1.74.0`
+- OpenSSL: `3.5.8` (LTS)
 - SQLite: `3.38.5` (wallet storage; replaced Berkeley DB 4.8.30)
-- miniupnpc: `1.9.20140701`
-- Protobuf: `2.5.0`
-- qrencode: `3.4.3`
+- miniupnpc: `2.3.3`
+- libnatpmp: `20230423`
+- Protobuf: `3.21.12` (BIP70 payment requests)
+- qrencode: `4.1.1`
+- zlib: `1.3.2`
+
+Every tarball is pinned by sha256 and mirrored at
+`https://dobbscoin.info/depends-sources/`, which `make -C depends` falls back to
+when an upstream URL fails.
 
 ## Ubuntu 22.04 / 24.04 workflow
 
