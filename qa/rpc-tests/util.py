@@ -17,14 +17,65 @@ import shutil
 import subprocess
 import time
 import re
+import socket
+import errno
 
 from dobbscoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 
+# Node n listens on 11000+OFFSET+n (p2p) and 12000+OFFSET+n (RPC). OFFSET used to
+# be pid % 999 and nothing checked the ports were free, so a test whose pid
+# landed on a port something else owns could not start its nodes. Offeringsd
+# listens on 127.0.0.1:11928 on guru and vps3 (vps3 also 11929 and 11332-11334):
+# "Unable to bind to 0.0.0.0:11928" failed listtransactions.py in two run-all
+# runs on guru. Now the offset starts at pid % OFFSET_SPAN and moves on until
+# every port the test can use is bindable. The same check skips ports still
+# held by a previous test's nodes that are slow to exit.
+MAX_NODES = 8
+OFFSET_SPAN = 1000 - MAX_NODES  # keeps the p2p block below the RPC block
+_port_offset = None
+
+def _port_free(port):
+    """True if dobbscoind could bind port now. Both listeners set SO_REUSEADDR,
+    so a TIME_WAIT leftover does not count as taken; a live listener on any
+    address (127.0.0.1 included) makes the wildcard bind fail and does."""
+    for family, addr in ((socket.AF_INET, "0.0.0.0"), (socket.AF_INET6, "::")):
+        try:
+            s = socket.socket(family, socket.SOCK_STREAM)
+        except OSError:
+            continue  # no IPv6 on this host
+        try:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            if family == socket.AF_INET6:
+                s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
+            s.bind((addr, port))
+        except OSError as e:
+            if family == socket.AF_INET6 and e.errno in (errno.EADDRNOTAVAIL, errno.EAFNOSUPPORT):
+                continue  # IPv6 present but not usable
+            return False
+        finally:
+            s.close()
+    return True
+
+def port_offset():
+    global _port_offset
+    if _port_offset is None:
+        start = os.getpid() % OFFSET_SPAN
+        for i in range(OFFSET_SPAN):
+            x = (start + i) % OFFSET_SPAN
+            if all(_port_free(base + x + n) for base in (11000, 12000) for n in range(MAX_NODES)):
+                _port_offset = x
+                break
+        else:
+            raise RuntimeError("no free block of %d test ports in 11000-12999" % MAX_NODES)
+    return _port_offset
+
 def p2p_port(n):
-    return 11000 + n + os.getpid()%999
+    assert n < MAX_NODES
+    return 11000 + n + port_offset()
 def rpc_port(n):
-    return 12000 + n + os.getpid()%999
+    assert n < MAX_NODES
+    return 12000 + n + port_offset()
 
 def check_json_precision():
     """Make sure json library being used does not lose precision converting BOB values"""
