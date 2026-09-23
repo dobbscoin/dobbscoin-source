@@ -99,6 +99,7 @@ DOBBSCOIN_CORE_H = \
   primitives/transaction.h \
   core_io.h \
   crypter.h \
+  bdbro.h \
   db.h \
   eccryptoverify.h \
   ecwrapper.h \
@@ -203,6 +204,7 @@ libdobbscoin_server_a_SOURCES = \
 # when wallet enabled
 libdobbscoin_wallet_a_CPPFLAGS = $(DOBBSCOIN_INCLUDES)
 libdobbscoin_wallet_a_SOURCES = \
+  bdbro.cpp \
   db.cpp \
   crypter.cpp \
   rpcdump.cpp \
