@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2026 The Dobbscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,10 +19,20 @@
 
 #include <boost/filesystem/path.hpp>
 
-#include <db_cxx.h>
+/**
+ * Wallet storage.
+ *
+ * Until v0.13.x the wallet lived in a Berkeley DB 4.8 btree. It now lives in a
+ * single SQLite file with one table, main(key BLOB PRIMARY KEY, value BLOB),
+ * holding the very same serialized key/value records CWalletDB always wrote.
+ * Nothing about the records changes; only the container does. A Berkeley DB
+ * wallet.dat found at startup is converted once by CDBEnv::MigrateFromBerkeley,
+ * which reads it with the libdb-free parser in bdbro.h and keeps the original.
+ */
 
 class CDiskBlockIndex;
 class COutPoint;
+class CSQLiteFile;
 
 struct CBlockLocator;
 
@@ -29,6 +40,8 @@ extern unsigned int nWalletDBUpdated;
 
 void ThreadFlushWalletDB(const std::string& strWalletFile);
 
+/** Version string of the wallet storage library, for the startup log and the debug window. */
+std::string WalletDBVersion();
 
 class CDBEnv
 {
@@ -37,67 +50,90 @@ private:
     bool fMockDb;
     boost::filesystem::path path;
 
-    void EnvShutdown();
-
 public:
     mutable CCriticalSection cs_db;
-    DbEnv dbenv;
     std::map<std::string, int> mapFileUseCount;
-    std::map<std::string, Db*> mapDb;
+    std::map<std::string, CSQLiteFile*> mapDb;
 
     CDBEnv();
     ~CDBEnv();
+    /** In-memory databases, for the unit tests. */
     void MakeMock();
     bool IsMock() { return fMockDb; }
 
     /**
-     * Verify that database file strFile is OK. If it is not,
-     * call the callback to try to recover.
-     * This must be called BEFORE strFile is opened.
-     * Returns true if strFile is OK.
+     * Check that database file strFile is a readable SQLite wallet
+     * (PRAGMA quick_check). Must be called BEFORE strFile is opened.
      */
     enum VerifyResult { VERIFY_OK,
                         RECOVER_OK,
                         RECOVER_FAIL };
-    VerifyResult Verify(std::string strFile, bool (*recoverFunc)(CDBEnv& dbenv, std::string strFile));
-    /**
-     * Salvage data from a file that Verify says is bad.
-     * fAggressive sets the DB_AGGRESSIVE flag (see berkeley DB->verify() method documentation).
-     * Appends binary key/value pairs to vResult, returns true if successful.
-     * NOTE: reads the entire database into memory, so cannot be used
-     * for huge databases.
-     */
+    VerifyResult Verify(const std::string& strFile, std::string& strError);
+
     typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char> > KeyValPair;
-    bool Salvage(std::string strFile, bool fAggressive, std::vector<KeyValPair>& vResult);
+
+    /**
+     * Replace the (closed) file strFile with a new SQLite file holding exactly
+     * vRecords. The new file is written beside it, read back and compared
+     * byte for byte, the original is preserved as "<strFile>.<tag>-<unixtime>"
+     * (a hard link to the original inode, or a verified copy where links are
+     * unsupported) and only then is the new file renamed over strFile. On any
+     * failure strFile is left untouched and false is returned with strError set.
+     */
+    bool ReplaceWithSQLite(const std::string& strFile, const std::vector<KeyValPair>& vRecords,
+                           const std::string& strBackupTag, std::string& strBackupName, std::string& strError);
+
+    /**
+     * If strFile is a Berkeley DB wallet, read it and migrate it to SQLite.
+     * Returns true if there was nothing to do or the migration succeeded.
+     */
+    bool MigrateFromBerkeley(const std::string& strFile, std::string& strError);
+
+    /**
+     * Consistent copy of strFile to pathDest through the SQLite backup API,
+     * written to "<pathDest>.tmp", compared record for record with the
+     * wallet, then renamed into place.
+     */
+    bool Backup(const std::string& strFile, const boost::filesystem::path& pathDest, std::string& strError);
 
     bool Open(const boost::filesystem::path& path);
     void Close();
     void Flush(bool fShutdown);
-    void CheckpointLSN(const std::string& strFile);
+    void CheckpointLSN(const std::string& strFile) {} // Berkeley DB leftover: SQLite commits are self-contained
 
     void CloseDb(const std::string& strFile);
     bool RemoveDb(const std::string& strFile);
 
-    DbTxn* TxnBegin(int flags = DB_TXN_WRITE_NOSYNC)
-    {
-        DbTxn* ptxn = NULL;
-        int ret = dbenv.txn_begin(NULL, &ptxn, flags);
-        if (!ptxn || ret != 0)
-            return NULL;
-        return ptxn;
-    }
+    /** Open (or return the already open) connection for strFile. Caller holds cs_db. */
+    CSQLiteFile* OpenFile(const std::string& strFile, bool fCreate);
 };
 
 extern CDBEnv bitdb;
 
+/** File-level helpers, used by the migration and exposed for the unit tests. */
+/** Create a new SQLite wallet file holding exactly vRecords (one transaction). */
+bool CreateSQLiteWalletFile(const boost::filesystem::path& path, const std::vector<CDBEnv::KeyValPair>& vRecords, std::string& strError);
+/** Every record of an SQLite wallet file, in key order. */
+bool ReadSQLiteWalletFile(const boost::filesystem::path& path, std::vector<CDBEnv::KeyValPair>& vRecords, std::string& strError);
+/** True only if the file holds exactly vExpected, byte for byte, and passes quick_check. */
+bool VerifySQLiteWalletFile(const boost::filesystem::path& path, std::vector<CDBEnv::KeyValPair> vExpected, std::string& strError);
 
-/** RAII class that provides access to a Berkeley database */
+/** A forward-only, key-ordered cursor over one wallet file. */
+class CDBCursor;
+
+enum {
+    DB_CURSOR_OK = 0,
+    DB_CURSOR_DONE = 1,
+    DB_CURSOR_ERROR = -1
+};
+
+/** RAII class that provides access to a wallet database */
 class CDB
 {
 protected:
-    Db* pdb;
+    CSQLiteFile* pdb;
     std::string strFile;
-    DbTxn* activeTxn;
+    bool activeTxn;
     bool fReadOnly;
 
     explicit CDB(const std::string& strFilename, const char* pszMode = "r+");
@@ -111,6 +147,11 @@ private:
     CDB(const CDB&);
     void operator=(const CDB&);
 
+    bool ReadRaw(const CDataStream& ssKey, CDataStream& ssValue);
+    bool WriteRaw(const CDataStream& ssKey, const CDataStream& ssValue, bool fOverwrite);
+    bool EraseRaw(const CDataStream& ssKey);
+    bool ExistsRaw(const CDataStream& ssKey);
+
 protected:
     template <typename K, typename T>
     bool Read(const K& key, T& value)
@@ -118,32 +159,23 @@ protected:
         if (!pdb)
             return false;
 
-        // Key
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
-        Dbt datKey(&ssKey[0], ssKey.size());
-
-        // Read
-        Dbt datValue;
-        datValue.set_flags(DB_DBT_MALLOC);
-        int ret = pdb->get(activeTxn, &datKey, &datValue, 0);
-        memset(datKey.get_data(), 0, datKey.get_size());
-        if (datValue.get_data() == NULL)
+        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        bool fFound = ReadRaw(ssKey, ssValue);
+        memory_cleanse_stream(ssKey);
+        if (!fFound)
             return false;
 
-        // Unserialize value
+        bool fOk = true;
         try {
-            CDataStream ssValue((char*)datValue.get_data(), (char*)datValue.get_data() + datValue.get_size(), SER_DISK, CLIENT_VERSION);
             ssValue >> value;
         } catch (const std::exception&) {
-            return false;
+            fOk = false;
         }
-
-        // Clear and free memory
-        memset(datValue.get_data(), 0, datValue.get_size());
-        free(datValue.get_data());
-        return (ret == 0);
+        memory_cleanse_stream(ssValue);
+        return fOk;
     }
 
     template <typename K, typename T>
@@ -154,25 +186,19 @@ protected:
         if (fReadOnly)
             assert(!"Write called on database in read-only mode");
 
-        // Key
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
-        Dbt datKey(&ssKey[0], ssKey.size());
-
-        // Value
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         ssValue.reserve(10000);
         ssValue << value;
-        Dbt datValue(&ssValue[0], ssValue.size());
 
-        // Write
-        int ret = pdb->put(activeTxn, &datKey, &datValue, (fOverwrite ? 0 : DB_NOOVERWRITE));
+        bool fOk = WriteRaw(ssKey, ssValue, fOverwrite);
 
         // Clear memory in case it was a private key
-        memset(datKey.get_data(), 0, datKey.get_size());
-        memset(datValue.get_data(), 0, datValue.get_size());
-        return (ret == 0);
+        memory_cleanse_stream(ssKey);
+        memory_cleanse_stream(ssValue);
+        return fOk;
     }
 
     template <typename K>
@@ -183,18 +209,12 @@ protected:
         if (fReadOnly)
             assert(!"Erase called on database in read-only mode");
 
-        // Key
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
-        Dbt datKey(&ssKey[0], ssKey.size());
-
-        // Erase
-        int ret = pdb->del(activeTxn, &datKey, 0);
-
-        // Clear memory
-        memset(datKey.get_data(), 0, datKey.get_size());
-        return (ret == 0 || ret == DB_NOTFOUND);
+        bool fOk = EraseRaw(ssKey);
+        memory_cleanse_stream(ssKey);
+        return fOk;
     }
 
     template <typename K>
@@ -203,97 +223,34 @@ protected:
         if (!pdb)
             return false;
 
-        // Key
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
-        Dbt datKey(&ssKey[0], ssKey.size());
-
-        // Exists
-        int ret = pdb->exists(activeTxn, &datKey, 0);
-
-        // Clear memory
-        memset(datKey.get_data(), 0, datKey.get_size());
-        return (ret == 0);
+        bool fOk = ExistsRaw(ssKey);
+        memory_cleanse_stream(ssKey);
+        return fOk;
     }
 
-    Dbc* GetCursor()
+    static void memory_cleanse_stream(CDataStream& ss)
     {
-        if (!pdb)
-            return NULL;
-        Dbc* pcursor = NULL;
-        int ret = pdb->cursor(NULL, &pcursor, 0);
-        if (ret != 0)
-            return NULL;
-        return pcursor;
+        if (!ss.empty())
+            memset(&ss[0], 0, ss.size());
     }
 
-    int ReadAtCursor(Dbc* pcursor, CDataStream& ssKey, CDataStream& ssValue, unsigned int fFlags = DB_NEXT)
-    {
-        // Read at cursor
-        Dbt datKey;
-        if (fFlags == DB_SET || fFlags == DB_SET_RANGE || fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE) {
-            datKey.set_data(&ssKey[0]);
-            datKey.set_size(ssKey.size());
-        }
-        Dbt datValue;
-        if (fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE) {
-            datValue.set_data(&ssValue[0]);
-            datValue.set_size(ssValue.size());
-        }
-        datKey.set_flags(DB_DBT_MALLOC);
-        datValue.set_flags(DB_DBT_MALLOC);
-        int ret = pcursor->get(&datKey, &datValue, fFlags);
-        if (ret != 0)
-            return ret;
-        else if (datKey.get_data() == NULL || datValue.get_data() == NULL)
-            return 99999;
-
-        // Convert to streams
-        ssKey.SetType(SER_DISK);
-        ssKey.clear();
-        ssKey.write((char*)datKey.get_data(), datKey.get_size());
-        ssValue.SetType(SER_DISK);
-        ssValue.clear();
-        ssValue.write((char*)datValue.get_data(), datValue.get_size());
-
-        // Clear and free memory
-        memset(datKey.get_data(), 0, datKey.get_size());
-        memset(datValue.get_data(), 0, datValue.get_size());
-        free(datKey.get_data());
-        free(datValue.get_data());
-        return 0;
-    }
+    /**
+     * Cursor over every record in key order, or (with pssStart) over every
+     * record whose key is >= *pssStart -- Berkeley DB's DB_SET_RANGE.
+     * Returns NULL on error. Free with CloseCursor.
+     */
+    CDBCursor* GetCursor(const CDataStream* pssStart = NULL);
+    /** DB_CURSOR_OK with ssKey/ssValue filled, DB_CURSOR_DONE past the end, DB_CURSOR_ERROR. */
+    int ReadAtCursor(CDBCursor* pcursor, CDataStream& ssKey, CDataStream& ssValue);
+    void CloseCursor(CDBCursor* pcursor);
 
 public:
-    bool TxnBegin()
-    {
-        if (!pdb || activeTxn)
-            return false;
-        DbTxn* ptxn = bitdb.TxnBegin();
-        if (!ptxn)
-            return false;
-        activeTxn = ptxn;
-        return true;
-    }
-
-    bool TxnCommit()
-    {
-        if (!pdb || !activeTxn)
-            return false;
-        int ret = activeTxn->commit(0);
-        activeTxn = NULL;
-        return (ret == 0);
-    }
-
-    bool TxnAbort()
-    {
-        if (!pdb || !activeTxn)
-            return false;
-        int ret = activeTxn->abort();
-        activeTxn = NULL;
-        return (ret == 0);
-    }
+    bool TxnBegin();
+    bool TxnCommit();
+    bool TxnAbort();
 
     bool ReadVersion(int& nVersion)
     {

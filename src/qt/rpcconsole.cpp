@@ -20,7 +20,7 @@
 #include <openssl/crypto.h>
 
 #ifdef ENABLE_WALLET
-#include <db_cxx.h>
+#include "db.h"
 #endif
 
 #include <QKeyEvent>
@@ -223,10 +223,10 @@ RPCConsole::RPCConsole(QWidget *parent) :
     // set library version labels
     ui->openSSLVersion->setText(SSLeay_version(SSLEAY_VERSION));
 #ifdef ENABLE_WALLET
-    ui->berkeleyDBVersion->setText(DbEnv::version(0, 0, 0));
+    ui->walletDBVersion->setText(QString::fromStdString(WalletDBVersion()));
 #else
-    ui->label_berkeleyDBVersion->hide();
-    ui->berkeleyDBVersion->hide();
+    ui->label_walletDBVersion->hide();
+    ui->walletDBVersion->hide();
 #endif
 
     startExecutor();

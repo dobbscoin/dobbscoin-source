@@ -6,6 +6,7 @@
 #include "walletdb.h"
 
 #include "base58.h"
+#include "bdbro.h"
 #include "protocol.h"
 #include "serialize.h"
 #include "sync.h"
@@ -209,24 +210,22 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
 {
     bool fAllAccounts = (strAccount == "*");
 
-    Dbc* pcursor = GetCursor();
+    CDataStream ssStart(SER_DISK, CLIENT_VERSION);
+    ssStart << std::make_pair(std::string("acentry"), std::make_pair((fAllAccounts ? string("") : strAccount), uint64_t(0)));
+    CDBCursor* pcursor = GetCursor(&ssStart);
     if (!pcursor)
         throw runtime_error("CWalletDB::ListAccountCreditDebit() : cannot create DB cursor");
-    unsigned int fFlags = DB_SET_RANGE;
     while (true)
     {
         // Read next record
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        if (fFlags == DB_SET_RANGE)
-            ssKey << std::make_pair(std::string("acentry"), std::make_pair((fAllAccounts ? string("") : strAccount), uint64_t(0)));
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
-        fFlags = DB_NEXT;
-        if (ret == DB_NOTFOUND)
+        int ret = ReadAtCursor(pcursor, ssKey, ssValue);
+        if (ret == DB_CURSOR_DONE)
             break;
-        else if (ret != 0)
+        else if (ret != DB_CURSOR_OK)
         {
-            pcursor->close();
+            CloseCursor(pcursor);
             throw runtime_error("CWalletDB::ListAccountCreditDebit() : error scanning DB");
         }
 
@@ -245,7 +244,7 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
         entries.push_back(acentry);
     }
 
-    pcursor->close();
+    CloseCursor(pcursor);
 }
 
 DBErrors CWalletDB::ReorderTransactions(CWallet* pwallet)
@@ -621,7 +620,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
         }
 
         // Get cursor
-        Dbc* pcursor = GetCursor();
+        CDBCursor* pcursor = GetCursor();
         if (!pcursor)
         {
             LogPrintf("Error getting wallet database cursor\n");
@@ -634,11 +633,12 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
             int ret = ReadAtCursor(pcursor, ssKey, ssValue);
-            if (ret == DB_NOTFOUND)
+            if (ret == DB_CURSOR_DONE)
                 break;
-            else if (ret != 0)
+            else if (ret != DB_CURSOR_OK)
             {
                 LogPrintf("Error reading next record from wallet database\n");
+                CloseCursor(pcursor);
                 return DB_CORRUPT;
             }
 
@@ -662,7 +662,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
             if (!strErr.empty())
                 LogPrintf("%s\n", strErr);
         }
-        pcursor->close();
+        CloseCursor(pcursor);
     }
     catch (boost::thread_interrupted) {
         throw;
@@ -721,7 +721,7 @@ DBErrors CWalletDB::FindWalletTx(CWallet* pwallet, vector<uint256>& vTxHash, vec
         }
 
         // Get cursor
-        Dbc* pcursor = GetCursor();
+        CDBCursor* pcursor = GetCursor();
         if (!pcursor)
         {
             LogPrintf("Error getting wallet database cursor\n");
@@ -734,11 +734,12 @@ DBErrors CWalletDB::FindWalletTx(CWallet* pwallet, vector<uint256>& vTxHash, vec
             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
             int ret = ReadAtCursor(pcursor, ssKey, ssValue);
-            if (ret == DB_NOTFOUND)
+            if (ret == DB_CURSOR_DONE)
                 break;
-            else if (ret != 0)
+            else if (ret != DB_CURSOR_OK)
             {
                 LogPrintf("Error reading next record from wallet database\n");
+                CloseCursor(pcursor);
                 return DB_CORRUPT;
             }
 
@@ -755,7 +756,7 @@ DBErrors CWalletDB::FindWalletTx(CWallet* pwallet, vector<uint256>& vTxHash, vec
                 vWtx.push_back(wtx);
             }
         }
-        pcursor->close();
+        CloseCursor(pcursor);
     }
     catch (boost::thread_interrupted) {
         throw;
@@ -853,93 +854,60 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
 {
     if (!wallet.fFileBacked)
         return false;
-    while (true)
-    {
-        {
-            LOCK(bitdb.cs_db);
-            if (!bitdb.mapFileUseCount.count(wallet.strWalletFile) || bitdb.mapFileUseCount[wallet.strWalletFile] == 0)
-            {
-                // Flush log data to the dat file
-                bitdb.CloseDb(wallet.strWalletFile);
-                bitdb.CheckpointLSN(wallet.strWalletFile);
-                bitdb.mapFileUseCount.erase(wallet.strWalletFile);
-
-                // Copy wallet.dat
-                filesystem::path pathSrc = GetDataDir() / wallet.strWalletFile;
-                filesystem::path pathDest(strDest);
-                if (filesystem::is_directory(pathDest))
-                    pathDest /= wallet.strWalletFile;
-
-                try {
-#if BOOST_VERSION >= 104000
-                    filesystem::copy_file(pathSrc, pathDest, filesystem::copy_option::overwrite_if_exists);
-#else
-                    filesystem::copy_file(pathSrc, pathDest);
-#endif
-                    LogPrintf("copied wallet.dat to %s\n", pathDest.string());
-                    return true;
-                } catch(const filesystem::filesystem_error &e) {
-                    LogPrintf("error copying wallet.dat to %s - %s\n", pathDest.string(), e.what());
-                    return false;
-                }
-            }
-        }
-        MilliSleep(100);
+    filesystem::path pathDest(strDest);
+    if (filesystem::is_directory(pathDest))
+        pathDest /= wallet.strWalletFile;
+    std::string strError;
+    if (!bitdb.Backup(wallet.strWalletFile, pathDest, strError)) {
+        LogPrintf("error backing up wallet to %s - %s\n", pathDest.string(), strError);
+        return false;
     }
-    return false;
+    LogPrintf("backed up wallet to %s\n", pathDest.string());
+    return true;
 }
 
 //
-// Try to (very carefully!) recover wallet.dat if there is a problem.
+// -salvagewallet: rebuild the wallet from whatever records can still be read.
 //
-bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
+// A Berkeley DB file (a wallet from v0.13.x or earlier that failed to migrate)
+// is read with the libdb-free parser: a clean read if the file allows it,
+// otherwise every leaf page that still parses. An SQLite wallet is read with
+// SQLite. The recovered records -- only the key records when fOnlyKeys is set,
+// which is what -salvagewallet asks for, each one checked by ReadKeyValue --
+// are written to a new SQLite wallet, and the damaged original is kept beside
+// it as <filename>.bdb-<unixtime> or <filename>.salvage-<unixtime>. -rescan
+// then finds the transactions again. An SQLite file damaged below the record
+// level (so SQLite itself cannot read it) is refused with a pointer to the
+// sqlite3 shell's .recover.
+//
+bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys, std::string& strError)
 {
-    // Recovery procedure:
-    // move wallet.dat to wallet.timestamp.bak
-    // Call Salvage with fAggressive=true to
-    // get as much data as possible.
-    // Rewrite salvaged data to wallet.dat
-    // Set -rescan so any missing transactions will be
-    // found.
-    int64_t now = GetTime();
-    std::string newFilename = strprintf("wallet.%d.bak", now);
-
-    int result = dbenv.dbenv.dbrename(NULL, filename.c_str(), NULL,
-                                      newFilename.c_str(), DB_AUTO_COMMIT);
-    if (result == 0)
-        LogPrintf("Renamed %s to %s\n", filename, newFilename);
-    else
-    {
-        LogPrintf("Failed to rename %s to %s\n", filename, newFilename);
+    filesystem::path pathFile = GetDataDir() / filename;
+    if (!filesystem::exists(pathFile)) {
+        strError = strprintf("%s does not exist", filename);
         return false;
     }
 
     std::vector<CDBEnv::KeyValPair> salvagedData;
-    bool allOK = dbenv.Salvage(newFilename, true, salvagedData);
-    if (salvagedData.empty())
-    {
-        LogPrintf("Salvage(aggressive) found no records in %s.\n", newFilename);
+    bool fBerkeley = BerkeleyRO::IsBerkeleyBtreeFile(pathFile);
+    if (fBerkeley) {
+        std::string strReport;
+        bool fRead = BerkeleyRO::Salvage(pathFile, salvagedData, strReport);
+        LogPrintf("Salvage of %s: %s\n", filename, strReport);
+        if (!fRead) {
+            strError = strprintf("no records could be read from %s (%s)", filename, strReport);
+            return false;
+        }
+    } else if (!ReadSQLiteWalletFile(pathFile, salvagedData, strError)) {
+        strError = strprintf("%s cannot be read as an SQLite wallet (%s). To try to rescue it, run the sqlite3 "
+                             "shell's .recover command on a copy", filename, strError);
         return false;
     }
-    LogPrintf("Salvage(aggressive) found %u records\n", salvagedData.size());
+    LogPrintf("Salvage read %u records from %s\n", (unsigned int)salvagedData.size(), filename);
 
-    bool fSuccess = allOK;
-    boost::scoped_ptr<Db> pdbCopy(new Db(&dbenv.dbenv, 0));
-    int ret = pdbCopy->open(NULL,               // Txn pointer
-                            filename.c_str(),   // Filename
-                            "main",             // Logical db name
-                            DB_BTREE,           // Database type
-                            DB_CREATE,          // Flags
-                            0);
-    if (ret > 0)
-    {
-        LogPrintf("Cannot create database file %s\n", filename);
-        return false;
-    }
+    std::vector<CDBEnv::KeyValPair> vKeep;
     CWallet dummyWallet;
     CWalletScanState wss;
-
-    DbTxn* ptxn = dbenv.TxnBegin();
     BOOST_FOREACH(CDBEnv::KeyValPair& row, salvagedData)
     {
         if (fOnlyKeys)
@@ -957,22 +925,20 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
                 continue;
             }
         }
-        Dbt datKey(&row.first[0], row.first.size());
-        Dbt datValue(&row.second[0], row.second.size());
-        int ret2 = pdbCopy->put(ptxn, &datKey, &datValue, DB_NOOVERWRITE);
-        if (ret2 > 0)
-            fSuccess = false;
+        vKeep.push_back(row);
     }
-    ptxn->commit(0);
-    pdbCopy->close(0);
-
-    return fSuccess;
+    if (vKeep.empty()) {
+        strError = strprintf("%u records were read from %s but none of them is a key", (unsigned int)salvagedData.size(), filename);
+        return false;
+    }
+    std::string strBackup;
+    if (!dbenv.ReplaceWithSQLite(filename, vKeep, fBerkeley ? "bdb" : "salvage", strBackup, strError))
+        return false;
+    LogPrintf("Salvaged %u of %u records from %s into a new SQLite wallet; the original is kept as %s\n",
+              (unsigned int)vKeep.size(), (unsigned int)salvagedData.size(), filename, strBackup);
+    return true;
 }
 
-bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename)
-{
-    return CWalletDB::Recover(dbenv, filename, false);
-}
 
 bool CWalletDB::WriteDestData(const std::string &address, const std::string &key, const std::string &value)
 {
