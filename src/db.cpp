@@ -38,6 +38,13 @@ const int32_t WALLET_SCHEMA_VERSION = 1;
 
 typedef std::vector<unsigned char> Bytes;
 
+/** Remove a file if it exists; never throws (these are cleanup paths). */
+void RemoveQuietly(const boost::filesystem::path& p)
+{
+    boost::system::error_code ec;
+    boost::filesystem::remove(p, ec);
+}
+
 std::string SQLiteError(sqlite3* db, int rc)
 {
     if (db)
@@ -192,8 +199,12 @@ bool ReadAllRecords(sqlite3* db, std::vector<CDBEnv::KeyValPair>& vRecords, std:
 /** Write vRecords into a brand-new file at path, in one transaction. */
 bool CreateSQLiteWalletFile(const boost::filesystem::path& path, const std::vector<CDBEnv::KeyValPair>& vRecords, std::string& strError)
 {
-    boost::filesystem::remove(path);
-    boost::filesystem::remove(path.string() + "-journal");
+    RemoveQuietly(path);
+    RemoveQuietly(path.string() + "-journal");
+    if (boost::filesystem::exists(path)) {
+        strError = strprintf("cannot remove the stale file %s", path.string());
+        return false;
+    }
     sqlite3* db = OpenStandalone(path, true, false, strError);
     if (!db)
         return false;
@@ -487,15 +498,15 @@ bool CDBEnv::ReplaceWithSQLite(const std::string& strFile, const std::vector<Key
     // 1. Write the records to a new file beside the wallet. A leftover from an
     //    interrupted attempt is simply replaced: the original was never touched.
     if (!CreateSQLiteWalletFile(pathTmp, vRecords, strError)) {
-        boost::filesystem::remove(pathTmp);
-        boost::filesystem::remove(pathTmp.string() + "-journal");
+        RemoveQuietly(pathTmp);
+        RemoveQuietly(pathTmp.string() + "-journal");
         return false;
     }
 
     // 2. Read it back and compare every record byte for byte.
     if (!VerifySQLiteWalletFile(pathTmp, vRecords, strError)) {
         strError = "verification failed: " + strError;
-        boost::filesystem::remove(pathTmp);
+        RemoveQuietly(pathTmp);
         return false;
     }
 
@@ -518,14 +529,14 @@ bool CDBEnv::ReplaceWithSQLite(const std::string& strFile, const std::vector<Key
                 fclose(f);
             }
             if (!FilesIdentical(pathFile, pathBackup)) {
-                boost::filesystem::remove(pathBackup);
+                RemoveQuietly(pathBackup);
                 throw runtime_error("the copy of the original does not match it");
             }
         }
         SyncDirectory(path);
     } catch (const std::exception& e) {
         strError = strprintf("could not preserve the original as %s: %s", pathBackup.string(), e.what());
-        boost::filesystem::remove(pathTmp);
+        RemoveQuietly(pathTmp);
         return false;
     }
 
@@ -600,8 +611,8 @@ bool CDBEnv::Backup(const std::string& strFile, const boost::filesystem::path& p
         fOk = ReadAllRecords(pfile->db, vRecords, strError);
         sqlite3* dst = NULL;
         if (fOk) {
-            boost::filesystem::remove(pathTmp);
-            boost::filesystem::remove(pathTmp.string() + "-journal");
+            RemoveQuietly(pathTmp);
+            RemoveQuietly(pathTmp.string() + "-journal");
             int rc = sqlite3_open_v2(pathTmp.string().c_str(), &dst, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
             if (rc != SQLITE_OK) {
                 strError = strprintf("cannot create %s: %s", pathTmp.string(), SQLiteError(dst, rc));
@@ -640,7 +651,7 @@ bool CDBEnv::Backup(const std::string& strFile, const boost::filesystem::path& p
         }
     }
     if (!fOk)
-        boost::filesystem::remove(pathTmp);
+        RemoveQuietly(pathTmp);
     {
         LOCK(cs_db);
         --mapFileUseCount[strFile];
@@ -1017,7 +1028,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                         }
                     }
                     if (!fSuccess)
-                        boost::filesystem::remove(pathRes);
+                        RemoveQuietly(pathRes);
                 }
                 if (!fSuccess)
                     LogPrintf("CDB::Rewrite : Failed to rewrite database file %s: %s\n", strFile, strError);
