@@ -14,6 +14,9 @@
 #include "data/bdb_fixture.raw.h"
 
 #include <stdio.h>
+#ifndef WIN32
+#include <unistd.h>
+#endif
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
@@ -322,6 +325,38 @@ BOOST_AUTO_TEST_CASE(migrate_refuses_damaged_wallet)
     BOOST_CHECK(env.Verify("wallet.dat", strError) == CDBEnv::RECOVER_FAIL);
     env.Close();
 }
+
+#ifndef WIN32 // POSIX permissions; the check itself is platform-neutral
+BOOST_AUTO_TEST_CASE(refuses_read_only_wallet)
+{
+    // SQLITE_OPEN_READWRITE silently degrades to read-only on a write-protected
+    // file. Refuse at load, as Berkeley DB did, instead of failing at the first write.
+    if (geteuid() == 0) {
+        BOOST_TEST_MESSAGE("skipped: root ignores file permissions");
+        return;
+    }
+    TempDir tmp;
+    fs::path pathWallet = tmp.path / "wallet.dat";
+    std::string strError;
+    std::vector<CDBEnv::KeyValPair> vRecords = AsVector(ExpectedFixture());
+    BOOST_REQUIRE_MESSAGE(CreateSQLiteWalletFile(pathWallet, vRecords, strError), strError);
+    fs::permissions(pathWallet, fs::owner_read | fs::group_read | fs::others_read);
+
+    CDBEnv env;
+    BOOST_REQUIRE(env.Open(tmp.path));
+    BOOST_CHECK(env.Verify("wallet.dat", strError) == CDBEnv::RECOVER_FAIL);
+    BOOST_CHECK_MESSAGE(strError.find("read-only") != std::string::npos, strError);
+
+    // Reading it is still fine; only opening it for writing is refused.
+    std::vector<CDBEnv::KeyValPair> vRead;
+    BOOST_CHECK_MESSAGE(ReadSQLiteWalletFile(pathWallet, vRead, strError), strError);
+    BOOST_CHECK(vRead == vRecords);
+
+    fs::permissions(pathWallet, fs::owner_read | fs::owner_write);
+    BOOST_CHECK_MESSAGE(env.Verify("wallet.dat", strError) == CDBEnv::VERIFY_OK, strError);
+    env.Close();
+}
+#endif
 
 BOOST_AUTO_TEST_CASE(verify_catches_mismatch)
 {

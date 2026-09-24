@@ -865,7 +865,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             }
 
             if (bitdb.Verify(strWalletFile, strError) != CDBEnv::VERIFY_OK)
-                return InitError(strprintf(_("%s is not a readable wallet: %s"), strWalletFile, strError));
+                return InitError(strprintf(_("Cannot open %s: %s"), strWalletFile, strError));
         }
     } // (!fDisableWallet)
 #endif // ENABLE_WALLET
