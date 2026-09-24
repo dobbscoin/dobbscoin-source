@@ -184,8 +184,12 @@ fi
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
 ##       compatibility with the legacy buildsystem.
 ##
+dnl The language standard is not a preference: gcc 11+ defaults to C++17, which
+dnl rejects the dynamic exception specifications in leveldbwrapper.h. So it is
+dnl added even when CXXFLAGS is given, as it always is by depends' config.site.
+CXXFLAGS="$CXXFLAGS -std=c++14"
 if test "x$CXXFLAGS_overridden" = "xno"; then
-  CXXFLAGS="$CXXFLAGS -std=c++14 -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter"
+  CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter"
 fi
 CPPFLAGS="$CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DBOOST_BIND_GLOBAL_PLACEHOLDERS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
