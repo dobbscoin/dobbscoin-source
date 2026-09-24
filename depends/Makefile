@@ -90,7 +90,7 @@ $(host_arch)_$(host_os)_native_toolchain?=$($(host_os)_native_toolchain)
 include funcs.mk
 
 toolchain_path=$($($(host_arch)_$(host_os)_native_toolchain)_prefixbin)
-final_build_id_long+=$(shell $(build_SHA256SUM) config.site.in)
+final_build_id_long+=$(shell $(build_SHA256SUM) config.site.in toolchain.cmake.in)
 final_build_id+=$(shell echo -n $(final_build_id_long) | $(build_SHA256SUM) | cut -c-$(HASH_LENGTH))
 $(host_prefix)/.stamp_$(final_build_id): | $(native_packages) $(packages)
 	$(AT)rm -rf $(@D)
@@ -122,7 +122,41 @@ $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_
             $< > $@
 	$(AT)touch $@
 
-install: $(host_prefix)/share/config.site
+ifeq ($(host),$(build))
+crosscompiling=FALSE
+else
+crosscompiling=TRUE
+endif
+host_system_name_mingw32=Windows
+host_system_name_linux=Linux
+host_system_name_darwin=Darwin
+
+# The CMake counterpart of config.site (see toolchain.cmake.in).
+$(host_prefix)/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_$(final_build_id)
+	$(AT)@mkdir -p $(@D)
+	$(AT)sed -e 's|@depends_crosscompiling@|$(crosscompiling)|' \
+            -e 's|@host@|$(host)|' \
+            -e 's|@host_system_name@|$(host_system_name_$(host_os))|' \
+            -e 's|@host_arch@|$(host_arch)|' \
+            -e 's|@CC@|$(toolchain_path)$(host_CC)|' \
+            -e 's|@CXX@|$(toolchain_path)$(host_CXX)|' \
+            -e 's|@AR@|$(toolchain_path)$(host_AR)|' \
+            -e 's|@RANLIB@|$(toolchain_path)$(host_RANLIB)|' \
+            -e 's|@NM@|$(toolchain_path)$(host_NM)|' \
+            -e 's|@STRIP@|$(toolchain_path)$(host_STRIP)|' \
+            -e 's|@CFLAGS@|$(strip $(host_CFLAGS) $(host_$(release_type)_CFLAGS))|' \
+            -e 's|@CXXFLAGS@|$(strip $(host_CXXFLAGS) $(host_$(release_type)_CXXFLAGS))|' \
+            -e 's|@CPPFLAGS@|$(strip $(host_CPPFLAGS) $(host_$(release_type)_CPPFLAGS))|' \
+            -e 's|@LDFLAGS@|$(strip $(host_LDFLAGS) $(host_$(release_type)_LDFLAGS))|' \
+            -e 's|@no_qt@|$(NO_QT)|' \
+            -e 's|@no_wallet@|$(NO_WALLET)|' \
+            -e 's|@no_upnp@|$(NO_UPNP)|' \
+            -e 's|@debug@|$(DEBUG)|' \
+            $< > $@
+	$(AT)echo To build with CMake: cmake -B build --toolchain $@
+	$(AT)touch $@
+
+install: $(host_prefix)/share/config.site $(host_prefix)/toolchain.cmake
 download-one: $(all_sources)
 download-osx:
 	@$(MAKE) -s HOST=x86_64-apple-darwin11 download-one

@@ -12,6 +12,10 @@ created. To use it for Dobbscoin:
 
 No other options are needed, the paths are automatically configured.
 
+For CMake, the same prefix holds a toolchain file (see doc/build-cmake.md):
+
+cmake -B build --toolchain `pwd`/depends/i686-w64-mingw32/toolchain.cmake
+
 Dependency Options:
 The following can be set when running make: make FOO=bar
 
