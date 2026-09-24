@@ -45,7 +45,13 @@ else()
     target_link_libraries(dobbscoin_interface INTERFACE anl)
   endif()
 endif()
+# On Windows inet_pton is in ws2_32, which configure's LIBS already carries
+# when AC_SEARCH_LIBS tries it.
+if(WIN32)
+  set(CMAKE_REQUIRED_LIBRARIES ws2_32)
+endif()
 check_function_exists(inet_pton HAVE_INET_PTON)
+unset(CMAKE_REQUIRED_LIBRARIES)
 
 check_cxx_source_compiles("
   #include <sys/socket.h>

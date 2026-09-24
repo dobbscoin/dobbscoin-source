@@ -217,8 +217,22 @@ elseif(APPLE)
   target_sources(dobbscoin-qt PRIVATE macdockiconhandler.mm macnotificationhandler.mm)
 endif()
 target_link_libraries(dobbscoin-qt PRIVATE dobbscoin_includes ${qt_node_libs})
+if(QT_STATICPLUGIN)
+  # What configure links: the platform plugin (and what its .prl lists), none
+  # of the other plugins a static Qt would pick by default (qminimal,
+  # qdirect2d, the Vista style).
+  qt5_import_plugins(dobbscoin-qt
+    INCLUDE ${qt_platform_plugin}
+    EXCLUDE_BY_TYPE platforms styles imageformats iconengines bearer
+  )
+endif()
 install(TARGETS dobbscoin-qt RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 if(BUILD_GUI_TESTS)
   add_subdirectory(test)
+  if(QT_STATICPLUGIN)
+    # test_main.cpp only needs a QCoreApplication and imports no plugin, and
+    # configure links none into it.
+    qt5_import_plugins(test_dobbscoin-qt EXCLUDE_BY_TYPE platforms styles imageformats iconengines bearer)
+  endif()
 endif()

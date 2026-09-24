@@ -9,6 +9,13 @@ set(_boost_components system filesystem program_options thread chrono)
 if(BUILD_TESTS)
   list(APPEND _boost_components unit_test_framework)
 endif()
+if(WIN32)
+  # depends builds Boost for mingw as runtime-link=static (libboost_*-mt-s-x64.a),
+  # matching the fully static executables. Boost's config skips such variants
+  # unless asked for them.
+  set(Boost_USE_STATIC_LIBS ON)
+  set(Boost_USE_STATIC_RUNTIME ON)
+endif()
 # 1.55 is what depends/ has shipped; older ones have no working sleep_for.
 find_package(Boost 1.55 REQUIRED CONFIG COMPONENTS ${_boost_components})
 mark_as_advanced(Boost_DIR)
@@ -27,6 +34,17 @@ endforeach()
 # BOOST_LIBS, in configure's order. The executables link these by name; the
 # libraries only use Boost::headers.
 set(boost_libs Boost::system Boost::filesystem Boost::program_options Boost::thread Boost::chrono)
+if(WIN32)
+  # configure links exactly these static libraries. Boost's config would add
+  # libboost_atomic, bcrypt and synchronization behind filesystem and thread;
+  # nothing here needs them, and synchronization makes the executables import
+  # api-ms-win-core-synch-l1-2-0.dll, which Windows 7 does not have.
+  foreach(_t IN LISTS boost_libs ITEMS Boost::unit_test_framework)
+    if(TARGET ${_t})
+      set_property(TARGET ${_t} PROPERTY INTERFACE_LINK_LIBRARIES Boost::headers)
+    endif()
+  endforeach()
+endif()
 # configure: "Determine if -DBOOST_TEST_DYN_LINK is needed". It is when the unit
 # test framework is a shared library, which a distro Boost is.
 if(BUILD_TESTS)
@@ -45,3 +63,4 @@ set(HAVE_WORKING_BOOST_SLEEP_FOR 1)
 unset(_boost_components)
 unset(_utf_type)
 unset(_imported)
+unset(_t)

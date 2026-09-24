@@ -26,6 +26,13 @@ project(DobbscoinCore
   HOMEPAGE_URL "https://dobbscoin.info"
   LANGUAGES C CXX
 )
+if(WIN32)
+  # The version resources (dobbscoind-res.rc and friends), compiled by windres
+  # with the target's defines and includes, as src/Makefile.am's .rc.o rule
+  # does. WINDRES_PREPROC keeps C++ out of clientversion.h.
+  enable_language(RC)
+  string(APPEND CMAKE_RC_FLAGS " -DWINDRES_PREPROC")
+endif()
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/module)
 
@@ -84,9 +91,18 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
 endif()
 foreach(lang IN ITEMS C CXX)
-  set(CMAKE_${lang}_FLAGS_RELWITHDEBINFO "-g -O2")
-  set(CMAKE_${lang}_FLAGS_RELEASE "-O2")
-  set(CMAKE_${lang}_FLAGS_MINSIZEREL "-Os")
+  if(DEPENDS_PREFIX)
+    # A depends toolchain (depends/toolchain.cmake.in) has already put
+    # config.site's flags ("-pipe -O2") in CMAKE_<LANG>_FLAGS, and configure
+    # adds no "-g -O2" of its own when CXXFLAGS is set.
+    set(CMAKE_${lang}_FLAGS_RELWITHDEBINFO "")
+    set(CMAKE_${lang}_FLAGS_RELEASE "")
+    set(CMAKE_${lang}_FLAGS_MINSIZEREL "")
+  else()
+    set(CMAKE_${lang}_FLAGS_RELWITHDEBINFO "-g -O2")
+    set(CMAKE_${lang}_FLAGS_RELEASE "-O2")
+    set(CMAKE_${lang}_FLAGS_MINSIZEREL "-Os")
+  endif()
   set(CMAKE_${lang}_FLAGS_DEBUG "-g3 -O0 -DDEBUG") # = configure --enable-debug
 endforeach()
 
@@ -154,11 +170,34 @@ target_compile_definitions(dobbscoin_interface INTERFACE
   HAVE_BUILD_INFO
   __STDC_FORMAT_MACROS
 )
-# configure adds these warnings to CXXFLAGS only, never CFLAGS.
-target_compile_options(dobbscoin_interface INTERFACE
-  $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter>
-)
+# configure adds these warnings to CXXFLAGS only, never CFLAGS, and only when
+# CXXFLAGS was not given, which depends' config.site always gives.
+if(NOT DEPENDS_PREFIX)
+  target_compile_options(dobbscoin_interface INTERFACE
+    $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter>
+  )
+endif()
 target_link_libraries(dobbscoin_interface INTERFACE Threads::Threads)
+
+if(WIN32)
+  # configure.ac, case *mingw*. Everything is linked statically (libtool's
+  # -all-static), so the executables need no DLL beyond Windows' own. configure
+  # leaves out its -w when CXXFLAGS is given, which a depends build always does.
+  # _FILE_OFFSET_BITS=64 is what AC_SYS_LARGEFILE finds for mingw (and nothing
+  # for 64-bit Linux).
+  target_compile_definitions(dobbscoin_interface INTERFACE
+    _MT WIN32 _WINDOWS BOOST_THREAD_USE_LIB _FILE_OFFSET_BITS=64
+  )
+  target_link_options(dobbscoin_interface INTERFACE -static)
+  # configure's AC_CHECK_LIB list, which ends up in LIBS at the end of every
+  # link line (libssp is added in cmake/hardening.cmake). CMake's own default
+  # list for MinGW is a subset of it.
+  set(windows_system_libs
+    -lcrypt32 -liphlpapi -lshlwapi -lmswsock -lws2_32 -ladvapi32 -lrpcrt4
+    -luuid -loleaut32 -lole32 -lcomctl32 -lshell32 -lwinmm -lwinspool
+    -lcomdlg32 -lgdi32 -luser32 -lkernel32 -lmingwthrd
+  )
+endif()
 
 # CMake hands the compiler absolute source paths, so __FILE__ (in assert()
 # messages, log lines and Boost.Test) would carry the builder's directory, e.g.
@@ -170,6 +209,11 @@ include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag("-fmacro-prefix-map=A=B" HAVE_MACRO_PREFIX_MAP)
 
 include(cmake/hardening.cmake)
+if(WIN32)
+  # configure's LIBS: last on every link line, which is where CMake puts these.
+  list(JOIN windows_system_libs " " CMAKE_C_STANDARD_LIBRARIES)
+  set(CMAKE_CXX_STANDARD_LIBRARIES "${CMAKE_C_STANDARD_LIBRARIES}")
+endif()
 
 #=============================
 # Platform introspection -> src/config/dobbscoin-config.h
@@ -187,6 +231,7 @@ if(BUILD_TESTS)
   enable_testing()
 endif()
 add_subdirectory(src)
+include(cmake/deploy.cmake) # the `deploy` target: Windows installer
 
 #=============================
 # Summary
@@ -216,5 +261,8 @@ message("  test_dobbscoin-qt .................... ${BUILD_GUI_TESTS}")
 message("Hardening .............................. ${ENABLE_HARDENING}")
 message("Reduce exports ......................... ${REDUCE_EXPORTS}")
 message("Build type ............................. ${CMAKE_BUILD_TYPE}")
+if(DEPENDS_PREFIX)
+  message("depends ................................ ${DEPENDS_PREFIX}")
+endif()
 message("C++ compiler ........................... ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message("")
