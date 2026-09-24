@@ -169,6 +169,15 @@ sqlite3* OpenStandalone(const boost::filesystem::path& path, bool fCreate, bool 
         sqlite3_close(db);
         return NULL;
     }
+    // SQLITE_OPEN_READWRITE quietly falls back to read-only when the file (or its
+    // directory) is write-protected. The pragmas and BEGIN IMMEDIATE still succeed;
+    // only the first INSERT fails, long after startup. Berkeley DB refused such a
+    // file at load, so refuse it here too, with a message that says why.
+    if (!fReadOnly && sqlite3_db_readonly(db, "main") == 1) {
+        strError = strprintf("cannot write to %s, it is read-only. Check that the user running dobbscoin can write to that file and to its folder.", path.string());
+        sqlite3_close(db);
+        return NULL;
+    }
     if ((!fReadOnly && !ConfigureConnection(db, strError)) || !SetupSchema(db, fCreate, strError)) {
         strError = strprintf("%s: %s", path.string(), strError);
         sqlite3_close(db);
