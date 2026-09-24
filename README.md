@@ -44,7 +44,7 @@ The Conspiracy wants you mediocre, taxable, and on autopay. (BOB) wants you free
 ## Contents
 - [What is (BOB)?](#what-is-bob)
 - [Quick start](#quick-start)
-- [Building from source](#building-from-source-linux)
+- [Building it yourself (BUILDING.md)](BUILDING.md)
 - [Wallet storage — SQLite](#wallet-storage--sqlite)
 - [Network parameters](#network-parameters)
 - [Ecosystem](#ecosystem)
@@ -68,32 +68,12 @@ Pre-built binaries for Linux (daemon, Qt5, AppImage) and Windows 64-bit live on 
 
 ## Quick start
 
-```bash
-git clone https://github.com/dobbscoin/dobbscoin-source.git
-cd dobbscoin-source
-./autogen.sh
-./configure
-make -j$(nproc)
-./src/dobbscoind --version                     # should say 0.13.0
-```
+**Just want the wallet?** Don't build anything. Download it from **<https://dobbscoin.info/downloads>**: `setup.exe` for Windows, the `.AppImage` for Linux.
 
-That's it. You now have a working (BOB) node and wallet. Praise "Bob".
+**Want to build it yourself?** Follow **[BUILDING.md](BUILDING.md)**. It's copy-and-paste steps for:
 
----
-
-## Building from source (Linux)
-
-Tested on Ubuntu 22.04 / 24.04 and recent Debian. Install build deps:
-
-```bash
-sudo apt install build-essential libssl-dev libboost-all-dev libevent-dev libsqlite3-dev \
-                 libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev-tools \
-                 libprotobuf-dev protobuf-compiler libqrencode-dev
-```
-
-Then run the [Quick start](#quick-start) block above.
-
-For Windows, macOS, and cross-compile, see [`doc/build-*.md`](doc/).
+- the Linux wallet (about 20 minutes), and
+- the Windows installer, built on Linux or on Windows with WSL (about an hour the first time).
 
 ---
 
