@@ -144,6 +144,10 @@ Section -un.post UNSEC0001
     Delete /REBOOTOK $INSTDIR\debug.log
     Delete /REBOOTOK $INSTDIR\db.log
     DeleteRegValue HKCU "${REGKEY}" StartMenuGroup
+    # The Start-menu page stores its folder under MUI_STARTMENUPAGE_REGISTRY_ROOT (HKLM),
+    # not HKCU, so clear it there too or it outlives the uninstall.
+    DeleteRegValue HKLM "${REGKEY}" StartMenuGroup
+    DeleteRegKey /IfEmpty HKLM "${REGKEY}"
     DeleteRegValue HKCU "${REGKEY}" Path
     DeleteRegKey /IfEmpty HKCU "${REGKEY}\Components"
     DeleteRegKey /IfEmpty HKCU "${REGKEY}"
@@ -173,6 +177,11 @@ FunctionEnd
 
 # Uninstaller functions
 Function un.onInit
+!if "@WINDOWS_BITS@" == "64"
+    ; .onInit switched the installer to the 64-bit registry view; without the same
+    ; here the uninstaller reads and deletes in the 32-bit view and misses HKLM keys.
+    SetRegView 64
+!endif
     ReadRegStr $INSTDIR HKCU "${REGKEY}" Path
     !insertmacro MUI_STARTMENU_GETFOLDER Application $StartMenuGroup
     !insertmacro SELECT_UNSECTION Main ${UNSEC0000}
