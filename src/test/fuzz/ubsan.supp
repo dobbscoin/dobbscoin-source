@@ -1,0 +1,11 @@
+# UndefinedBehaviorSanitizer suppressions for the fuzz harnesses
+# (UBSAN_OPTIONS=suppressions=..., set by run.sh). Each entry is a finding
+# that has been reported and is waiting for a fix in the wallet code; remove
+# it when the fix lands. See "Known issues" in doc/fuzzing.md.
+
+# CKey::Load (key.cpp) passes &privkey[0] for an empty privkey: a "key" or
+# "wkey" record with an empty private key. ec_privkey_import_der rejects a
+# zero length before reading, so nothing is read, but binding the reference is
+# undefined behaviour. UBSan matches the innermost (inlined) frame, so this
+# names the operator[] of secure vectors (CPrivKey and friends), not CKey::Load.
+null:std::vector<unsigned char, secure_allocator<unsigned char> >::operator[]
