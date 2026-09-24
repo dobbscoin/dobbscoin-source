@@ -68,10 +68,13 @@ target_include_directories(dobbscoin_includes INTERFACE
   $<$<BOOL:${ENABLE_WALLET}>:${SQLite3_INCLUDE_DIRS}>
 )
 target_compile_definitions(dobbscoin_includes INTERFACE SECP256K1_STATIC)
-if(NOT WIN32)
-  # configure's AX_BOOST_THREAD puts -pthread into BOOST_CPPFLAGS, and so into
-  # DOBBSCOIN_INCLUDES (it defines _REENTRANT). Linking needs no flag on glibc
-  # >= 2.34, and Threads::Threads in dobbscoin_interface covers older ones.
+# configure's AX_BOOST_THREAD puts -pthread (-mthreads for mingw) into
+# BOOST_CPPFLAGS, and so into DOBBSCOIN_INCLUDES (it defines _REENTRANT, _MT).
+# Linking needs no flag on glibc >= 2.34, and Threads::Threads in
+# dobbscoin_interface covers older ones; mingw links -lmingwthrd from LIBS.
+if(WIN32)
+  target_compile_options(dobbscoin_includes INTERFACE -mthreads)
+else()
   target_compile_options(dobbscoin_includes INTERFACE -pthread)
 endif()
 target_link_libraries(dobbscoin_includes INTERFACE dobbscoin_interface Boost::headers) # headers only
@@ -257,9 +260,16 @@ if(BUILD_CONSENSUS_LIB)
   target_link_libraries(dobbscoinconsensus_objects PRIVATE dobbscoin_interface)
 
   add_library(dobbscoinconsensus SHARED $<TARGET_OBJECTS:dobbscoinconsensus_objects>)
-  # libtool names it libdobbscoinconsensus.so.0.0.0 with soname .so.0.
+  # libtool names it libdobbscoinconsensus.so.0.0.0 with soname .so.0, and
+  # libdobbscoinconsensus-0.dll (import library libdobbscoinconsensus.dll.a) on Windows.
   set_target_properties(dobbscoinconsensus PROPERTIES VERSION 0.0.0 SOVERSION 0)
   target_link_libraries(dobbscoinconsensus PRIVATE dobbscoin_interface secp256k1 OpenSSL::Crypto)
+  if(WIN32)
+    set_target_properties(dobbscoinconsensus PROPERTIES RUNTIME_OUTPUT_NAME dobbscoinconsensus-0)
+    # configure's archive_cmds_CXX for mingw: a DLL that needs neither
+    # libgcc_s nor libstdc++ DLLs at run time.
+    target_link_options(dobbscoinconsensus PRIVATE -static-libgcc -static-libstdc++ -Wl,--enable-auto-image-base)
+  endif()
 
   add_library(dobbscoinconsensus_static STATIC EXCLUDE_FROM_ALL $<TARGET_OBJECTS:dobbscoinconsensus_objects>)
 

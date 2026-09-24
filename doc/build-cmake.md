@@ -83,7 +83,8 @@ No build type ever defines `NDEBUG`: the code relies on `assert()`, and
 configure never defines it either.
 
 Not ported, because nothing uses them: `--enable-glibc-back-compat`, `--enable-lcov`,
-`--with-comparison-tool`, and the `make deploy` / NSIS / macOS DMG packaging targets.
+`--with-comparison-tool`, and the macOS DMG packaging. The Windows installer
+(`make deploy`) is the `deploy` target; see Cross-compiling below.
 
 How the two builds are kept equivalent
 --------------------------------------
@@ -123,11 +124,62 @@ compile, the NEEDED lists, libdobbscoinconsensus' exports, and the version strin
 Cross-compiling
 ---------------
 
-Not wired up yet. The plan is Bitcoin Core's: `depends/` generates a
-`depends/<host>/toolchain.cmake` and the build is
+As in Bitcoin Core v29: `make -C depends HOST=<host>` builds the dependencies
+and writes `depends/<host>/toolchain.cmake` beside the `share/config.site` that
+configure uses. The toolchain file names the cross compilers, confines package
+searches to the depends prefix, and turns `BUILD_GUI`, `ENABLE_WALLET` and
+`WITH_MINIUPNPC`/`WITH_NATPMP` on or off to match what depends built
+(`NO_QT`, `NO_WALLET`, `NO_UPNP`; a `-D` on the command line still wins).
 
-    cmake -B build --toolchain depends/x86_64-w64-mingw32/toolchain.cmake
+Windows (64-bit), from Debian 12 / Ubuntu 22.04 with `g++-mingw-w64-x86-64-posix`
+selected as the default `x86_64-w64-mingw32-g++` (see build-windows.md) and `nsis`
+for the installer:
 
-The CMake files already carry the Windows pieces configure has (the `.rc`
-resources, `SECP256K1_STATIC`, the static miniupnpc/natpmp defines, `-mwindows`,
-static Qt plugin macros), but they have not been built for Windows yet.
+    make -C depends HOST=x86_64-w64-mingw32 -j4
+    cmake -B build-win --toolchain depends/x86_64-w64-mingw32/toolchain.cmake
+    cmake --build build-win -j4
+    cmake --build build-win --target deploy    # the NSIS installer
+
+That builds `build-win/src/dobbscoind.exe`, `dobbscoin-cli.exe`, `dobbscoin-tx.exe`,
+`libdobbscoinconsensus-0.dll` (import library `libdobbscoinconsensus.dll.a`),
+`build-win/src/qt/dobbscoin-qt.exe`, `build-win/src/test/test_dobbscoin.exe` and
+`build-win/src/qt/test/test_dobbscoin-qt.exe`, and with `deploy`
+`build-win/dobbscoin-<major>.<minor>.<revision>-win64-setup.exe`, as `make deploy`
+does (stripped copies of the three programs in `build-win/release/`, then
+`makensis` on `build-win/share/setup.nsi`). `ENABLE_STATIC_PORTMAP` makes no
+difference on Windows, where everything is linked statically anyway.
+
+What the Windows build does that the native one does not, each mirroring
+configure.ac's `*mingw*` case:
+
+* `-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -D_FILE_OFFSET_BITS=64`, and
+  `-mthreads` in place of `-pthread`.
+* Every executable is linked `-static` (libtool's `-all-static`), and every
+  link ends with configure's `LIBS`: `-lssp -lcrypt32 -liphlpapi -lshlwapi
+  -lmswsock -lws2_32 ... -lkernel32 -lmingwthrd` (set as
+  `CMAKE_<LANG>_STANDARD_LIBRARIES`). The executables import nothing but
+  Windows system DLLs.
+* The consensus DLL additionally gets `-static-libgcc -static-libstdc++
+  -Wl,--enable-auto-image-base`, libtool's name `libdobbscoinconsensus-0.dll`,
+  and `DLL_EXPORT`.
+* The `.rc` version resources are compiled by windres with the target's defines
+  and `-DWINDRES_PREPROC`, so they carry the real version (they used to say
+  0.13.0.0 under Autotools too, which now passes its `DEFS`/`CPPFLAGS` to windres).
+* Boost is the static `-mt-s` build and only the five libraries configure links:
+  Boost's own CMake package would add libboost_atomic and `synchronization`,
+  and with it an import of `api-ms-win-core-synch-l1-2-0.dll`.
+* The static Qt comes from Qt's CMake package (depends installs it, with the
+  `.prl` files that list what each Qt library needs after it). Only the
+  `qwindows` platform plugin is linked, into `dobbscoin-qt.exe`, where
+  `dobbscoin.cpp` imports it; Qt's default plugin set is switched off.
+
+With a depends toolchain the compile flags are config.site's (`-pipe -O2`)
+without the `-g -O2` of the build type, and without the warning flags, because
+configure adds neither when CXXFLAGS is given, which config.site always does.
+`-DCMAKE_CXX_FLAGS=-g` puts debug info back.
+
+`contrib/devtools/compare-build-systems.py` checks a Windows pair the same way
+as a native one (COFF sections, the PE import and export tables, the version
+resources, and `dobbscoind.exe -version` under wine when it is installed).
+
+macOS (`depends` for `x86_64-apple-darwin`) has not been tried with CMake.

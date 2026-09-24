@@ -14,6 +14,9 @@ include(CheckLinkerFlag)
 # test-then-add that configure's AX_CHECK_*_FLAG macros do.
 function(dobbscoin_try_compile_flag flag)
   string(MAKE_C_IDENTIFIER "CXX_HAS${flag}" var)
+  # Compile only, like AX_CHECK_COMPILE_FLAG: linking -fstack-protector-all on
+  # mingw needs libssp, which is only added to the link line further down.
+  set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
   check_cxx_compiler_flag("${flag}" ${var})
   if(${var})
     target_compile_options(dobbscoin_interface INTERFACE $<$<COMPILE_LANGUAGE:CXX>:${flag}>)
@@ -44,10 +47,15 @@ if(ENABLE_HARDENING)
     dobbscoin_try_compile_flag(-fPIC)
   endif()
   if(WIN32)
-    # MinGW's stack protector lives in libssp.
-    target_link_libraries(dobbscoin_interface INTERFACE ssp)
+    # MinGW's stack protector lives in libssp; configure puts it first in LIBS.
+    list(PREPEND windows_system_libs -lssp)
   endif()
 endif()
+
+# Not a hardening flag in configure, but tested and added the same way, to
+# every link. Only Windows linkers know it (a 32-bit executable may then use
+# more than 2 GB); elsewhere the test fails and nothing is added.
+dobbscoin_try_link_flag(-Wl,--large-address-aware)
 
 if(REDUCE_EXPORTS)
   dobbscoin_try_compile_flag(-fvisibility=hidden)

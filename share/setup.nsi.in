@@ -48,7 +48,7 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile @abs_top_srcdir@/dobbscoin-${VERSION}-win@WINDOWS_BITS@-setup.exe
+OutFile @abs_top_builddir@/dobbscoin-${VERSION}-win@WINDOWS_BITS@-setup.exe
 !if "@WINDOWS_BITS@" == "64"
 InstallDir $PROGRAMFILES64\Dobbscoin
 !else
@@ -73,12 +73,12 @@ ShowUninstDetails show
 Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
-    File @abs_top_srcdir@/release/dobbscoin-qt.exe
+    File @abs_top_builddir@/release/dobbscoin-qt.exe
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
-    File @abs_top_srcdir@/release/dobbscoind.exe
-    File @abs_top_srcdir@/release/dobbscoin-cli.exe
+    File @abs_top_builddir@/release/dobbscoind.exe
+    File @abs_top_builddir@/release/dobbscoin-cli.exe
     SetOutPath $INSTDIR\doc
     File /r @abs_top_srcdir@/doc\*.*
     SetOutPath $INSTDIR

@@ -74,6 +74,19 @@ zip -j dobbscoin-qt-win64.zip \
   src/dobbscoin-cli.exe
 ```
 
+## The same with CMake
+
+After `make -C depends`, CMake (3.22 or later) replaces `autogen.sh`, `configure`
+and `make`; `nsis` is only needed for the installer:
+
+```bash
+cmake -B build-win --toolchain "$PWD/depends/x86_64-w64-mingw32/toolchain.cmake"
+cmake --build build-win -j"$(nproc)"
+cmake --build build-win --target deploy   # build-win/dobbscoin-<version>-win64-setup.exe
+
+ls build-win/src/qt/dobbscoin-qt.exe build-win/src/dobbscoind.exe build-win/src/dobbscoin-cli.exe
+```
+
 ## Artifacts
 
 - `src/qt/dobbscoin-qt.exe`
