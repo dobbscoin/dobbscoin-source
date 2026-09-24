@@ -115,12 +115,34 @@ AC_DEFUN([DOBBSCOIN_QT_CONFIGURE],[
         QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms"
       fi
       if test x$use_pkgconfig = xyes; then
-        PKG_CHECK_MODULES([QTPLATFORM], [Qt5PlatformSupport], [QT_LIBS="$QTPLATFORM_LIBS $QT_LIBS"])
+        dnl Qt 5.7 ships one Qt5PlatformSupport module; Qt 5.8+ split it into
+        dnl per-feature modules that the static platform plugin links against.
+        dnl Use whichever this Qt provides (none of them is fatal on its own:
+        dnl the static-plugin link check below is what decides).
+        PKG_CHECK_MODULES([QTPLATFORM], [Qt5PlatformSupport], [QT_LIBS="$QTPLATFORM_LIBS $QT_LIBS"], [true])
+        PKG_CHECK_MODULES([QT_EVENTDISPATCHER], [Qt5EventDispatcherSupport], [QT_LIBS="$QT_EVENTDISPATCHER_LIBS $QT_LIBS"], [true])
+        PKG_CHECK_MODULES([QT_FONTDATABASE], [Qt5FontDatabaseSupport], [QT_LIBS="$QT_FONTDATABASE_LIBS $QT_LIBS"], [true])
+        PKG_CHECK_MODULES([QT_THEME], [Qt5ThemeSupport], [QT_LIBS="$QT_THEME_LIBS $QT_LIBS"], [true])
+        PKG_CHECK_MODULES([QT_ACCESSIBILITY], [Qt5AccessibilitySupport], [QT_LIBS="$QT_ACCESSIBILITY_LIBS $QT_LIBS"], [true])
+        if test x$TARGET_OS = xwindows; then
+          PKG_CHECK_MODULES([QT_WINDOWSUIAUTOMATION], [Qt5WindowsUIAutomationSupport], [QT_LIBS="$QT_WINDOWSUIAUTOMATION_LIBS $QT_LIBS"], [true])
+        fi
       fi
       dnl Qt 5.7+ requires Qt5PlatformSupport + transitive deps that pkg-config
       dnl sometimes fails to wire up cleanly. Force-link the static helpers
       dnl QWindows* needs at the head of QT_LIBS to satisfy the resolver.
       if test x$qt_lib_path != x; then
+        dnl Qt 5.8+ split Qt5PlatformSupport into per-feature modules, renamed
+        dnl the bundled helpers (qtharfbuzz, qtlibpng, qtpcre2) and added
+        dnl system-library dependencies. Its static .pc files list all of that,
+        dnl so take the link line from pkg-config even where use_pkgconfig=no.
+        if test -f "$qt_lib_path/libQt5EventDispatcherSupport.a" && test -n "$PKG_CONFIG"; then
+          qt_static_modules="Qt5EventDispatcherSupport Qt5FontDatabaseSupport Qt5ThemeSupport Qt5AccessibilitySupport"
+          if test x$TARGET_OS = xwindows; then
+            qt_static_modules="$qt_static_modules Qt5WindowsUIAutomationSupport"
+          fi
+          QT_LIBS="`$PKG_CONFIG --static --libs $qt_static_modules Qt5Widgets Qt5Network` $QT_LIBS"
+        fi
         if test -f "$qt_lib_path/libQt5PlatformSupport.a"; then
           QT_LIBS="-lQt5PlatformSupport $QT_LIBS"
         fi
@@ -141,6 +163,11 @@ AC_DEFUN([DOBBSCOIN_QT_CONFIGURE],[
         _DOBBSCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(AccessibleFactory)], [-lqtaccessiblewidgets])
       fi
       if test x$TARGET_OS = xwindows; then
+        dnl The Qt 5.8+ qwindows plugin also needs these system libraries,
+        dnl which no .pc file carries (see QTBUG-27097 for wtsapi32).
+        if test -f "$qt_lib_path/libQt5EventDispatcherSupport.a"; then
+          QT_LIBS="$QT_LIBS -lwtsapi32 -ldwmapi -luxtheme -lshlwapi -limm32 -loleaut32 -lwinmm"
+        fi
         _DOBBSCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)],[-lqwindows])
         AC_DEFINE(QT_QPA_PLATFORM_WINDOWS, 1, [Define this symbol if the qt platform is windows])
       elif test x$TARGET_OS = xlinux; then

@@ -1,11 +1,10 @@
 package=zlib
-$(package)_version=1.2.11
-# zlib.net serves a bot-wall HTML page to CI runners, so a cold depends build
-# fails fetching this tarball. SourceForge mirrors the identical file - the
-# sha256 below is unchanged and still verifies.
-$(package)_download_path=https://downloads.sourceforge.net/project/libpng/zlib/1.2.11
+$(package)_version=1.3.2
+# zlib.net serves a bot-wall HTML page to some CI runners, so fetch from the
+# GitHub release instead. Both serve the identical file (same sha256).
+$(package)_download_path=https://github.com/madler/zlib/releases/download/v$($(package)_version)
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1
+$(package)_sha256_hash=bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16
 
 define $(package)_set_vars
 $(package)_build_opts= CC="$($(package)_cc)"

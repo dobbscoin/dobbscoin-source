@@ -1,8 +1,10 @@
 package=native_ccache
-$(package)_version=3.1.9
-$(package)_download_path=http://samba.org/ftp/ccache
-$(package)_file_name=ccache-$($(package)_version).tar.bz2
-$(package)_sha256_hash=04d3e2e438ac8d4cc4b110b68cdd61bd59226c6588739a4a386869467f5ced7c
+# 3.7.12 is the last ccache with an autotools build; 4.x needs CMake, which
+# this depends tree has no recipe support for yet (see the CMake port, #43).
+$(package)_version=3.7.12
+$(package)_download_path=https://github.com/ccache/ccache/releases/download/v$($(package)_version)
+$(package)_file_name=ccache-$($(package)_version).tar.gz
+$(package)_sha256_hash=d2abe88d4c283ce960e233583061127b156ffb027c6da3cf10770fc0c7244194
 
 define $(package)_set_vars
 $(package)_config_opts=
