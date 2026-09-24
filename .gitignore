@@ -93,6 +93,9 @@ qrc_*.cpp
 .DS_Store
 build
 
+# CMake build directories (cmake -B build, build-static, ...)
+/build*/
+
 #lcov
 *.gcno
 /*.info
