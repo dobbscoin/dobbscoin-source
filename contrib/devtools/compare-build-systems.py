@@ -16,12 +16,19 @@ the same options (e.g. both with the GUI, or both without). It compares:
   4. libdobbscoinconsensus: exported symbols, and that libsecp256k1 is linked in
   5. version: the first line of `dobbscoind -version`
 
+Windows cross builds (depends/x86_64-w64-mingw32, found by the .exe files) are
+compared the same way with the mingw binutils: COFF sections for 2, the PE
+import table (DLL names) for 3, the PE export table for 4, and for 5 the
+version resource plus `dobbscoind.exe -version` run under wine (set WINEPREFIX
+as needed; skipped when wine is missing).
+
 Exit status 0 when everything matches. A transition tool for v0.14.0 (#43):
 it goes when Autotools does.
 """
 import hashlib
 import os
 import re
+import struct
 import subprocess
 import sys
 
@@ -49,7 +56,47 @@ def tested_macro_names(template):
     return sorted(names)
 
 
+MINGW = 'x86_64-w64-mingw32-'
+PE = False  # set in main() for a Windows build
+
+
+def coff_sections(obj, kinds):
+    """Contents of a COFF object's sections, read directly: g++ gives every
+    inline function a COMDAT section of its own (.text$name), thousands per
+    object, far too many to extract one objcopy call at a time.
+
+    COFF keeps relocation addends in the section bytes, where ELF (RELA) keeps
+    them in the relocation entries. They are zeroed here, so that, as with ELF,
+    a string moving within .rdata (a shorter __FILE__ before it) does not show
+    up as a change in the code that refers to it."""
+    data = open(obj, 'rb').read()
+    nsec, symtab, nsym = struct.unpack_from('<2xH4xII', data, 0)
+    strtab = symtab + 18 * nsym
+    width = {0: 0, 1: 8, 0xA: 2}  # IMAGE_REL_AMD64_ABSOLUTE, ADDR64, SECTION; the rest are 4 bytes
+    result = {}
+    for i in range(nsec):
+        raw_name, size, ptr, relptr, nrel = struct.unpack_from('<8s8xIII4xH', data, 20 + 40 * i)
+        name = raw_name.rstrip(b'\0').decode()
+        if name.startswith('/'):  # long name, in the string table
+            start = strtab + int(name[1:])
+            name = data[start:data.index(b'\0', start)].decode()
+        if re.match(r'\.(?:%s)' % kinds, name):
+            key = name
+            while key in result:  # the same name can occur more than once
+                key += '+'
+            contents = bytearray(data[ptr:ptr + size] if ptr else b'')
+            for r in range(nrel):
+                offset, _, kind = struct.unpack_from('<IIH', data, relptr + 10 * r)
+                n = width.get(kind, 4)
+                contents[offset:offset + n] = bytes(n)
+            result[key] = bytes(contents)
+    return result
+
+
 def sections(obj, kinds):
+    if PE:
+        # COFF puts read-only data in .rdata, which 'rodata' is taken to mean.
+        return coff_sections(obj, kinds.replace('rodata', 'rdata'))
     names = re.findall(r'\]\s+(\.(?:%s)\S*)\s+PROGBITS' % kinds, run('readelf', '-SW', obj))
     return {n: subprocess.run(['objcopy', '-O', 'binary', '--only-section=' + n, obj, '/dev/stdout'],
                               capture_output=True).stdout for n in names}
@@ -65,7 +112,7 @@ FILE_PATH = re.compile(rb'[\w./-]*/([\w.-]+\.(?:h|cpp|cc|c))\b')
 
 def without_file_names(data):
     # Shorter names also change the NUL padding between aligned strings.
-    return re.sub(rb'\0+', b'\0', FILE_PATH.sub(rb'\1', data))
+    return re.sub(rb'\0+', b'\0', FILE_PATH.sub(rb'\1', data)).rstrip(b'\0')
 
 
 def compare_object(a, c):
@@ -79,7 +126,8 @@ def compare_object(a, c):
     build system differ there too)."""
     if sections(a, 'text') != sections(c, 'text'):
         return 'DIFFERENT'
-    da, dc = sections(a, 'rodata|data|init_array'), sections(c, 'rodata|data|init_array')
+    kinds = 'rodata|data|ctors' if PE else 'rodata|data|init_array'
+    da, dc = sections(a, kinds), sections(c, kinds)
     if da == dc:
         return 'same'
     if da.keys() == dc.keys() and all(without_file_names(da[k]) == without_file_names(dc[k]) for k in da):
@@ -107,7 +155,7 @@ PREFIX = {
 
 def autotools_twin(at_src, cm_build, obj):
     rel = os.path.relpath(obj, cm_build)
-    m = re.match(r'(?:src/)?(.*?)CMakeFiles/([^/]+)\.dir/(.*)\.(?:cpp|cc|c)\.o$', rel)
+    m = re.match(r'(?:src/)?(.*?)CMakeFiles/([^/]+)\.dir/(.*)\.(?:cpp|cc|c)\.obj?$', rel)
     if not m or m.group(2) not in PREFIX:
         return None
     subdir, target, source = m.groups()
@@ -121,15 +169,37 @@ def autotools_twin(at_src, cm_build, obj):
 
 
 def needed(path):
+    if PE:
+        return re.findall(r'DLL Name: (\S+)', run(MINGW + 'objdump', '-p', path))
     return re.findall(r'\(NEEDED\).*\[(.*)\]', run('readelf', '-d', path))
+
+
+def exports(path):
+    if PE:
+        # The [Ordinal/Name Pointer] Table of objdump -p: "\t[   0] name".
+        table = run(MINGW + 'objdump', '-p', path).split('[Ordinal/Name Pointer] Table')[-1]
+        return sorted(re.findall(r'^\s+\[\s*\d+\] (\S+)$', table, re.M))
+    return sorted(' '.join(l.split()[1:]) for l in run('nm', '-D', '--defined-only', path).splitlines())
+
+
+def version_resource(path):
+    # FileVersion/ProductVersion/LegalCopyright of a PE VERSIONINFO (UTF-16 strings).
+    strings = run('strings', '-el', path).splitlines()
+    return {k: strings[i + 1] for i, k in enumerate(strings[:-1])
+            if k in ('FileVersion', 'ProductVersion', 'LegalCopyright')}
 
 
 def main():
     if len(sys.argv) != 3:
         sys.exit(__doc__)
+    global PE
     at_src = os.path.join(sys.argv[1], 'src')
     cm = sys.argv[2]
     cm_src = os.path.join(cm, 'src')
+    PE = os.path.exists(os.path.join(cm_src, 'dobbscoind.exe'))
+    exe = '.exe' if PE else ''
+    lib_at, lib_cm = (('.libs/libdobbscoinconsensus-0.dll', 'libdobbscoinconsensus-0.dll') if PE else
+                      ('.libs/libdobbscoinconsensus.so.0.0.0', 'libdobbscoinconsensus.so.0.0.0'))
     template = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../cmake/dobbscoin-config.h.in')
     failures = 0
 
@@ -149,7 +219,7 @@ def main():
     unmatched = []
     for root, _, files in os.walk(cm):
         for f in files:
-            if not f.endswith('.o'):
+            if not f.endswith(('.o', '.obj')):
                 continue
             obj = os.path.join(root, f)
             twin = autotools_twin(at_src, cm, obj)
@@ -171,13 +241,12 @@ def main():
         print('   no twin  ', u)
     failures += len(result['DIFFERENT'])
 
-    print('== 3. NEEDED (shared libraries loaded, in order)')
-    pairs = [(b, os.path.join(at_src, b), os.path.join(cm_src, b)) for b in (
+    print('== 3. NEEDED (shared libraries loaded, in order)' if not PE else
+          '== 3. DLL imports (PE import table, in order)')
+    pairs = [(b + exe, os.path.join(at_src, b + exe), os.path.join(cm_src, b + exe)) for b in (
         'dobbscoind', 'dobbscoin-cli', 'dobbscoin-tx', 'qt/dobbscoin-qt',
         'test/test_dobbscoin', 'qt/test/test_dobbscoin-qt')]
-    pairs.append(('libdobbscoinconsensus.so.0.0.0',
-                  os.path.join(at_src, '.libs/libdobbscoinconsensus.so.0.0.0'),
-                  os.path.join(cm_src, 'libdobbscoinconsensus.so.0.0.0')))
+    pairs.append((lib_cm, os.path.join(at_src, lib_at), os.path.join(cm_src, lib_cm)))
     for name, pa, pc in pairs:
         if not (os.path.exists(pa) and os.path.exists(pc)):
             print(f'   {name:32} (not built by both)')
@@ -193,23 +262,33 @@ def main():
         print(f'   {name:32} {verdict}: {" ".join(nc)}')
 
     print('== 4. libdobbscoinconsensus')
-    la = os.path.join(at_src, '.libs/libdobbscoinconsensus.so.0.0.0')
-    lc = os.path.join(cm_src, 'libdobbscoinconsensus.so.0.0.0')
+    la = os.path.join(at_src, lib_at)
+    lc = os.path.join(cm_src, lib_cm)
     if os.path.exists(la) and os.path.exists(lc):
-        def exports(p):
-            return sorted(' '.join(l.split()[1:]) for l in run('nm', '-D', '--defined-only', p).splitlines())
         ea, ec = exports(la), exports(lc)
         failures += ea != ec
-        print(f'   exported symbols: {len(ec)}, {"identical" if ea == ec else "DIFFERENT"}')
+        print(f'   exported symbols: {len(ec)}, {"identical" if ea == ec else "DIFFERENT"}'
+              + (f': {" ".join(ec)}' if PE else ''))
         for p, label in ((la, 'Autotools'), (lc, 'CMake')):
-            has = 'secp256k1_ecdsa_verify' in run('nm', p)
+            has = 'secp256k1_ecdsa_verify' in run((MINGW if PE else '') + 'nm', p)
             failures += not has
             print(f'   {label:9} links libsecp256k1 in: {"yes" if has else "NO"}')
 
     print('== 5. version')
-    for label, d in (('Autotools', at_src), ('CMake', cm_src)):
-        out = subprocess.run([os.path.join(d, 'dobbscoind'), '-version'], capture_output=True, text=True).stdout
-        print(f'   {label:9} {out.splitlines()[0] if out else "(no output)"}')
+    if PE:
+        for b in ('dobbscoind', 'dobbscoin-cli', 'qt/dobbscoin-qt'):
+            pa, pc = os.path.join(at_src, b + exe), os.path.join(cm_src, b + exe)
+            if os.path.exists(pa) and os.path.exists(pc):
+                va, vc = version_resource(pa), version_resource(pc)
+                failures += va != vc
+                print(f'   {b + exe:20} version resource {"identical" if va == vc else "DIFFERENT"}: {vc}')
+    wine = ['wine'] if PE else []
+    if not PE or subprocess.run(['sh', '-c', 'command -v wine'], capture_output=True).returncode == 0:
+        env = dict(os.environ, WINEDEBUG='-all')
+        for label, d in (('Autotools', at_src), ('CMake', cm_src)):
+            out = subprocess.run(wine + [os.path.join(d, 'dobbscoind' + exe), '-version'],
+                                 capture_output=True, text=True, env=env).stdout.replace('\r', '')
+            print(f'   {label:9} {out.splitlines()[0] if out else "(no output)"}')
 
     print()
     print('EQUIVALENT' if failures == 0 else f'{failures} DIFFERENCES')
