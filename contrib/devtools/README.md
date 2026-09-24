@@ -49,6 +49,19 @@ For example a file changed in 2014 (with 2014 being the current year):
 would be changed to:
 ```// Copyright (c) 2009-2014 The Bitcoin developers```
 
+gen-paymentrequest-testdata.py
+===============================
+
+Regenerates `src/qt/test/paymentrequestdata.h`, the BIP70 certificates and
+signed payment requests used by `test_dobbscoin-qt` (PaymentServerTests).
+The valid certificates run to 2099; the two deliberately expired ones stay
+expired (2013). Run from the root of the repository:
+
+    contrib/devtools/gen-paymentrequest-testdata.py > src/qt/test/paymentrequestdata.h
+
+Needs python3 and python3-cryptography. Keys are fresh each run, so the output
+changes every time; only its structure matters to the test.
+
 symbol-check.py
 ==================
 
