@@ -125,6 +125,17 @@ Build using:
     make # use "-j N" for N parallel jobs
     sudo bash -c "echo 1 > /proc/sys/fs/binfmt_misc/status" # Enable WSL support for Win32 applications.
 
+Or, with CMake (3.22 or later; see [build-cmake.md](build-cmake.md)) in place of
+`autogen.sh`, `configure` and `make`, after the same `make -C depends` step:
+
+    cmake -B build-win --toolchain depends/x86_64-w64-mingw32/toolchain.cmake
+    cmake --build build-win -j"$(nproc)"
+
+The toolchain file that depends writes turns the GUI, wallet and UPnP/NAT-PMP on
+or off to match the packages it built (`NO_QT=1` and so on). The executables
+land in `build-win/src/` (`dobbscoin-qt.exe` in `build-win/src/qt/`), the same
+places as the Autotools build puts them under `src/`.
+
 ## Depends system
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
@@ -137,11 +148,13 @@ executables to a directory on the Windows drive in the same directory structure
 as they appear in the release `.zip` archive. This can be done in the following
 way. This will install to `c:\workspace\dobbscoin`, for example:
 
-    make install DESTDIR=/mnt/c/workspace/dobbscoin
+    make install DESTDIR=/mnt/c/workspace/dobbscoin    # Autotools
+    cmake --install build-win --prefix /mnt/c/workspace/dobbscoin    # CMake
 
-You can also create an installer using:
+You can also create an installer (needs `nsis`) using:
 
-    make deploy
+    make deploy                                # Autotools: ./dobbscoin-<version>-win64-setup.exe
+    cmake --build build-win --target deploy    # CMake: build-win/dobbscoin-<version>-win64-setup.exe
 
 Footnotes
 ---------
