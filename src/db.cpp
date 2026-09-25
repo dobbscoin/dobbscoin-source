@@ -214,7 +214,9 @@ bool CreateSQLiteWalletFile(const boost::filesystem::path& path, const std::vect
 {
     RemoveQuietly(path);
     RemoveQuietly(path.string() + "-journal");
-    if (boost::filesystem::exists(path)) {
+    boost::system::error_code ecExists; // the error_code form never throws; an unreadable
+                                        // path fails at the SQLite open below instead
+    if (boost::filesystem::exists(path, ecExists)) {
         strError = strprintf("cannot remove the stale file %s", path.string());
         return false;
     }
@@ -402,7 +404,12 @@ CDBEnv::CDBEnv()
 
 CDBEnv::~CDBEnv()
 {
-    Close();
+    // Close() without its LOCK: this runs during static destruction, when no
+    // other thread can use bitdb any more, and with -DDEBUG_LOCKORDER the lock
+    // checker's own statics may already be destroyed.
+    for (map<string, CSQLiteFile*>::iterator it = mapDb.begin(); it != mapDb.end(); ++it)
+        delete it->second;
+    mapDb.clear();
 }
 
 void CDBEnv::Close()
@@ -621,7 +628,7 @@ bool CDBEnv::Backup(const std::string& strFile, const boost::filesystem::path& p
         LOCK(cs_db);
         if (!fMockDb) {
             boost::system::error_code ec;
-            if (boost::filesystem::exists(pathDest) && boost::filesystem::equivalent(path / strFile, pathDest, ec)) {
+            if (boost::filesystem::exists(pathDest, ec) && boost::filesystem::equivalent(path / strFile, pathDest, ec)) {
                 strError = "cannot back up a wallet onto itself";
                 return false;
             }
@@ -634,6 +641,18 @@ bool CDBEnv::Backup(const std::string& strFile, const boost::filesystem::path& p
         }
         ++mapFileUseCount[strFile]; // keeps the connection open while we copy
     }
+    // Give the use count back however this function ends. A count left at 1
+    // (an exception between here and the end) makes CDB::Rewrite, which waits
+    // for 0, spin forever: the next encryptwallet would hang the node.
+    struct UseCountGuard {
+        CDBEnv& env;
+        const std::string& strFile;
+        ~UseCountGuard()
+        {
+            LOCK(env.cs_db);
+            --env.mapFileUseCount[strFile];
+        }
+    } useCountGuard = {*this, strFile};
 
     bool fOk;
     {
@@ -685,10 +704,6 @@ bool CDBEnv::Backup(const std::string& strFile, const boost::filesystem::path& p
     }
     if (!fOk)
         RemoveQuietly(pathTmp);
-    {
-        LOCK(cs_db);
-        --mapFileUseCount[strFile];
-    }
     return fOk;
 }
 
