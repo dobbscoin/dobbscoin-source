@@ -79,8 +79,14 @@ Section -Main SEC0000
     SetOutPath $INSTDIR\daemon
     File @abs_top_builddir@/release/dobbscoind.exe
     File @abs_top_builddir@/release/dobbscoin-cli.exe
+    ; Only what a wallet user might open. The whole doc/ folder used to ship,
+    ; developer build guides, gitian screenshots and release notes back to 0.3
+    ; included. The uninstaller still removes all of $INSTDIR\doc, so an older
+    ; install's copy goes on upgrade-then-uninstall.
     SetOutPath $INSTDIR\doc
-    File /r @abs_top_srcdir@/doc\*.*
+    File @abs_top_srcdir@/doc/files.md
+    File @abs_top_srcdir@/doc/bootstrap.md
+    File @abs_top_srcdir@/doc/tor.md
     SetOutPath $INSTDIR
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 
