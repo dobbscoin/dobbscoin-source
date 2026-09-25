@@ -96,8 +96,12 @@ bool ConfigureConnection(sqlite3* db, std::string& strError)
     // Normal (not exclusive) locking: the journal is removed after every
     // commit instead of lingering beside wallet.dat, and the datadir lock
     // already keeps a second node away.
+    // EXTRA, not FULL: in DELETE mode the commit point is unlinking the journal,
+    // and only EXTRA syncs the directory after that. At FULL a power cut right
+    // after a commit can bring the journal back and roll the commit back,
+    // e.g. the key a payment was just sent to (verified with strace).
     return Exec(db, "PRAGMA journal_mode = DELETE", strError) &&
-           Exec(db, "PRAGMA synchronous = FULL", strError) &&
+           Exec(db, "PRAGMA synchronous = EXTRA", strError) &&
            Exec(db, "PRAGMA secure_delete = ON", strError) &&
            Exec(db, "PRAGMA fullfsync = ON", strError);
 }
@@ -330,6 +334,21 @@ void SyncDirectory(const boost::filesystem::path& dir)
     }
 #endif
 }
+
+/** The file a wallet path really is. wallet.dat may be a symlink to another
+ *  volume (an encrypted disk, say). Replacing it must happen beside the target:
+ *  renaming over the link itself swaps it for a plain file in the datadir, so
+ *  the wallet silently moves off the volume the user put it on. */
+boost::filesystem::path RealWalletPath(const boost::filesystem::path& p)
+{
+    boost::system::error_code ec;
+    if (boost::filesystem::is_symlink(p, ec)) {
+        boost::filesystem::path r = boost::filesystem::canonical(p, ec);
+        if (!ec)
+            return r;
+    }
+    return p;
+}
 } // anonymous namespace
 
 std::string WalletDBVersion()
@@ -506,7 +525,7 @@ bool CDBEnv::ReplaceWithSQLite(const std::string& strFile, const std::vector<Key
 {
     LOCK(cs_db);
     assert(!fMockDb);
-    boost::filesystem::path pathFile = path / strFile;
+    boost::filesystem::path pathFile = RealWalletPath(path / strFile);
     boost::filesystem::path pathTmp = pathFile.string() + ".migrating";
 
     // 1. Write the records to a new file beside the wallet. A leftover from an
@@ -547,7 +566,7 @@ bool CDBEnv::ReplaceWithSQLite(const std::string& strFile, const std::vector<Key
                 throw runtime_error("the copy of the original does not match it");
             }
         }
-        SyncDirectory(path);
+        SyncDirectory(pathFile.parent_path());
     } catch (const std::exception& e) {
         strError = strprintf("could not preserve the original as %s: %s", pathBackup.string(), e.what());
         RemoveQuietly(pathTmp);
@@ -558,7 +577,7 @@ bool CDBEnv::ReplaceWithSQLite(const std::string& strFile, const std::vector<Key
     //    path still holds the untouched original.
     try {
         boost::filesystem::rename(pathTmp, pathFile);
-        SyncDirectory(path);
+        SyncDirectory(pathFile.parent_path());
     } catch (const std::exception& e) {
         strError = strprintf("could not move %s into place: %s", pathTmp.string(), e.what());
         return false;
@@ -1028,7 +1047,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                     // carries no free pages with old content in them.
                     bitdb.CloseDb(strFile);
                     bitdb.mapFileUseCount.erase(strFile);
-                    boost::filesystem::path pathFile = GetDataDir() / strFile;
+                    boost::filesystem::path pathFile = RealWalletPath(GetDataDir() / strFile);
                     boost::filesystem::path pathRes = pathFile.string() + ".rewrite";
                     fSuccess = CreateSQLiteWalletFile(pathRes, vKeep, strError) &&
                                VerifySQLiteWalletFile(pathRes, vKeep, strError);

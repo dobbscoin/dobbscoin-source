@@ -305,6 +305,51 @@ BOOST_AUTO_TEST_CASE(migrate_berkeley_wallet)
     env.Close();
 }
 
+#ifndef WIN32
+BOOST_AUTO_TEST_CASE(migrate_through_symlink)
+{
+    // wallet.dat is a symlink to a file on "another volume". The migration must
+    // convert the file it points at, keep the original beside it, and leave the
+    // link in place, not swap it for a plain file in the datadir.
+    TempDir tmp;
+    fs::path dirData = tmp.path / "data", dirVault = tmp.path / "vault";
+    fs::create_directories(dirData);
+    fs::create_directories(dirVault);
+    fs::path pathReal = dirVault / "wallet.dat";
+    WriteFile(pathReal, Fixture());
+    fs::create_symlink(pathReal, dirData / "wallet.dat");
+
+    CDBEnv env;
+    BOOST_REQUIRE(env.Open(dirData));
+    std::string strError;
+    BOOST_REQUIRE_MESSAGE(env.MigrateFromBerkeley("wallet.dat", strError), strError);
+
+    BOOST_CHECK(fs::is_symlink(dirData / "wallet.dat"));
+    BOOST_CHECK(fs::equivalent(dirData / "wallet.dat", pathReal));
+    std::vector<CDBEnv::KeyValPair> vRecords;
+    BOOST_REQUIRE(ReadSQLiteWalletFile(pathReal, vRecords, strError));
+    BOOST_CHECK(vRecords == AsVector(ExpectedFixture()));
+
+    // The original is kept on the vault, next to the file it was.
+    int nBackups = 0;
+    for (fs::directory_iterator it(dirVault), end; it != end; ++it) {
+        std::string name = it->path().filename().string();
+        if (name.find("wallet.dat.bdb-") == 0) {
+            nBackups++;
+            BOOST_CHECK(ReadFile(it->path()) == Fixture());
+        }
+    }
+    BOOST_CHECK_EQUAL(nBackups, 1);
+    // Nothing but the link was left in the datadir.
+    int nData = 0;
+    for (fs::directory_iterator it(dirData), end; it != end; ++it)
+        if (it->path().filename().string().find("wallet.dat") == 0)
+            nData++;
+    BOOST_CHECK_EQUAL(nData, 1);
+    env.Close();
+}
+#endif
+
 BOOST_AUTO_TEST_CASE(migrate_refuses_damaged_wallet)
 {
     TempDir tmp;
