@@ -1,0 +1,7 @@
+# UndefinedBehaviorSanitizer suppressions for the fuzz harnesses
+# (UBSAN_OPTIONS=suppressions=..., set by run.sh). Each entry is a finding
+# that has been reported and is waiting for a fix in the wallet code; remove
+# it when the fix lands. See "Known issues" in doc/fuzzing.md.
+
+# None at present. CKey::Load's empty-key case was fixed with the other fuzz
+# findings (see "Fixed findings" in doc/fuzzing.md).

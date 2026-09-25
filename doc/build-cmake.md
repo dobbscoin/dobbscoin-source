@@ -72,6 +72,7 @@ Pass with `-D<option>=ON|OFF`. The last column is the Autotools spelling.
 | `ENABLE_HARDENING` | ON | Stack protector, `_FORTIFY_SOURCE=2`, `-z relro -z now` | `--enable-hardening` |
 | `REDUCE_EXPORTS` | ON | `-fvisibility=hidden`, `--exclude-libs,ALL` | `--enable-reduce-exports` |
 | `WITH_CCACHE` | ON | Use ccache if it is installed | `--enable-ccache` |
+| `BUILD_FUZZ` | OFF | libFuzzer harnesses for the wallet file readers, clang only (see [fuzzing.md](fuzzing.md)) | none |
 | `CMAKE_BUILD_TYPE` | RelWithDebInfo | `-g -O2`, as configure's default; `Debug` = `-g3 -O0 -DDEBUG` | `--enable-debug` |
 
 Two deliberate differences from configure: the GUI is opt-in rather than

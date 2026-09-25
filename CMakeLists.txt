@@ -76,8 +76,9 @@ cmake_dependent_option(WITH_DBUS "Enable D-Bus desktop notifications in the GUI"
 option(ENABLE_HARDENING "Harden the executables (stack protector, fortify, relro/now)" ON)
 option(REDUCE_EXPORTS "Hide symbols that do not need exporting" ON)
 option(WITH_CCACHE "Use ccache when it is found" ON)
+option(BUILD_FUZZ "Build the libFuzzer harnesses in src/test/fuzz (clang only; see doc/fuzzing.md)" OFF)
 
-if(NOT (BUILD_DAEMON OR BUILD_CLI OR BUILD_TX OR BUILD_CONSENSUS_LIB OR BUILD_TESTS OR BUILD_GUI))
+if(NOT (BUILD_DAEMON OR BUILD_CLI OR BUILD_TX OR BUILD_CONSENSUS_LIB OR BUILD_TESTS OR BUILD_GUI OR BUILD_FUZZ))
   message(FATAL_ERROR "Nothing to build. Enable at least one BUILD_* option.")
 endif()
 
@@ -208,6 +209,33 @@ endif()
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag("-fmacro-prefix-map=A=B" HAVE_MACRO_PREFIX_MAP)
 
+#=============================
+# Fuzzing (BUILD_FUZZ)
+#=============================
+# Clang only. Everything compiled from here on -- our libraries, the bundled
+# secp256k1 and LevelDB -- gets coverage instrumentation (fuzzer-no-link) and
+# ASan/UBSan; only the harnesses link libFuzzer's main (src/test/fuzz). Use a
+# build directory of its own: every executable in it is sanitized.
+set(DOBBSCOIN_FUZZ OFF)
+if(BUILD_FUZZ)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_C_COMPILER_ID MATCHES "Clang")
+    set(DOBBSCOIN_FUZZ ON)
+    # -Wl,--exclude-libs,ALL (REDUCE_EXPORTS) would hide the sanitizer
+    # runtime's malloc/operator new from libstdc++ and Boost, so memory they
+    # allocate would be freed by ASan as "not malloc()-ed". _FORTIFY_SOURCE
+    # (ENABLE_HARDENING) only gets in ASan's way. Neither matters here.
+    set(REDUCE_EXPORTS OFF)
+    set(ENABLE_HARDENING OFF)
+    # UBSan reports are recoverable so that src/test/fuzz/ubsan.supp can
+    # suppress known ones; run.sh sets UBSAN_OPTIONS=halt_on_error=1.
+    add_compile_options(-fsanitize=fuzzer-no-link,address,undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address,undefined)
+  else()
+    message(WARNING "BUILD_FUZZ needs clang (CC=clang CXX=clang++); "
+                    "the compiler is ${CMAKE_CXX_COMPILER_ID}, so no fuzz harnesses are built.")
+  endif()
+endif()
+
 include(cmake/hardening.cmake)
 if(WIN32)
   # configure's LIBS: last on every link line, which is where CMake puts these.
@@ -258,6 +286,7 @@ endif()
 message("Tests:")
 message("  test_dobbscoin ....................... ${BUILD_TESTS}")
 message("  test_dobbscoin-qt .................... ${BUILD_GUI_TESTS}")
+message("  fuzz harnesses (clang) ............... ${DOBBSCOIN_FUZZ}")
 message("Hardening .............................. ${ENABLE_HARDENING}")
 message("Reduce exports ......................... ${REDUCE_EXPORTS}")
 message("Build type ............................. ${CMAKE_BUILD_TYPE}")
