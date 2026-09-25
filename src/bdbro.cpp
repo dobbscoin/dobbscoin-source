@@ -268,8 +268,11 @@ public:
                 throw std::runtime_error(strprintf("page %u: unsupported internal item type %u", pgno, type));
             if (off + 12 + len > pagesize)
                 throw std::runtime_error(strprintf("page %u: internal item %u runs off the page", pgno, i));
+            // Berkeley DB flags deleted items on leaf pages only. On an internal
+            // page the flag is corruption, and skipping the item would silently
+            // drop every record under it; ReadAll is strict, so refuse.
             if (type & B_DELETE)
-                continue;
+                throw std::runtime_error(strprintf("page %u: internal item %u is marked deleted", pgno, i));
             children.push_back(Get32(base + off + 4));
         }
         return children;
@@ -373,7 +376,14 @@ void ReadAll(const boost::filesystem::path& path, RecordMap& records)
         throw std::runtime_error("subdatabase metadata page is past the end of the file");
     Meta inner = f.ReadMeta(main_pgno);
 
+    // Seeded with the pages that belong to the outer database, so a corrupt
+    // child pointer to one of them is refused instead of read as a wallet leaf
+    // (the outer root leaf holds the "main" -> page-number pair).
     std::set<uint32_t> visited;
+    visited.insert(0);
+    visited.insert(main_pgno);
+    if (outer.root != inner.root)
+        visited.insert(outer.root);
     std::vector<std::pair<uint32_t, int> > stack; // page, expected level (-1: any)
     stack.push_back(std::make_pair(inner.root, -1));
     while (!stack.empty()) {

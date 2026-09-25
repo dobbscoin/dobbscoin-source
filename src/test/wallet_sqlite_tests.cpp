@@ -12,6 +12,7 @@
 #include "utilstrencodings.h"
 
 #include "data/bdb_fixture.raw.h"
+#include "data/sqlite_index_mismatch.raw.h"
 
 #include <stdio.h>
 #ifndef WIN32
@@ -294,6 +295,44 @@ BOOST_AUTO_TEST_CASE(bdbro_salvage_skips_one_bad_record)
         BOOST_CHECK(it->second == rec[i].second);
     }
     BOOST_CHECK(strReport.find("1 unreadable records skipped") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(bdbro_refuses_deleted_internal_item)
+{
+    // Berkeley DB never flags an internal-page item deleted. Skipping one would
+    // drop the whole subtree under it, keys included, without an error.
+    TempDir tmp;
+    fs::path p = tmp.path / "internal.dat";
+    Bytes b = Fixture();
+    std::vector<size_t> internals = PagesOfType(b, 3);
+    BOOST_REQUIRE(!internals.empty());
+    size_t base = internals[0] * FIXTURE_PAGESIZE;
+    size_t item0 = b[base + 26] | (b[base + 27] << 8);
+    b[base + item0 + 2] |= 0x80; // B_DELETE
+    WriteFile(p, b);
+    BOOST_CHECK(ReadAllThrows(p));
+}
+
+BOOST_AUTO_TEST_CASE(verify_catches_index_mismatch)
+{
+    // The v0.13.8 encrypted fixture, migrated, with two bytes of one ckey
+    // swapped in the table page (the wallet_sqlite fuzzer's find). Every row
+    // still reads, so only PRAGMA integrity_check can tell, and only if its
+    // text is read: it returns a row either way.
+    TempDir tmp;
+    fs::path p = tmp.path / "wallet.dat";
+    WriteFile(p, Bytes(alert_tests::sqlite_index_mismatch,
+                       alert_tests::sqlite_index_mismatch + sizeof(alert_tests::sqlite_index_mismatch)));
+    std::string strError;
+    std::vector<CDBEnv::KeyValPair> vRecords;
+    BOOST_REQUIRE_MESSAGE(ReadSQLiteWalletFile(p, vRecords, strError), strError);
+    BOOST_CHECK(!VerifySQLiteWalletFile(p, vRecords, strError));
+    BOOST_CHECK_MESSAGE(strError.find("integrity_check") != std::string::npos, strError);
+
+    CDBEnv env;
+    BOOST_REQUIRE(env.Open(tmp.path));
+    BOOST_CHECK(env.Verify("wallet.dat", strError) == CDBEnv::RECOVER_FAIL);
+    env.Close();
 }
 
 BOOST_AUTO_TEST_CASE(migrate_berkeley_wallet)
