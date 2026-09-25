@@ -18,7 +18,7 @@ set(json_test_files
   tx_valid.json
   sighash.json
 )
-set(raw_test_files alertTests.raw bdb_fixture.raw)
+set(raw_test_files alertTests.raw bdb_fixture.raw sqlite_index_mismatch.raw)
 
 set(generated_test_headers)
 foreach(f IN LISTS json_test_files raw_test_files)

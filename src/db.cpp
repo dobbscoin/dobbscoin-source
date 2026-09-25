@@ -45,6 +45,15 @@ void RemoveQuietly(const boost::filesystem::path& p)
     boost::filesystem::remove(p, ec);
 }
 
+/** Whether a file exists; never throws. Unreadable counts as absent: the open
+ *  or rename that follows then fails with a proper error message. (Test the
+ *  return value only: in Boost 1.74 exists(p, ec) sets ec for a missing file.) */
+bool ExistsQuietly(const boost::filesystem::path& p)
+{
+    boost::system::error_code ec;
+    return boost::filesystem::exists(p, ec);
+}
+
 std::string SQLiteError(sqlite3* db, int rc)
 {
     if (db)
@@ -82,10 +91,33 @@ bool PragmaInt(sqlite3* db, const char* sql, int64_t& nOut, std::string& strErro
     return fOk;
 }
 
+/** PRAGMA integrity_check passes only when its one row reads "ok"; any other
+ *  text is the list of problems. Not quick_check: only the full check compares
+ *  each index with its table, and a wallet whose key index disagrees with its
+ *  rows loads with records silently missing (found by the wallet_sqlite fuzzer). */
+bool IntegrityOk(sqlite3* db, std::string& strError)
+{
+    sqlite3_stmt* stmt = NULL;
+    int rc = sqlite3_prepare_v2(db, "PRAGMA integrity_check", -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        strError = SQLiteError(db, rc);
+        return false;
+    }
+    rc = sqlite3_step(stmt);
+    std::string strResult;
+    if (rc == SQLITE_ROW && sqlite3_column_text(stmt, 0))
+        strResult = (const char*)sqlite3_column_text(stmt, 0);
+    sqlite3_finalize(stmt);
+    if (strResult == "ok")
+        return true;
+    strError = strResult.empty() ? SQLiteError(db, rc) : "integrity_check: " + strResult;
+    return false;
+}
+
 /**
  * Connection settings. A wallet has one writer, so no WAL: a rollback journal
  * that is deleted on commit keeps wallet.dat a single self-contained file that
- * can be copied while the node is stopped. synchronous=FULL makes a commit
+ * can be copied while the node is stopped. synchronous=EXTRA makes a commit
  * durable before it returns. secure_delete overwrites freed content, so an
  * erased plaintext key does not linger in a free page after encryptwallet.
  */
@@ -214,9 +246,7 @@ bool CreateSQLiteWalletFile(const boost::filesystem::path& path, const std::vect
 {
     RemoveQuietly(path);
     RemoveQuietly(path.string() + "-journal");
-    boost::system::error_code ecExists; // the error_code form never throws; an unreadable
-                                        // path fails at the SQLite open below instead
-    if (boost::filesystem::exists(path, ecExists)) {
+    if (ExistsQuietly(path)) {
         strError = strprintf("cannot remove the stale file %s", path.string());
         return false;
     }
@@ -275,15 +305,10 @@ bool VerifySQLiteWalletFile(const boost::filesystem::path& path, std::vector<CDB
         return false;
     std::vector<CDBEnv::KeyValPair> vActual;
     bool fOk = ReadAllRecords(db, vActual, strError);
-    std::string strCheck;
-    int64_t nIgnored;
-    // integrity_check, not quick_check: only the full check compares each index
-    // with its table, and a wallet whose key index disagrees with its rows loads
-    // with records silently missing (found by the wallet_sqlite fuzzer).
-    if (fOk && !PragmaInt(db, "PRAGMA integrity_check", nIgnored, strCheck)) {
-        strError = "integrity_check failed: " + strCheck;
+    // PragmaInt used to run this and counted any row as a pass, so the check
+    // accepted every file; the text has to be "ok".
+    if (fOk && !IntegrityOk(db, strError))
         fOk = false;
-    }
     sqlite3_close(db);
     if (!fOk)
         return false;
@@ -472,11 +497,11 @@ CSQLiteFile* CDBEnv::OpenFile(const std::string& strFile, bool fCreate)
         }
     } else {
         boost::filesystem::path pathFile = path / strFile;
-        if (boost::filesystem::exists(pathFile) && BerkeleyRO::IsBerkeleyBtreeFile(pathFile)) {
+        if (ExistsQuietly(pathFile) && BerkeleyRO::IsBerkeleyBtreeFile(pathFile)) {
             mapDb.erase(strFile);
             throw runtime_error(strprintf("CDB : %s is still a Berkeley DB file; it is migrated at startup", strFile));
         }
-        if (!fCreate && !boost::filesystem::exists(pathFile)) {
+        if (!fCreate && !ExistsQuietly(pathFile)) {
             mapDb.erase(strFile);
             throw runtime_error(strprintf("CDB : database %s does not exist", strFile));
         }
@@ -507,22 +532,7 @@ CDBEnv::VerifyResult CDBEnv::Verify(const std::string& strFile, std::string& str
     if (!db)
         return RECOVER_FAIL;
     sqlite3_stmt* stmt = NULL;
-    VerifyResult result = RECOVER_FAIL;
-    // Not quick_check: it does not compare the key index with the table, and a
-    // wallet where they disagree passes it yet loads with a key silently missing.
-    if (sqlite3_prepare_v2(db, "PRAGMA integrity_check", -1, &stmt, NULL) == SQLITE_OK) {
-        int rc = sqlite3_step(stmt);
-        std::string strResult;
-        if (rc == SQLITE_ROW && sqlite3_column_text(stmt, 0))
-            strResult = (const char*)sqlite3_column_text(stmt, 0);
-        if (strResult == "ok")
-            result = VERIFY_OK;
-        else
-            strError = strResult.empty() ? SQLiteError(db, rc) : strResult;
-    } else {
-        strError = sqlite3_errmsg(db);
-    }
-    sqlite3_finalize(stmt);
+    VerifyResult result = IntegrityOk(db, strError) ? VERIFY_OK : RECOVER_FAIL;
     sqlite3_close(db);
     return result;
 }
@@ -555,7 +565,7 @@ bool CDBEnv::ReplaceWithSQLite(const std::string& strFile, const std::vector<Key
     //    supported, a copy that is compared with the original.
     int64_t nNow = GetTime();
     boost::filesystem::path pathBackup = pathFile.string() + strprintf(".%s-%d", strBackupTag, nNow);
-    for (int i = 1; boost::filesystem::exists(pathBackup); i++)
+    for (int i = 1; ExistsQuietly(pathBackup); i++)
         pathBackup = pathFile.string() + strprintf(".%s-%d-%d", strBackupTag, nNow, i);
     try {
         boost::system::error_code ec;
@@ -596,7 +606,7 @@ bool CDBEnv::ReplaceWithSQLite(const std::string& strFile, const std::vector<Key
 bool CDBEnv::MigrateFromBerkeley(const std::string& strFile, std::string& strError)
 {
     boost::filesystem::path pathFile = path / strFile;
-    if (fMockDb || !boost::filesystem::exists(pathFile) || !BerkeleyRO::IsBerkeleyBtreeFile(pathFile))
+    if (fMockDb || !ExistsQuietly(pathFile) || !BerkeleyRO::IsBerkeleyBtreeFile(pathFile))
         return true;
 
     LogPrintf("Wallet %s is a Berkeley DB file; migrating it to SQLite %s\n", strFile, sqlite3_libversion());
@@ -622,7 +632,15 @@ bool CDBEnv::MigrateFromBerkeley(const std::string& strFile, std::string& strErr
 
 bool CDBEnv::Backup(const std::string& strFile, const boost::filesystem::path& pathDest, std::string& strError)
 {
-    boost::filesystem::path pathTmp = pathDest.string() + ".tmp";
+    // A name of its own per call: two backups to the same destination at once
+    // must not remove or rename each other's half-written copy.
+    static int nBackupSeq = 0;
+    int nSeq;
+    {
+        LOCK(cs_db);
+        nSeq = ++nBackupSeq;
+    }
+    boost::filesystem::path pathTmp = pathDest.string() + strprintf(".tmp-%d-%d", (int)getpid(), nSeq);
     CSQLiteFile* pfile;
     {
         LOCK(cs_db);
@@ -655,11 +673,11 @@ bool CDBEnv::Backup(const std::string& strFile, const boost::filesystem::path& p
     } useCountGuard = {*this, strFile};
 
     bool fOk;
+    std::vector<KeyValPair> vRecords;
     {
         // The file mutex is held for the whole of any transaction, so taking
         // it means no half-finished transaction is copied.
         boost::lock_guard<boost::recursive_mutex> lock(pfile->mutex);
-        std::vector<KeyValPair> vRecords;
         fOk = ReadAllRecords(pfile->db, vRecords, strError);
         sqlite3* dst = NULL;
         if (fOk) {
@@ -689,10 +707,11 @@ bool CDBEnv::Backup(const std::string& strFile, const boost::filesystem::path& p
             strError = "closing the backup failed";
             fOk = false;
         }
-        // The copy must hold exactly what the wallet holds.
-        if (fOk)
-            fOk = VerifySQLiteWalletFile(pathTmp, vRecords, strError);
     }
+    // The copy must hold exactly what the wallet held. vRecords is the snapshot
+    // taken under the lock, so checking the copy does not need to block the wallet.
+    if (fOk)
+        fOk = VerifySQLiteWalletFile(pathTmp, vRecords, strError);
     if (fOk) {
         try {
             boost::filesystem::rename(pathTmp, pathDest);
