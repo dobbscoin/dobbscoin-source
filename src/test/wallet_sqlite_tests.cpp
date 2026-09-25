@@ -265,6 +265,37 @@ BOOST_AUTO_TEST_CASE(bdbro_salvage_skips_bad_pages)
     BOOST_CHECK(strReport.find("clean read failed") != std::string::npos);
 }
 
+BOOST_AUTO_TEST_CASE(bdbro_salvage_skips_one_bad_record)
+{
+    // One unreadable item on a leaf page costs its own key/value pair, not every
+    // record on the page.
+    TempDir tmp;
+    fs::path p = tmp.path / "salvage.dat";
+    const BerkeleyRO::RecordMap expected = ExpectedFixture();
+    Bytes b = Fixture();
+    std::vector<size_t> leaves = PagesOfType(b, 5);
+    size_t victim = leaves[leaves.size() / 2];
+    size_t base = victim * FIXTURE_PAGESIZE;
+    unsigned int entries = b[base + 20] | (b[base + 21] << 8);
+    BOOST_REQUIRE(entries >= 4);
+    // Item 0 (a key): its type byte becomes one Berkeley DB never writes.
+    size_t item0 = b[base + 26] | (b[base + 27] << 8);
+    b[base + item0 + 2] = 0x7f;
+    WriteFile(p, b);
+    BOOST_CHECK(ReadAllThrows(p));
+
+    BerkeleyRO::RecordList rec;
+    std::string strReport;
+    BOOST_CHECK(BerkeleyRO::Salvage(p, rec, strReport));
+    BOOST_CHECK_MESSAGE(rec.size() == 59U, strReport);
+    for (size_t i = 0; i < rec.size(); i++) {
+        BerkeleyRO::RecordMap::const_iterator it = expected.find(rec[i].first);
+        BOOST_REQUIRE(it != expected.end());
+        BOOST_CHECK(it->second == rec[i].second);
+    }
+    BOOST_CHECK(strReport.find("1 unreadable records skipped") != std::string::npos);
+}
+
 BOOST_AUTO_TEST_CASE(migrate_berkeley_wallet)
 {
     TempDir tmp;

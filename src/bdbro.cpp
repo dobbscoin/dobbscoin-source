@@ -219,34 +219,39 @@ public:
         return out;
     }
 
+    /** Item i of a leaf page. Throws if that one item is unreadable. */
+    Item ReadLeafItem(uint32_t pgno, const PageHeader& h, unsigned int i) const
+    {
+        size_t base = PageOffset(pgno);
+        size_t off = ItemOffset(pgno, h, i, 3);
+        uint16_t len = Get16(base + off);
+        uint8_t type = Get8(base + off + 2);
+        Item item;
+        item.deleted = (type & B_DELETE) != 0;
+        type &= ~B_DELETE;
+        if (type == B_KEYDATA) {
+            if (off + 3 + len > pagesize)
+                throw std::runtime_error(strprintf("page %u: item %u runs off the page", pgno, i));
+            item.data.assign(buf.begin() + base + off + 3, buf.begin() + base + off + 3 + len);
+        } else if (type == B_OVERFLOW) {
+            if (off + 12 > pagesize)
+                throw std::runtime_error(strprintf("page %u: overflow item %u runs off the page", pgno, i));
+            uint32_t first = Get32(base + off + 4);
+            uint32_t total = Get32(base + off + 8);
+            if (!item.deleted)
+                item.data = ReadOverflow(first, total);
+        } else {
+            throw std::runtime_error(strprintf("page %u: unsupported item type %u", pgno, type));
+        }
+        return item;
+    }
+
     /** All items of a leaf page, in index order. */
     std::vector<Item> ReadLeafItems(uint32_t pgno, const PageHeader& h) const
     {
         std::vector<Item> items;
-        size_t base = PageOffset(pgno);
-        for (unsigned int i = 0; i < h.entries; i++) {
-            size_t off = ItemOffset(pgno, h, i, 3);
-            uint16_t len = Get16(base + off);
-            uint8_t type = Get8(base + off + 2);
-            Item item;
-            item.deleted = (type & B_DELETE) != 0;
-            type &= ~B_DELETE;
-            if (type == B_KEYDATA) {
-                if (off + 3 + len > pagesize)
-                    throw std::runtime_error(strprintf("page %u: item %u runs off the page", pgno, i));
-                item.data.assign(buf.begin() + base + off + 3, buf.begin() + base + off + 3 + len);
-            } else if (type == B_OVERFLOW) {
-                if (off + 12 > pagesize)
-                    throw std::runtime_error(strprintf("page %u: overflow item %u runs off the page", pgno, i));
-                uint32_t first = Get32(base + off + 4);
-                uint32_t total = Get32(base + off + 8);
-                if (!item.deleted)
-                    item.data = ReadOverflow(first, total);
-            } else {
-                throw std::runtime_error(strprintf("page %u: unsupported item type %u", pgno, type));
-            }
-            items.push_back(item);
-        }
+        for (unsigned int i = 0; i < h.entries; i++)
+            items.push_back(ReadLeafItem(pgno, h, i));
         return items;
     }
 
@@ -436,14 +441,27 @@ bool Salvage(const boost::filesystem::path& path, RecordList& records, std::stri
     static const unsigned char name[] = {'m', 'a', 'i', 'n'};
     const Bytes subdb_name(name, name + 4);
     std::set<Bytes> seen;
-    unsigned int nPagesRead = 0, nPagesSkipped = 0, nDupes = 0;
+    unsigned int nPagesRead = 0, nPagesSkipped = 0, nItemsSkipped = 0, nDupes = 0;
     for (uint32_t pgno = 1; pgno < f.NumPages(); pgno++) {
         try {
             PageHeader h = f.ReadHeader(pgno);
             if (h.type != P_LBTREE || h.level != LEAF_LEVEL)
                 continue;
+            // Pair by pair, not LeafPairs: one damaged item costs its own
+            // key/value pair, not every record on the page. Keys sit at even
+            // indexes and values at odd ones, so a skipped pair does not shift
+            // the pairing of the rest.
             RecordList pairs;
-            LeafPairs(f, pgno, h, pairs);
+            for (unsigned int i = 0; i + 1 < h.entries; i += 2) {
+                try {
+                    Item k = f.ReadLeafItem(pgno, h, i);
+                    Item v = f.ReadLeafItem(pgno, h, i + 1);
+                    if (!k.deleted && !v.deleted)
+                        pairs.push_back(std::make_pair(k.data, v.data));
+                } catch (const std::exception&) {
+                    nItemsSkipped++;
+                }
+            }
             nPagesRead++;
             for (size_t i = 0; i < pairs.size(); i++) {
                 if (pairs[i].first == subdb_name && pairs[i].second.size() == 4)
@@ -458,8 +476,8 @@ bool Salvage(const boost::filesystem::path& path, RecordList& records, std::stri
             nPagesSkipped++;
         }
     }
-    strReport += strprintf("%u leaf pages read, %u unreadable pages skipped, %u repeated keys dropped, %u records recovered",
-                           nPagesRead, nPagesSkipped, nDupes, (unsigned int)records.size());
+    strReport += strprintf("%u leaf pages read, %u unreadable pages skipped, %u unreadable records skipped, %u repeated keys dropped, %u records recovered",
+                           nPagesRead, nPagesSkipped, nItemsSkipped, nDupes, (unsigned int)records.size());
     return !records.empty();
 }
 } // namespace BerkeleyRO

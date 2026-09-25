@@ -602,6 +602,16 @@ static bool IsKeyType(string strType)
             strType == "mkey" || strType == "ckey");
 }
 
+/** What -salvagewallet keeps besides keys: what it takes to spend and recognize
+ *  the coins. Redeem scripts (P2SH/multisig coins are unspendable without them),
+ *  watch-only addresses, labels, and key metadata (the creation time a rescan
+ *  starts from). Transactions are left out; the rescan rebuilds them. */
+static bool IsSalvageType(const string& strType)
+{
+    return IsKeyType(strType) || strType == "cscript" || strType == "watchs" ||
+           strType == "name" || strType == "purpose" || strType == "keymeta";
+}
+
 DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 {
     pwallet->vchDefaultKey = CPubKey();
@@ -917,7 +927,7 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys, std
             string strType, strErr;
             bool fReadOK = ReadKeyValue(&dummyWallet, ssKey, ssValue,
                                         wss, strType, strErr);
-            if (!IsKeyType(strType))
+            if (!IsSalvageType(strType))
                 continue;
             if (!fReadOK)
             {
@@ -927,7 +937,15 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys, std
         }
         vKeep.push_back(row);
     }
-    if (vKeep.empty()) {
+    int nKeys = 0;
+    BOOST_FOREACH(const CDBEnv::KeyValPair& row, vKeep) {
+        CDataStream ssKey(row.first, SER_DISK, CLIENT_VERSION);
+        string strType;
+        try { ssKey >> strType; } catch (const std::exception&) { continue; }
+        if (IsKeyType(strType))
+            nKeys++;
+    }
+    if (nKeys == 0) {
         strError = strprintf("%u records were read from %s but none of them is a key", (unsigned int)salvagedData.size(), filename);
         return false;
     }
