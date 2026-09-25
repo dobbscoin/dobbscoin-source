@@ -271,8 +271,11 @@ bool VerifySQLiteWalletFile(const boost::filesystem::path& path, std::vector<CDB
     bool fOk = ReadAllRecords(db, vActual, strError);
     std::string strCheck;
     int64_t nIgnored;
-    if (fOk && !PragmaInt(db, "PRAGMA quick_check", nIgnored, strCheck)) {
-        strError = "quick_check failed: " + strCheck;
+    // integrity_check, not quick_check: only the full check compares each index
+    // with its table, and a wallet whose key index disagrees with its rows loads
+    // with records silently missing (found by the wallet_sqlite fuzzer).
+    if (fOk && !PragmaInt(db, "PRAGMA integrity_check", nIgnored, strCheck)) {
+        strError = "integrity_check failed: " + strCheck;
         fOk = false;
     }
     sqlite3_close(db);
@@ -479,7 +482,9 @@ CDBEnv::VerifyResult CDBEnv::Verify(const std::string& strFile, std::string& str
         return RECOVER_FAIL;
     sqlite3_stmt* stmt = NULL;
     VerifyResult result = RECOVER_FAIL;
-    if (sqlite3_prepare_v2(db, "PRAGMA quick_check", -1, &stmt, NULL) == SQLITE_OK) {
+    // Not quick_check: it does not compare the key index with the table, and a
+    // wallet where they disagree passes it yet loads with a key silently missing.
+    if (sqlite3_prepare_v2(db, "PRAGMA integrity_check", -1, &stmt, NULL) == SQLITE_OK) {
         int rc = sqlite3_step(stmt);
         std::string strResult;
         if (rc == SQLITE_ROW && sqlite3_column_text(stmt, 0))

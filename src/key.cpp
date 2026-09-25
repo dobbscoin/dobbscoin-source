@@ -132,6 +132,8 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
 }
 
 bool CKey::Load(CPrivKey &privkey, CPubKey &vchPubKey, bool fSkipCheck=false) {
+    if (privkey.empty()) // &privkey[0] on an empty vector is undefined behaviour
+        return false;
     if (!ec_privkey_import_der(instance_of_csecp256k1.ctx, (unsigned char*)begin(), &privkey[0], privkey.size()))
         return false;
     fCompressed = vchPubKey.IsCompressed();

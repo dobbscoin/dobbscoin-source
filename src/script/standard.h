@@ -69,7 +69,10 @@ enum txnouttype
 class CNoDestination {
 public:
     friend bool operator==(const CNoDestination &a, const CNoDestination &b) { return true; }
-    friend bool operator<(const CNoDestination &a, const CNoDestination &b) { return true; }
+    // All CNoDestinations are equal, so none is less than another. This returned
+    // true, which is not a strict weak ordering: std::map lost and leaked nodes when
+    // a wallet held two address-book entries that are not valid addresses.
+    friend bool operator<(const CNoDestination &a, const CNoDestination &b) { return false; }
 };
 
 /** 
