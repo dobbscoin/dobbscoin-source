@@ -13,8 +13,9 @@
 //  - Success: the directory holds exactly wallet.dat and
 //    wallet.dat.<bdb|salvage>-<MOCK_TIME> ("bdb" for a Berkeley DB input);
 //    that backup is byte-identical to the input; the new wallet.dat is an
-//    SQLite wallet holding at least one record, every one of them a key
-//    record ("key", "wkey", "mkey", "ckey") that the salvage read returned.
+//    SQLite wallet holding at least one key record ("key", "wkey", "mkey",
+//    "ckey"), and every record in it is a key, "cscript", "watchs", "name",
+//    "purpose" or "keymeta" record that the salvage read returned.
 //  - Known, reported: stray wallet.dat-shm/-wal after opening a WAL-mode
 //    file are tolerated unless BOB_FUZZ_STRICT_FILES=1 (see ListChecked).
 
@@ -40,7 +41,7 @@ fs::path g_dir;
 fs::path g_file;
 CDBEnv* g_env;
 
-bool IsKeyRecord(const fuzz::Bytes& key)
+bool IsSalvageRecord(const fuzz::Bytes& key)
 {
     CDataStream ss(key, SER_DISK, CLIENT_VERSION);
     std::string strType;
@@ -49,7 +50,9 @@ bool IsKeyRecord(const fuzz::Bytes& key)
     } catch (const std::exception&) {
         return false;
     }
-    return strType == "key" || strType == "wkey" || strType == "mkey" || strType == "ckey";
+    return strType == "key" || strType == "wkey" || strType == "mkey" || strType == "ckey" ||
+           strType == "cscript" || strType == "watchs" || strType == "name" ||
+           strType == "purpose" || strType == "keymeta";
 }
 /**
  * Known and reported: a file whose header says WAL mode makes SQLite create
@@ -129,7 +132,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     FUZZ_CHECK(ReadSQLiteWalletFile(g_file, got, strReadBack), "the recovered wallet cannot be read: " + strReadBack);
     FUZZ_CHECK(!got.empty(), "Recover succeeded with an empty wallet");
     for (size_t i = 0; i < got.size(); i++) {
-        FUZZ_CHECK(IsKeyRecord(got[i].first), strprintf("recovered record %u is not a key record", (unsigned int)i));
+        FUZZ_CHECK(IsSalvageRecord(got[i].first), strprintf("recovered record %u is not a record salvage keeps", (unsigned int)i));
         FUZZ_CHECK(std::binary_search(candidates.begin(), candidates.end(), got[i]),
                    strprintf("recovered record %u was not in what the salvage read returned", (unsigned int)i));
     }
