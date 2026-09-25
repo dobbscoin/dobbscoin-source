@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 // wallet_sqlite: arbitrary bytes as an SQLite wallet.dat, opened the way the
-// node opens it at startup: CDBEnv::Verify (quick_check), then a CDB handle
+// node opens it at startup: CDBEnv::Verify (integrity_check), then a CDB handle
 // that reads the version record and walks every record with a cursor, plus
 // the standalone reader ReadSQLiteWalletFile that -salvagewallet and the
 // migration use. Every one of them must reject or read, never crash.
@@ -12,17 +12,16 @@
 //  - No crash, no sanitizer report, no exception other than the
 //    std::runtime_error CDB documents for a file it cannot open.
 //  - A Berkeley DB file is refused by Verify and by CDB.
-//  - When Verify says VERIFY_OK (the file passes PRAGMA quick_check, the
+//  - When Verify says VERIFY_OK (the file passes PRAGMA integrity_check, the
 //    node's gate at startup): the cursor returns keys in strictly increasing
 //    order (so it always ends), every key the cursor returns is found again by
 //    a point lookup, and if both readers succeed, the cursor walk and
 //    ReadSQLiteWalletFile return exactly the same records. A file Verify
 //    rejects only has to be handled without a crash.
-//  - Known, reported: quick_check does not compare the key index with the
-//    table, so a file can pass Verify and still lose records in CDB. By
-//    default the record-level checks skip files that fail PRAGMA
-//    integrity_check; BOB_FUZZ_STRICT_VERIFY=1 applies them to every file
-//    Verify accepts.
+//  - This harness found that Verify once ran quick_check, which passed a file
+//    whose key index disagreed with its table; CDB then silently skipped a
+//    record. Verify now runs integrity_check, and the checks above apply to
+//    every file it accepts.
 
 #include "fuzz_util.h"
 
@@ -97,40 +96,6 @@ public:
     }
 };
 
-/**
- * PRAGMA integrity_check, which (unlike Verify's quick_check) also checks that
- * every index matches its table. Read-only; run on the harness's own copy.
- */
-bool DeepCheck(const fs::path& p)
-{
-    sqlite3* db = NULL;
-    bool fOk = false;
-    if (sqlite3_open_v2(p.string().c_str(), &db, SQLITE_OPEN_READONLY, NULL) == SQLITE_OK) {
-        sqlite3_stmt* stmt = NULL;
-        if (sqlite3_prepare_v2(db, "PRAGMA integrity_check", -1, &stmt, NULL) == SQLITE_OK &&
-            sqlite3_step(stmt) == SQLITE_ROW) {
-            const unsigned char* txt = sqlite3_column_text(stmt, 0);
-            fOk = txt && std::string((const char*)txt) == "ok";
-        }
-        sqlite3_finalize(stmt);
-    }
-    sqlite3_close(db);
-    return fOk;
-}
-
-/**
- * Known and reported: Verify's quick_check passes a file whose unique index
- * on key no longer matches the table, and CDB then silently skips or garbles
- * records. Unless BOB_FUZZ_STRICT_VERIFY=1, the record-level checks below
- * apply only to files that also pass integrity_check, so that one finding
- * does not stop every run.
- */
-bool StrictVerify()
-{
-    const char* env = getenv("BOB_FUZZ_STRICT_VERIFY");
-    return env && std::string(env) == "1";
-}
-
 void Reset()
 {
     LOCK(bitdb.cs_db);
@@ -157,8 +122,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 
     std::string strError;
     CDBEnv::VerifyResult verify = bitdb.Verify(WALLET, strError);
-    // Verified, and (see StrictVerify) consistent enough for the record checks.
-    const bool fVerified = verify == CDBEnv::VERIFY_OK && (StrictVerify() || DeepCheck(g_file));
+    const bool fVerified = verify == CDBEnv::VERIFY_OK;
     FUZZ_CHECK(verify == CDBEnv::VERIFY_OK || verify == CDBEnv::RECOVER_FAIL, "Verify returned an unexpected value");
     if (verify != CDBEnv::VERIFY_OK)
         FUZZ_CHECK(!strError.empty(), "Verify failed without saying why");

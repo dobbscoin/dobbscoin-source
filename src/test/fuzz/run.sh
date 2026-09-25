@@ -31,13 +31,7 @@ mkdir -p "$out/corpus" "$out/crashes"
 case $target in
   wallet_load)
     max_len=8192
-    # Known, reported: CNoDestination's operator< makes mapAddressBook leak
-    # nodes whenever two records name invalid addresses. Leak reports would
-    # stop every run at once, so they are off here; ASan and UBSan stay on.
-    leaks=0 ;;
-  wallet_recover)
-    max_len=32768
-    leaks=0 ;;
+    leaks=1 ;;
   *)
     max_len=32768
     leaks=1 ;;

@@ -121,37 +121,25 @@ Debug it with gdb (`gdb --args build-fuzz/src/test/fuzz/bdbro_parse <file>`,
 then `break __sanitizer::Die` or `break abort`, `run`, `bt`). A failing input
 makes a good unit test in `src/test/wallet_sqlite_tests.cpp`.
 
+Fixed findings
+--------------
+
+The first smoke runs found three bugs in the wallet code. All three are fixed,
+and each minimized input now runs clean with every check on:
+
+- **Verify missed a damaged index.** `CDBEnv::Verify` ran `PRAGMA quick_check`,
+  which does not compare the key index with the table. A wallet with two
+  swapped bytes in one `ckey` passed it and loaded with one encrypted key
+  silently missing. Verify now runs `PRAGMA integrity_check`, which refuses it.
+- **Address book ordering.** `CNoDestination`'s `operator<` returned `true`,
+  not a valid ordering for `std::map`: `mapAddressBook` lost and leaked nodes
+  when a wallet named two invalid addresses. It now returns `false`, and leak
+  detection is on for every harness.
+- **Empty private key.** `CKey::Load` took `&privkey[0]` of an empty vector
+  (undefined behaviour). It now returns `false` first.
+
 Known issues
 ------------
-
-Four findings in the wallet code are reported but not fixed yet. The harnesses
-step around them by default so that a run is not stopped by the same bug over
-and over.
-
-**Address book ordering.** `CNoDestination`'s `operator<` (`src/script/standard.h`) returns `true` for two
-`CNoDestination`s, which is not a valid ordering for `std::map`. When a wallet
-holds two or more `name`, `purpose` or `destdata` records for strings that are
-not valid addresses on the current network, `mapAddressBook` loses nodes (a
-leak LeakSanitizer reports) and its `size()` no longer matches its contents.
-Until that is fixed, `run.sh` turns leak detection off for `wallet_load` and
-`wallet_recover`, which reach that code; ASan and UBSan stay on.
-
-**Verify misses a damaged index.** `CDBEnv::Verify` runs `PRAGMA quick_check`,
-which does not compare the `main` table's key index with the table. A wallet
-whose key bytes were damaged on disk passes it, and the node then loads it with
-records silently missing: the cursor that `LoadWallet` walks skips or garbles
-keys whose index entry no longer matches. `PRAGMA integrity_check` finds it.
-`wallet_sqlite` applies its record-level checks only to files that pass
-`integrity_check`; run it with `BOB_FUZZ_STRICT_VERIFY=1` to apply them to
-every file `Verify` accepts, which reproduces the finding within seconds.
-
-**Empty private key.** `CKey::Load` (`src/key.cpp`) takes `&privkey[0]` of an
-empty vector when a `key` or `wkey` record holds an empty private key.
-`ec_privkey_import_der` rejects the zero length before reading anything, so
-it does no harm in practice, but it is undefined behaviour and UBSan stops on
-it. `src/test/fuzz/ubsan.supp` suppresses it (UBSan matches the innermost
-frame, so the entry names `operator[]` of secure vectors); remove the entry
-when `CKey::Load` checks for an empty key.
 
 **Stray WAL files.** A `wallet.dat` whose SQLite header says WAL mode (bytes
 18 and 19 set to 2) makes SQLite create `wallet.dat-shm` and `wallet.dat-wal`
