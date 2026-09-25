@@ -865,7 +865,8 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
     if (!wallet.fFileBacked)
         return false;
     filesystem::path pathDest(strDest);
-    if (filesystem::is_directory(pathDest))
+    boost::system::error_code ec; // an unreadable destination is a failed backup, not an exception
+    if (filesystem::is_directory(pathDest, ec))
         pathDest /= wallet.strWalletFile;
     std::string strError;
     if (!bitdb.Backup(wallet.strWalletFile, pathDest, strError)) {
