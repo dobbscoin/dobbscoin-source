@@ -26,7 +26,7 @@ A Linux bash script that will set up traffic control (tc) to limit the outgoing 
 ### [Seeds](/contrib/seeds) ###
 Utility to generate the pnSeed[] array that is compiled into the client.
 
-Build Tools and Keys
+Build Tools
 ---------------------
 
 ### [Debian](/contrib/debian) ###
@@ -35,9 +35,6 @@ for Debian-based Linux systems. If you compile dobbscoind/dobbscoin-qt yourself,
 
 ### [Gitian-descriptors](/contrib/gitian-descriptors) ###
 Gavin's notes on getting gitian builds up and running using KVM.
-
-### [Gitian-downloader](/contrib/gitian-downloader)
-Various PGP files of core developers. 
 
 ### [MacDeploy](/contrib/macdeploy) ###
 Scripts and notes for Mac builds. 
@@ -51,6 +48,3 @@ Utilities to generate test vectors for the data-driven Dobbscoin tests.
 ### [Test Patches](/contrib/test-patches) ###
 These patches are applied when the automated pull-tester
 tests each pull and when master is tested using jenkins.
-
-### [Verify SF Binaries](/contrib/verifysfbinaries) ###
-This script attempts to download and verify the signature file SHA256SUMS.asc from SourceForge.
