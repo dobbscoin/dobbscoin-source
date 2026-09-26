@@ -13,7 +13,7 @@
 - (NSString *)__bundleIdentifier
 {
     if (self == [NSBundle mainBundle]) {
-        return @"org.dobbscoinfoundation.Dobbscoin-Qt";
+        return @"info.dobbscoin.Dobbscoin-Qt";
     } else {
         return [self __bundleIdentifier];
     }

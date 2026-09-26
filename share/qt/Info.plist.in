@@ -32,7 +32,7 @@
   <string>Dobbscoin-Qt</string>
 
   <key>CFBundleIdentifier</key>
-  <string>org.dobbscoinfoundation.Dobbscoin-Qt</string>
+  <string>info.dobbscoin.Dobbscoin-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
@@ -40,7 +40,7 @@
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>CFBundleURLName</key>
-      <string>org.dobbscoin.DobbscoinPayment</string>
+      <string>info.dobbscoin.DobbscoinPayment</string>
       <key>CFBundleURLSchemes</key>
       <array>
         <string>dobbscoin</string>
@@ -52,7 +52,7 @@
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>org.dobbscoin.paymentrequest</string>
+      <string>info.dobbscoin.paymentrequest</string>
       <key>UTTypeDescription</key>
       <string>Dobbscoin payment request</string>
       <key>UTTypeConformsTo</key>
@@ -78,7 +78,7 @@
       <string>Editor</string>
       <key>LSItemContentTypes</key>
       <array>
-        <string>org.dobbscoin.paymentrequest</string>
+        <string>info.dobbscoin.paymentrequest</string>
       </array>
       <key>LSHandlerRank</key>
       <string>Owner</string>
