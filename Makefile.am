@@ -17,7 +17,7 @@ OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/dobbscoin.icns
 OSX_PLIST=$(top_srcdir)/share/qt/Info.plist #not installed
 OSX_QT_TRANSLATIONS = da,de,es,hu,ru,uk,zh_CN,zh_TW
 
-DIST_DOCS = $(wildcard doc/*.md) $(wildcard doc/release-notes/*.md)
+DIST_DOCS = $(wildcard doc/*.md)
 
 WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/dobbscoin.ico \
   $(top_srcdir)/share/pixmaps/nsis-header.bmp \

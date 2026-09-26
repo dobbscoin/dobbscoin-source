@@ -9,9 +9,8 @@
 ---
 # Dobbscoin Core — (BOB)
 
-[![Release](https://img.shields.io/github/v/release/dobbscoin/dobbscoin-source?label=release)](https://github.com/dobbscoin/dobbscoin-source/releases)
+[![Release](https://img.shields.io/gitea/v/release/SubGeniusFinance/dobbscoin-source?gitea_url=https%3A%2F%2Fgit.subgenius.finance&label=release)](https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](COPYING)
-[![CI](https://github.com/dobbscoin/dobbscoin-source/actions/workflows/release.yml/badge.svg)](https://github.com/dobbscoin/dobbscoin-source/actions/workflows/release.yml)
 
 > # **MONETIZED SLACK.**
 > ### Backed By Nothing. Powered By Everything.
@@ -62,7 +61,7 @@ It is **scrypt** under the hood, **flat 1.5 (BOB) per block forever**, and **NOT
 
 Pre-built binaries for Linux (daemon, Qt5, AppImage) and Windows 64-bit live on the releases page:
 
-→ **<https://github.com/dobbscoin/dobbscoin-source/releases>**
+→ **<https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source/releases>**
 
 ---
 
@@ -144,8 +143,6 @@ Build and run the unit tests:
 ```bash
 make check
 ```
-
-Every PR is built via GitHub Actions — see [`.github/workflows/release.yml`](.github/workflows/release.yml).
 
 Large changes need a test plan and need to be tested by **someone other than the author.** "It works on my machine" is how chains die.
 

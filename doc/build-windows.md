@@ -72,7 +72,7 @@ If you want to build the windows installer with `make deploy` you need [NSIS](ht
 
 Acquire the source in the usual way:
 
-    git clone https://github.com/SubGeniusFinance/dobbscoin-source.git
+    git clone https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source.git
     cd dobbscoin-source
 
 ## Building for 64-bit Windows

@@ -48,7 +48,7 @@ through `brew --prefix sqlite`). Berkeley DB is no longer needed.
 
 1. Clone the github tree to get the source code and go into the directory.
 
-        git clone https://github.com/SubGeniusFinance/dobbscoin-source.git
+        git clone https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source.git
         cd dobbscoin
 
 2.  Build dobbscoind:
