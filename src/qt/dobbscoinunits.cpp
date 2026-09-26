@@ -125,7 +125,7 @@ QString DobbscoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separat
 // TODO: Review all remaining calls to DobbscoinUnits::formatWithUnit to
 // TODO: determine whether the output is used in a plain text context
 // TODO: or an HTML context (and replace with
-// TODO: boboinUnits::formatHtmlWithUnit in the latter case). Hopefully
+// TODO: DobbscoinUnits::formatHtmlWithUnit in the latter case). Hopefully
 // TODO: there aren't instances where the result could be used in
 // TODO: either context.
 

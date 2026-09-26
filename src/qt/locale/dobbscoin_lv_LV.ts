@@ -165,7 +165,7 @@
     </message>
     <message>
         <source>Dobbscoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dobbscoins from being stolen by malware infecting your computer.</source>
-        <translation>Dobbscoin aizvērsies, lai pabeigtu šifrēšanu. Atcerieties, ka maciņa šifrēšana nevar pilnībā novērst bitkoinu zādzību, ko veic datorā ieviesušās kaitīgas programmas.</translation>
+        <translation>Dobbscoin aizvērsies, lai pabeigtu šifrēšanu. Atcerieties, ka maciņa šifrēšana nevar pilnībā novērst Dobbscoin zādzību, ko veic datorā ieviesušās kaitīgas programmas.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -284,7 +284,7 @@
     </message>
     <message>
         <source>Send coins to a Dobbscoin address</source>
-        <translation>Nosūtīt bitkoinus uz Dobbscoin adresi</translation>
+        <translation>Nosūtīt Dobbscoin uz Dobbscoin adresi</translation>
     </message>
     <message>
         <source>Modify configuration options for Dobbscoin</source>
@@ -940,7 +940,7 @@ Adrese: %4
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Izvēlēties dalījuma vienību pēc noklusēšanas, ko izmantot interfeisā un nosūtot bitkoinus.</translation>
+        <translation>Izvēlēties dalījuma vienību pēc noklusēšanas, ko izmantot interfeisā un nosūtot Dobbscoin.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1370,7 +1370,7 @@ Adrese: %4
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Sūtīt bitkoinus</translation>
+        <translation>Sūtīt Dobbscoin</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -1450,7 +1450,7 @@ Adrese: %4
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation>Apstiprināt bitkoinu sūtīšanu</translation>
+        <translation>Apstiprināt Dobbscoin sūtīšanu</translation>
     </message>
     <message>
         <source>%1 to %2</source>
@@ -2126,7 +2126,7 @@ Adrese: %4
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation>Sūtīt Bitkoinus</translation>
+        <translation>Sūtīt Dobbscoin</translation>
     </message>
 </context>
 <context>
@@ -2364,7 +2364,7 @@ Adrese: %4
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation>Nepietiek bitkoinu</translation>
+        <translation>Nepietiek Dobbscoin</translation>
     </message>
     <message>
         <source>Loading block index...</source>

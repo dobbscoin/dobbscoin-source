@@ -48,7 +48,7 @@ through `brew --prefix sqlite`). Berkeley DB is no longer needed.
 
 1. Clone the github tree to get the source code and go into the directory.
 
-        git clone https://github.com/SubGeniusFinance/dobbscoin-source.git
+        git clone https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source.git
         cd dobbscoin
 
 2.  Build dobbscoind:
@@ -96,8 +96,8 @@ All dependencies should be compiled with these flags:
  -arch x86_64
  -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
 
-Once dependencies are compiled, see release-process.md for how the Dobbscoin-Qt.app
-bundle is packaged and signed to create the .dmg disk image that is distributed.
+No macOS build of (BOB) has been released; `contrib/macdeploy` holds Bitcoin's
+.dmg packaging scripts, not yet adapted.
 
 Running
 -------

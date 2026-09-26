@@ -67,11 +67,11 @@
     </message>
     <message>
         <source>These are your Dobbscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>هذه هي عناوين Bitcion التابعة لك من أجل إرسال الدفعات. تحقق دائما من المبلغ و عنوان المرسل المستقبل قبل إرسال العملات</translation>
+        <translation>هذه هي عناوين Dobbscoin التابعة لك من أجل إرسال الدفعات. تحقق دائما من المبلغ و عنوان المرسل المستقبل قبل إرسال العملات</translation>
     </message>
     <message>
         <source>These are your Dobbscoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>هذه هي عناوين Bitcion التابعة لك من أجل إستقبال الدفعات. ينصح استخدام عنوان جديد من أجل كل صفقة</translation>
+        <translation>هذه هي عناوين Dobbscoin التابعة لك من أجل إستقبال الدفعات. ينصح استخدام عنوان جديد من أجل كل صفقة</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -292,7 +292,7 @@
     </message>
     <message>
         <source>Dobbscoin Core client</source>
-        <translation>عميل bitcion core</translation>
+        <translation>عميل Dobbscoin core</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -304,7 +304,7 @@
     </message>
     <message>
         <source>Send coins to a Dobbscoin address</source>
-        <translation>ارسل عملات الى عنوان بيتكوين</translation>
+        <translation>ارسل عملات الى عنوان Dobbscoin</translation>
     </message>
     <message>
         <source>Modify configuration options for Dobbscoin</source>
@@ -340,7 +340,7 @@
     </message>
     <message>
         <source>Show information about Dobbscoin Core</source>
-        <translation>  اظهار معلومات حول bitcion core</translation>
+        <translation>  اظهار معلومات حول Dobbscoin core</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -372,7 +372,7 @@
     </message>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>جوهر البيت كوين</translation>
+        <translation>جوهر Dobbscoin</translation>
     </message>
     <message>
         <source>&amp;About Dobbscoin Core</source>
@@ -627,7 +627,7 @@
     <name>HelpMessageDialog</name>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>جوهر البيت كوين</translation>
+        <translation>جوهر Dobbscoin</translation>
     </message>
     <message>
         <source>version</source>
@@ -635,7 +635,7 @@
     </message>
     <message>
         <source>About Dobbscoin Core</source>
-        <translation>عن جوهر البيت كوين</translation>
+        <translation>عن جوهر Dobbscoin</translation>
     </message>
     <message>
         <source>Usage:</source>
@@ -662,7 +662,7 @@
     </message>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>جوهر البيت كوين</translation>
+        <translation>جوهر Dobbscoin</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1306,11 +1306,11 @@
     <name>SplashScreen</name>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>جوهر البيت كوين</translation>
+        <translation>جوهر Dobbscoin</translation>
     </message>
     <message>
         <source>The Dobbscoin Core developers</source>
-        <translation>مطوري جوهر البيت كوين</translation>
+        <translation>مطوري جوهر Dobbscoin</translation>
     </message>
     <message>
         <source>[testnet]</source>

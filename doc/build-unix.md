@@ -38,7 +38,7 @@ Optional dependencies:
  protobuf    | Payments in GUI  | Data interchange format used for payment protocol (only needed when GUI enabled)
  libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
 
-For the versions used in the release, see [release-process.md](release-process.md) under *Fetch and build inputs*.
+For the versions used in the release, see `depends/packages/`.
 
 System requirements
 --------------------

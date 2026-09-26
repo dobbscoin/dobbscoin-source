@@ -1,13 +1,15 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
-# Generate seeds.txt from Pieter's DNS seeder
+# Generate seeds.txt from a DNS seeder's dump (bitcoin-seeder format, dnsseed.dump)
 #
 
 NSEEDS=512
 
-MAX_SEEDS_PER_ASN=2
+# (BOB) is a small network; several of its public nodes share a hosting ASN.
+MAX_SEEDS_PER_ASN=8
 
-MIN_BLOCKS = 337600
+# (BOB) mainnet was past height 1,912,000 in 2026-09.
+MIN_BLOCKS = 1900000
 
 # These are hosts that have been observed to be behaving strangely (e.g.
 # aggressively connecting to every node).
@@ -24,7 +26,9 @@ import sys
 import dns.resolver
 
 PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):19985$")
-PATTERN_AGENT = re.compile(r"^(\/Satoshi:0.8.6\/|\/Satoshi:0.9.(2|3)\/|\/Satoshi:0.10.\d{1,2}\/)$")
+# Dobbscoin 0.13.x and 0.14.x announce /EndTimes:<version>/, optionally with a
+# (comment) as BIP 14 allows. 0.13.8 and earlier are still on the network.
+PATTERN_AGENT = re.compile(r"^/EndTimes:0\.1[34]\.\d{1,2}(\([^)]*\))?/$")
 
 def parseline(line):
     sline = line.split()
@@ -43,7 +47,7 @@ def parseline(line):
     if ip == 0:
         return None
     # Skip bad results.
-    if sline[1] == 0:
+    if int(sline[1]) == 0:
         return None
     # Extract uptime %.
     uptime30 = float(sline[7][:-1])
@@ -112,7 +116,7 @@ def main():
     ips.sort(key=lambda x: (x['ipnum']))
 
     for ip in ips:
-        print ip['ip']
+        print(ip['ip'])
 
 if __name__ == '__main__':
     main()

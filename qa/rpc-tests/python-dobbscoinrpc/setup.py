@@ -10,6 +10,6 @@ setup(name='python-dobbscoinrpc',
       author_email='<jgarzik@exmulti.com>',
       maintainer='Jeff Garzik',
       maintainer_email='<jgarzik@exmulti.com>',
-      url='http://www.github.com/jgarzik/python-dobbscoinrpc',
+      url='http://www.github.com/jgarzik/python-bitcoinrpc',
       packages=['dobbscoinrpc'],
       classifiers=['License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)', 'Operating System :: OS Independent'])

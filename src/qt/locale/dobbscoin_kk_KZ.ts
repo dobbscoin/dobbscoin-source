@@ -108,7 +108,7 @@
     </message>
     <message>
         <source>Dobbscoin</source>
-        <translation>Биткоин</translation>
+        <translation>Dobbscoin</translation>
     </message>
     <message>
         <source>Wallet</source>

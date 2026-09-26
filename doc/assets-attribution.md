@@ -1,16 +1,32 @@
-The following is a list of assets used in the dobbscoin source and their proper attribution.
+The following is a list of assets used in the Dobbscoin source and their attribution.
 
-[Wladimir van der Laan](https://github.com/laanwj)
+Most of the wallet's art was redrawn for (BOB). The files that are still
+the artwork Bitcoin Core shipped in v0.10.2 are listed under their original
+designers below; everything else is Dobbscoin art.
+
+Dobbscoin / SubGenius art
 -----------------------
-#### Info
-* License: MIT
+
+### Info
+* Source: the Dobbscoin project and the Church of the SubGenius
+* License: not stated in this repository
+* The image of "Bob" Dobbs's face is a registered trademark of the SubGenius Foundation, Inc.
 
 ### Assets Used
-	src/qt/res/icons/clock*.png, src/qt/res/icons/tx*.png,
-	src/qt/res/src/clock_green.svg, src/qt/res/src/clock1.svg,
-	src/qt/res/src/clock2.svg, src/qt/res/src/clock3.svg,
-	src/qt/res/src/clock4.svg, src/qt/res/src/clock5.svg,
-	src/qt/res/src/inout.svg, src/qt/res/src/questionmark.svg
+	src/qt/res/icons/dobbscoin.png, src/qt/res/icons/dobbscoin.ico,
+	src/qt/res/icons/dobbscoin.icns, src/qt/res/icons/dobbscoin_testnet.png,
+	src/qt/res/icons/dobbscoin_testnet.ico, src/qt/res/icons/bob.png,
+	src/qt/res/icons/unit_*.png, src/qt/res/icons/clock*.png,
+	src/qt/res/icons/tx_*.png, src/qt/res/icons/transaction0.png,
+	src/qt/res/icons/transaction2.png, src/qt/res/icons/address-book.png,
+	src/qt/res/icons/history.png, src/qt/res/icons/overview.png,
+	src/qt/res/icons/receive.png, src/qt/res/icons/send.png,
+	src/qt/res/icons/synced.png, src/qt/res/icons/connect4_16.png,
+	src/qt/res/icons/debugwindow.png, src/qt/res/icons/qrcode.png,
+	src/qt/res/images/*.png, src/qt/res/movies/*.png,
+	share/pixmaps/dobbscoin*.png, share/pixmaps/dobbscoin*.xpm,
+	share/pixmaps/dobbscoin.ico, share/pixmaps/nsis-header.bmp,
+	share/pixmaps/nsis-wizard.bmp, doc/dobbscoin_logo_doxygen.png
 
 [David Vignoni](http://www.icon-king.com)
 -----------------------
@@ -22,11 +38,8 @@ The following is a list of assets used in the dobbscoin source and their proper 
 * Site: [http://www.icon-king.com/projects/nuvola](http://www.icon-king.com/projects/nuvola)
 
 ### Assets Used
-	src/qt/res/icons/address-book.png, src/qt/res/icons/export.png,
-	src/qt/res/icons/history.png, src/qt/res/icons/key.png,
-	src/qt/res/icons/lock_*.png, src/qt/res/icons/overview.png,
-	src/qt/res/icons/receive.png, src/qt/res/icons/send.png,
-	src/qt/res/icons/synced.png, src/qt/res/icons/filesave.png
+	src/qt/res/icons/export.png, src/qt/res/icons/key.png,
+	src/qt/res/icons/lock_*.png, src/qt/res/icons/filesave.png
 
 schollidesign
 -----------------------
@@ -38,7 +51,8 @@ schollidesign
 * Site: [http://findicons.com/icon/93743/blocks_gnome_netstatus_0](http://findicons.com/icon/93743/blocks_gnome_netstatus_0)
 
 ### Assets Used
-	src/qt/res/icons/connect*.png
+	src/qt/res/icons/connect0_16.png, src/qt/res/icons/connect1_16.png,
+	src/qt/res/icons/connect2_16.png, src/qt/res/icons/connect3_16.png
 
 md2k7
 -----------------------
@@ -47,10 +61,10 @@ md2k7
 * Designer: md2k7
 * License: You are free to do with these icons as you wish, including selling, copying, modifying etc.
 * License: MIT
-* Site: [https://dobbscointalk.org/index.php?topic=15276.0](https://dobbscointalk.org/index.php?topic=15276.0)
+* Site: [https://bitcointalk.org/index.php?topic=15276.0](https://bitcointalk.org/index.php?topic=15276.0)
 
 ### Assets Used
-	src/qt/res/icons/transaction*.png
+	src/qt/res/icons/transaction_conflicted.png
 
 [Everaldo.com](http://www.everaldo.com)
 -----------------------
@@ -65,39 +79,3 @@ md2k7
 	src/qt/res/icons/editcopy.png, src/qt/res/icons/editpaste.png,
 	src/qt/res/icons/add.png, src/qt/res/icons/edit.png,
 	src/qt/res/icons/remove.png (edited)
-
-Everaldo (Everaldo Coelho)
------------------------
-
-### Info
-* Icon Pack: Kids
-* Designer: Everaldo (Everaldo Coelho)
-* License: GNU/GPL 
-* Site: [http://findicons.com/icon/17102/reload?id=17102](http://findicons.com/icon/17102/reload?id=17102)
-
-### Assets Used
-	scripts/img/reload.xcf (modified), src/qt/res/movies/*.png
-
-[Vignoni David](http://techbase.kde.org/Projects/Oxygen)
------------------------
-
-### Info
-* Designer: Vignoni David
-* License: Oxygen icon theme is dual licensed. You may copy it under the Creative Common Attribution-ShareAlike 3.0 License or the GNU Library General Public License.
-* Site: [http://techbase.kde.org/Projects/Oxygen](http://techbase.kde.org/Projects/Oxygen)
-
-### Assets Used
-	src/qt/res/icons/debugwindow.png
-
-Jonas Schnelli
------------------------
-
-### Info
-* Designer: Jonas Schnelli (based on the original dobbscoin logo from Bitboy)
-* License: MIT
-
-### Assets Used
-	src/qt/res/icons/dobbscoin.icns, src/qt/res/src/dobbscoin.svg,
-	src/qt/res/src/dobbscoin.ico, src/qt/res/src/dobbscoin.png,
-	src/qt/res/src/dobbscoin_testnet.png, docs/dobbscoin_logo_doxygen.png,
-	src/qt/res/images/splash.png, src/qt/res/images/splash_testnet.png

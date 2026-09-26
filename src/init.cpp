@@ -501,7 +501,7 @@ bool InitSanityCheck(void)
 {
     if(!ECC_InitSanityCheck()) {
         InitError("OpenSSL appears to lack support for elliptic curve cryptography. For more "
-                  "information, visit https://en.dobbscoin.it/wiki/OpenSSL_and_EC_Libraries");
+                  "information, visit https://en.bitcoin.it/wiki/OpenSSL_and_EC_Libraries");
         return false;
     }
     if (!glibc_sanity_test() || !glibcxx_sanity_test())

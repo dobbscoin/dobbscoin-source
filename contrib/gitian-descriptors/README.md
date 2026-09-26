@@ -20,7 +20,7 @@ Sanity checks:
 
 Once you've got the right hardware and software:
 
-    git clone git://github.com/dobbscoin/dobbscoin-source.git
+    git clone https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source.git
     git clone git://github.com/devrandom/gitian-builder.git
     mkdir gitian-builder/inputs
     cd gitian-builder/inputs
@@ -30,7 +30,7 @@ Once you've got the right hardware and software:
     bin/make-base-vm --suite precise --arch amd64
     cd ..
 
-    # Get inputs (see doc/release-process.md for exact inputs needed and where to get them)
+    # Get inputs (see depends/packages/ for the exact versions)
     ...
 
     # For further build instructions see doc/release-notes.md
@@ -62,5 +62,5 @@ Here's a description of Gavin's setup on OSX 10.6:
 5. Still inside Ubuntu, tell gitian-builder to use LXC, then follow the "Once you've got the right hardware and software" instructions above:
 
 	export USE_LXC=1
-	git clone git://github.com/dobbscoin/dobbscoin-source.git
+	git clone https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source.git
 	... etc

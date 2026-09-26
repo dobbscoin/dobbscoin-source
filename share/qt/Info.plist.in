@@ -17,7 +17,7 @@
   <string>APPL</string>
 
   <key>CFBundleGetInfoString</key>
-  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@, Copyright © 2009-@COPYRIGHT_YEAR@ The Dobbscoin Core developers</string>
+  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@, Copyright © 2009-@COPYRIGHT_YEAR@ The Bitcoin Core developers, 2013-@COPYRIGHT_YEAR@ The Dobbscoin developers</string>
 
   <key>CFBundleShortVersionString</key>
   <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@</string>
@@ -32,7 +32,7 @@
   <string>Dobbscoin-Qt</string>
 
   <key>CFBundleIdentifier</key>
-  <string>org.dobbscoinfoundation.Dobbscoin-Qt</string>
+  <string>info.dobbscoin.Dobbscoin-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
@@ -40,7 +40,7 @@
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>CFBundleURLName</key>
-      <string>org.dobbscoin.DobbscoinPayment</string>
+      <string>info.dobbscoin.DobbscoinPayment</string>
       <key>CFBundleURLSchemes</key>
       <array>
         <string>dobbscoin</string>
@@ -52,7 +52,7 @@
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>org.dobbscoin.paymentrequest</string>
+      <string>info.dobbscoin.paymentrequest</string>
       <key>UTTypeDescription</key>
       <string>Dobbscoin payment request</string>
       <key>UTTypeConformsTo</key>
@@ -78,7 +78,7 @@
       <string>Editor</string>
       <key>LSItemContentTypes</key>
       <array>
-        <string>org.dobbscoin.paymentrequest</string>
+        <string>info.dobbscoin.paymentrequest</string>
       </array>
       <key>LSHandlerRank</key>
       <string>Owner</string>

@@ -45,7 +45,7 @@ static const int MAX_URI_LENGTH = 255;
 #define SPINNER_FRAMES 35
 
 #define QAPP_ORG_NAME "Dobbscoin"
-#define QAPP_ORG_DOMAIN "dobbscoin.org"
+#define QAPP_ORG_DOMAIN "dobbscoin.info"
 #define QAPP_APP_NAME_DEFAULT "Dobbscoin-Qt"
 #define QAPP_APP_NAME_TESTNET "Dobbscoin-Qt-testnet"
 

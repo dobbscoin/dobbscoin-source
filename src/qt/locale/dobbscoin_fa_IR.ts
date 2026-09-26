@@ -556,7 +556,7 @@ Address: %4
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation>تایید ارسال بیت کوین ها</translation>
+        <translation>تایید ارسال Dobbscoin ها</translation>
     </message>
     <message>
         <source>Copy amount</source>

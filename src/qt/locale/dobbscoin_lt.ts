@@ -699,7 +699,7 @@ Adresas: %4</translation>
     </message>
     <message>
         <source>Automatically start Dobbscoin after logging in to the system.</source>
-        <translation>Automatiškai paleisti Bitkoin programą įjungus sistemą.</translation>
+        <translation>Automatiškai paleisti Dobbscoin programą įjungus sistemą.</translation>
     </message>
     <message>
         <source>&amp;Start Dobbscoin on system login</source>

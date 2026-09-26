@@ -425,7 +425,7 @@ Regtest:
 
 The canonical reference implementation is the `dobbscoind` daemon and
 `dobbscoin-qt` graphical wallet, in this repository at
-`github.com/dobbscoin/dobbscoin-source`. Build instructions for modern
+`git.subgenius.finance/SubGeniusFinance/dobbscoin-source`. Build instructions for modern
 Linux are documented in `docs/build-linux.md`. Windows reproducible
 builds use the `depends/` cross-compile tree.
 
@@ -444,9 +444,9 @@ your passphrase. "Bob" does not retrieve forgotten passphrases.
 
 | Resource | URL |
 |---|---|
-| Reference daemon source | https://github.com/dobbscoin/dobbscoin-source |
-| wBOB bridge source | https://github.com/dobbscoin/wbob-bridge |
-| wBOB bridge contracts | https://github.com/dobbscoin/wbob-contracts |
+| Reference daemon source | https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source |
+| wBOB bridge source | https://git.subgenius.finance/SubGeniusFinance/wbob-bridge |
+| wBOB bridge contracts | https://git.subgenius.finance/SubGeniusFinance/wbob-contracts |
 | wBOB bridge UI | https://bridge.subgenius.finance |
 | Project homepage | https://dobbscoin.info |
 | SubGenius mothership | https://www.subgenius.com |

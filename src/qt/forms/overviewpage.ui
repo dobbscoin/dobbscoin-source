@@ -490,7 +490,7 @@
        <item>
         <widget class="QLabel" name="label_6">
          <property name="pixmap">
-          <pixmap resource="../bitcoin.qrc">:/images/overviewLeftTop</pixmap>
+          <pixmap resource="../dobbscoin.qrc">:/images/overviewLeftTop</pixmap>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -513,7 +513,7 @@
        <item>
         <widget class="QLabel" name="label_7">
          <property name="pixmap">
-          <pixmap resource="../bitcoin.qrc">:/images/overviewLeftBottom</pixmap>
+          <pixmap resource="../dobbscoin.qrc">:/images/overviewLeftBottom</pixmap>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -654,7 +654,7 @@
               <item>
         <widget class="QLabel" name="label_8">
          <property name="pixmap">
-          <pixmap resource="../bitcoin.qrc">:/images/overviewRight</pixmap>
+          <pixmap resource="../dobbscoin.qrc">:/images/overviewRight</pixmap>
          </property>
          <property name="alignment">
           <set>Qt::AlignLeading</set>
