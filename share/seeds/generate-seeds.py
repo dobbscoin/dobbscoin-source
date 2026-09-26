@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # Copyright (c) 2014 Wladmir J. van der Laan
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -46,7 +46,7 @@ def name_to_ipv6(addr):
     if len(addr)>6 and addr.endswith('.onion'):
         vchAddr = b32decode(addr[0:-6], True)
         if len(vchAddr) != 16-len(pchOnionCat):
-            raise ValueError('Invalid onion %s' % s)
+            raise ValueError('Invalid onion %s' % addr)
         return pchOnionCat + vchAddr
     elif '.' in addr: # IPv4
         return pchIPv4 + bytearray((int(x) for x in addr.split('.')))
@@ -90,8 +90,7 @@ def parse_spec(s, defaultport):
     return (host,port)
 
 def process_nodes(g, f, structname, defaultport):
-    g.write('static SeedSpec6 %s[] = {\n' % structname)
-    first = True
+    specs = []
     for line in f:
         comment = line.find('#')
         if comment != -1:
@@ -99,13 +98,14 @@ def process_nodes(g, f, structname, defaultport):
         line = line.strip()
         if not line:
             continue
-        if not first:
-            g.write(',\n')
-        first = False
-
-        (host,port) = parse_spec(line, defaultport)
-        hoststr = ','.join(('0x%02x' % b) for b in host)
-        g.write('    {{%s}, %i}' % (hoststr, port))
+        specs.append(parse_spec(line, defaultport))
+    if not specs:
+        # A zero-length array is not valid C++; chainparams.cpp does not
+        # reference a list that has no entries.
+        g.write('// %s: no fixed seeds\n' % structname)
+        return
+    g.write('static SeedSpec6 %s[] = {\n' % structname)
+    g.write(',\n'.join('    {{%s}, %i}' % (','.join('0x%02x' % b for b in host), port) for (host, port) in specs))
     g.write('\n};\n')
 
 def main():

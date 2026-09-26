@@ -256,7 +256,8 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
 
-        convertSeed6(vFixedSeeds, pnSeed6_test, ARRAYLEN(pnSeed6_test));
+        // No fixed seeds for testnet: no public (BOB) testnet node is known
+        // (share/seeds/nodes_test.txt).
 
         fRequireRPCPassword = true;
         fMiningRequiresPeers = true;
