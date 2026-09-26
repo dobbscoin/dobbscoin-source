@@ -63,11 +63,11 @@
     </message>
     <message>
         <source>These are your Dobbscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>אלה כתובת הביטקוין שלך לצורך שליחת תשלומים. תמיד יש לבדוק את הכמות ואת כתובות מקבלי התשלומים לפני שליחת מטבעות.</translation>
+        <translation>אלה כתובת ה-Dobbscoin שלך לצורך שליחת תשלומים. תמיד יש לבדוק את הכמות ואת כתובות מקבלי התשלומים לפני שליחת מטבעות.</translation>
     </message>
     <message>
         <source>These are your Dobbscoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>אלה כתובות הביטקוין שלך לצורך קבלת תשלומים. מומלץ להשתמש בכתובת קבלה חדשה לכל העברה.</translation>
+        <translation>אלה כתובות ה-Dobbscoin שלך לצורך קבלת תשלומים. מומלץ להשתמש בכתובת קבלה חדשה לכל העברה.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -185,7 +185,7 @@
     </message>
     <message>
         <source>Dobbscoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dobbscoins from being stolen by malware infecting your computer.</source>
-        <translation>ביטקוין ייסגר כעת כדי להשלים את תהליך ההצפנה. עליך לזכור שהצפנת הארנק שלך אינה מגנה באופן מלא על הביטקוינים שלך מתכניות זדוניות המושתלות על המחשב.</translation>
+        <translation>Dobbscoin ייסגר כעת כדי להשלים את תהליך ההצפנה. עליך לזכור שהצפנת הארנק שלך אינה מגנה באופן מלא על הביטקוינים שלך מתכניות זדוניות המושתלות על המחשב.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -292,7 +292,7 @@
     </message>
     <message>
         <source>Dobbscoin Core client</source>
-        <translation>לקוח ליבה של ביטקוין</translation>
+        <translation>לקוח ליבה של Dobbscoin</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -304,11 +304,11 @@
     </message>
     <message>
         <source>Send coins to a Dobbscoin address</source>
-        <translation>שליחת מטבעות לכתובת ביטקוין</translation>
+        <translation>שליחת מטבעות לכתובת Dobbscoin</translation>
     </message>
     <message>
         <source>Modify configuration options for Dobbscoin</source>
-        <translation>שינוי התצורה של ביטקוין</translation>
+        <translation>שינוי התצורה של Dobbscoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -332,7 +332,7 @@
     </message>
     <message>
         <source>Dobbscoin</source>
-        <translation>ביטקוין</translation>
+        <translation>Dobbscoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -348,7 +348,7 @@
     </message>
     <message>
         <source>Show information about Dobbscoin Core</source>
-        <translation>הצגת מידע על ליבת ביטקוין</translation>
+        <translation>הצגת מידע על ליבת Dobbscoin</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -364,11 +364,11 @@
     </message>
     <message>
         <source>Sign messages with your Dobbscoin addresses to prove you own them</source>
-        <translation>חתום על הודעות עם כתובות הביטקוין שלך כדי להוכיח שהן בבעלותך</translation>
+        <translation>חתום על הודעות עם כתובות ה-Dobbscoin שלך כדי להוכיח שהן בבעלותך</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Dobbscoin addresses</source>
-        <translation>אמת הודעות כדי להבטיח שהן נחתמו עם כתובת ביטקוין מסוימות</translation>
+        <translation>אמת הודעות כדי להבטיח שהן נחתמו עם כתובת Dobbscoin מסוימות</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -388,7 +388,7 @@
     </message>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>ליבת ביטקוין</translation>
+        <translation>ליבת Dobbscoin</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and dobbscoin: URIs)</source>
@@ -396,7 +396,7 @@
     </message>
     <message>
         <source>&amp;About Dobbscoin Core</source>
-        <translation>על &amp;אודות ליבת ביטקוין</translation>
+        <translation>על &amp;אודות ליבת Dobbscoin</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -408,7 +408,7 @@
     </message>
     <message>
         <source>Open a dobbscoin: URI or payment request</source>
-        <translation>פתיחת ביטקוין: כתובת משאב או בקשת תשלום</translation>
+        <translation>פתיחת Dobbscoin: כתובת משאב או בקשת תשלום</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -416,7 +416,7 @@
     </message>
     <message>
         <source>Show the Dobbscoin Core help message to get a list with possible Dobbscoin command-line options</source>
-        <translation>הצגת הודעות העזרה של ליבת ביטקוין כדי לקבל רשימה עם אפשרויות שורת הפקודה האפשריות של ביטקוין</translation>
+        <translation>הצגת הודעות העזרה של ליבת Dobbscoin כדי לקבל רשימה עם אפשרויות שורת הפקודה האפשריות של Dobbscoin</translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -748,7 +748,7 @@ Address: %4
     </message>
     <message>
         <source>The entered address "%1" is not a valid Dobbscoin address.</source>
-        <translation>הכתובת שהוכנסה „%1“ אינה כתובת ביטקוין תקנית.</translation>
+        <translation>הכתובת שהוכנסה „%1“ אינה כתובת Dobbscoin תקנית.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -786,7 +786,7 @@ Address: %4
     <name>HelpMessageDialog</name>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>ליבת ביטקוין</translation>
+        <translation>ליבת Dobbscoin</translation>
     </message>
     <message>
         <source>version</source>
@@ -798,7 +798,7 @@ Address: %4
     </message>
     <message>
         <source>About Dobbscoin Core</source>
-        <translation>על אודות ליבת ביטקוין</translation>
+        <translation>על אודות ליבת Dobbscoin</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -845,15 +845,15 @@ Address: %4
     </message>
     <message>
         <source>Welcome to Dobbscoin Core.</source>
-        <translation>ברוך בואך לליבת ביטקוין</translation>
+        <translation>ברוך בואך לליבת Dobbscoin</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Dobbscoin Core will store its data.</source>
-        <translation>מכיוון שזאת הפעם הראשונה שהתכנית פועלת ניתן לבחור איפה ליבת ביטקוין תאחסן את הנתונים שלה.</translation>
+        <translation>מכיוון שזאת הפעם הראשונה שהתכנית פועלת ניתן לבחור איפה ליבת Dobbscoin תאחסן את הנתונים שלה.</translation>
     </message>
     <message>
         <source>Dobbscoin Core will download and store a copy of the Dobbscoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>לקוח ביטקוין יוריד וישמור העתק של שרשרת המקטעים של ביטקוין. לפחות %1 ג״ב מהנתונים יאוחסנו בתיקייה זו, והיא תגדל עם הזמן. הארנק גם יאוחסן בתיקייה הזו.</translation>
+        <translation>לקוח Dobbscoin יוריד וישמור העתק של שרשרת המקטעים של Dobbscoin. לפחות %1 ג״ב מהנתונים יאוחסנו בתיקייה זו, והיא תגדל עם הזמן. הארנק גם יאוחסן בתיקייה הזו.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -865,7 +865,7 @@ Address: %4
     </message>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>ליבת ביטקוין</translation>
+        <translation>ליבת Dobbscoin</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -911,11 +911,11 @@ Address: %4
     </message>
     <message>
         <source>Automatically start Dobbscoin after logging in to the system.</source>
-        <translation>הפעלת ביטקוין אוטומטית לאחר כניסה למערכת.</translation>
+        <translation>הפעלת Dobbscoin אוטומטית לאחר כניסה למערכת.</translation>
     </message>
     <message>
         <source>&amp;Start Dobbscoin on system login</source>
-        <translation>ה&amp;פעלת ביטקוין בעת הכניסה למערכת</translation>
+        <translation>ה&amp;פעלת Dobbscoin בעת הכניסה למערכת</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -991,7 +991,7 @@ Address: %4
     </message>
     <message>
         <source>Automatically open the Dobbscoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>פתיחת הפתחה של ביטקוין בנתב באופן אוטומטי. עובד רק אם UPnP מופעל ונתמך בנתב.</translation>
+        <translation>פתיחת הפתחה של Dobbscoin בנתב באופן אוטומטי. עובד רק אם UPnP מופעל ונתמך בנתב.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1039,7 +1039,7 @@ Address: %4
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting Dobbscoin.</source>
-        <translation>להלן ניתן לקבוע את שפת מנשק המשתמש. הגדרה זו תיכנס לתוקף לאחר הפעלה מחדש של ביטקוין.</translation>
+        <translation>להלן ניתן לקבוע את שפת מנשק המשתמש. הגדרה זו תיכנס לתוקף לאחר הפעלה מחדש של Dobbscoin.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1098,7 +1098,7 @@ Address: %4
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dobbscoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>המידע המוצג עשוי להיות מיושן. הארנק שלך מסתנכרן באופן אוטומטי עם רשת הביטקוין לאחר יצירת החיבור, אך התהליך טרם הסתיים.</translation>
+        <translation>המידע המוצג עשוי להיות מיושן. הארנק שלך מסתנכרן באופן אוטומטי עם רשת ה-Dobbscoin לאחר יצירת החיבור, אך התהליך טרם הסתיים.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1201,7 +1201,7 @@ Address: %4
     </message>
     <message>
         <source>Cannot start dobbscoin: click-to-pay handler</source>
-        <translation>לא ניתן להתחיל את ביטקוין: טיפול בלחיצה–לתשלום </translation>
+        <translation>לא ניתן להתחיל את Dobbscoin: טיפול בלחיצה–לתשלום </translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1209,7 +1209,7 @@ Address: %4
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Dobbscoin address or malformed URI parameters.</source>
-        <translation>לא ניתן לנתח את כתובת המשאב! מצב זה יכול לקרות עקב כתובת ביטקוין שגויה או פרמטרים שגויים בכתובת המשאב.</translation>
+        <translation>לא ניתן לנתח את כתובת המשאב! מצב זה יכול לקרות עקב כתובת Dobbscoin שגויה או פרמטרים שגויים בכתובת המשאב.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1271,7 +1271,7 @@ Address: %4
     </message>
     <message>
         <source>Enter a Dobbscoin address (e.g. %1)</source>
-        <translation>נא להזין כתובת ביטקוין (למשל: %1)</translation>
+        <translation>נא להזין כתובת Dobbscoin (למשל: %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1505,7 +1505,7 @@ Address: %4
     </message>
     <message>
         <source>Welcome to the Dobbscoin RPC console.</source>
-        <translation>ברוכים הבאים למסוף ה־RPC של ביטקוין.</translation>
+        <translation>ברוכים הבאים למסוף ה־RPC של Dobbscoin.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1580,7 +1580,7 @@ Address: %4
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dobbscoin network.</source>
-        <translation>הודעת רשות לצירוף לבקשת התשלום שתוצג בעת פתיחת הבקשה. לתשומת לבך: ההודעה לא תישלח עם התשלום ברשת ביטקוין.</translation>
+        <translation>הודעת רשות לצירוף לבקשת התשלום שתוצג בעת פתיחת הבקשה. לתשומת לבך: ההודעה לא תישלח עם התשלום ברשת Dobbscoin.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -1889,7 +1889,7 @@ Address: %4
     </message>
     <message>
         <source>Warning: Invalid Dobbscoin address</source>
-        <translation>אזהרה: כתובת ביטקוין שגויה</translation>
+        <translation>אזהרה: כתובת Dobbscoin שגויה</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1940,7 +1940,7 @@ Address: %4
     </message>
     <message>
         <source>The Dobbscoin address to send the payment to</source>
-        <translation>כתובת הביטקוין של המוטב</translation>
+        <translation>כתובת ה-Dobbscoin של המוטב</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -1972,7 +1972,7 @@ Address: %4
     </message>
     <message>
         <source>A message that was attached to the dobbscoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dobbscoin network.</source>
-        <translation>הודעה שצורפה לביטקוין: כתובת שתאוחסן בהעברה לצורך מעקב מצדך. לתשומת לבך: הודעה זו לא תישלח ברשת הביטקוין.</translation>
+        <translation>הודעה שצורפה ל-Dobbscoin: כתובת שתאוחסן בהעברה לצורך מעקב מצדך. לתשומת לבך: הודעה זו לא תישלח ברשת ה-Dobbscoin.</translation>
     </message>
     <message>
         <source>This is an unverified payment request.</source>
@@ -1991,7 +1991,7 @@ Address: %4
     <name>ShutdownWindow</name>
     <message>
         <source>Dobbscoin Core is shutting down...</source>
-        <translation>ליבת ביטקוין נסגרת…</translation>
+        <translation>ליבת Dobbscoin נסגרת…</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -2014,7 +2014,7 @@ Address: %4
     </message>
     <message>
         <source>The Dobbscoin address to sign the message with</source>
-        <translation>כתובת הביטקוין אתה לחתום אתה את ההודעה</translation>
+        <translation>כתובת ה-Dobbscoin אתה לחתום אתה את ההודעה</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2046,7 +2046,7 @@ Address: %4
     </message>
     <message>
         <source>Sign the message to prove you own this Dobbscoin address</source>
-        <translation>ניתן לחתום על ההודעה כדי להוכיח שכתובת הביטקוין הזו בבעלותך.</translation>
+        <translation>ניתן לחתום על ההודעה כדי להוכיח שכתובת ה-Dobbscoin הזו בבעלותך.</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2070,11 +2070,11 @@ Address: %4
     </message>
     <message>
         <source>The Dobbscoin address the message was signed with</source>
-        <translation>כתובת הביטקוין שאתה נחתמה ההודעה</translation>
+        <translation>כתובת ה-Dobbscoin שאתה נחתמה ההודעה</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Dobbscoin address</source>
-        <translation>ניתן לאמת את ההודעה כדי להבטיח שהיא נחתמה עם כתובת הביטקוין הנתונה</translation>
+        <translation>ניתן לאמת את ההודעה כדי להבטיח שהיא נחתמה עם כתובת ה-Dobbscoin הנתונה</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2141,11 +2141,11 @@ Address: %4
     <name>SplashScreen</name>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>ליבת ביטקוין</translation>
+        <translation>ליבת Dobbscoin</translation>
     </message>
     <message>
         <source>The Dobbscoin Core developers</source>
-        <translation>מתכנתי ליבת ביטקוין</translation>
+        <translation>מתכנתי ליבת Dobbscoin</translation>
     </message>
     <message>
         <source>[testnet]</source>
@@ -2675,7 +2675,7 @@ Address: %4
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Dobbscoin Core is probably already running.</source>
-        <translation>לא ניתן להתאגד אל %s במחשב זה. כנראה שליבת ביטקוין כבר פועלת.</translation>
+        <translation>לא ניתן להתאגד אל %s במחשב זה. כנראה שליבת Dobbscoin כבר פועלת.</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2843,7 +2843,7 @@ Address: %4
     </message>
     <message>
         <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Dobbscoin Core will not work properly.</source>
-        <translation>אזהרה: נא לבדוק שהתאריך והשעה של המחשב שלך נכונים! אם השעון שלך שגוי ליבת ביטקוין לא תעבוד כראוי.</translation>
+        <translation>אזהרה: נא לבדוק שהתאריך והשעה של המחשב שלך נכונים! אם השעון שלך שגוי ליבת Dobbscoin לא תעבוד כראוי.</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -2855,7 +2855,7 @@ Address: %4
     </message>
     <message>
         <source>Copyright (C) 2009-%i The Dobbscoin Core Developers</source>
-        <translation>כל הזכויות שמורות (C)‏ 2009‏-%i מתכנתי ליבת ביטקוין</translation>
+        <translation>כל הזכויות שמורות (C)‏ 2009‏-%i מתכנתי ליבת Dobbscoin</translation>
     </message>
     <message>
         <source>Could not parse -rpcbind value %s as network address</source>
@@ -2863,7 +2863,7 @@ Address: %4
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Dobbscoin Core</source>
-        <translation>אירעה שגיאה בטעינת wallet.dat: הארנק דורש גרסה חדשה יותר של ליבת ביטקוין</translation>
+        <translation>אירעה שגיאה בטעינת wallet.dat: הארנק דורש גרסה חדשה יותר של ליבת Dobbscoin</translation>
     </message>
     <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
@@ -2879,7 +2879,7 @@ Address: %4
     </message>
     <message>
         <source>Initialization sanity check failed. Dobbscoin Core is shutting down.</source>
-        <translation>בדיקת התקינות ההתחלתית נכשלה. ליבת ביטקוין תיסגר כעת.</translation>
+        <translation>בדיקת התקינות ההתחלתית נכשלה. ליבת Dobbscoin תיסגר כעת.</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -2907,7 +2907,7 @@ Address: %4
     </message>
     <message>
         <source>RPC SSL options: (see the Dobbscoin Wiki for SSL setup instructions)</source>
-        <translation>אפשרויות RPC SSL: (נא לעיין בוויקי של ביטקוין לקבלת הנחיות על הגדרת SSL)</translation>
+        <translation>אפשרויות RPC SSL: (נא לעיין בוויקי של Dobbscoin לקבלת הנחיות על הגדרת SSL)</translation>
     </message>
     <message>
         <source>RPC server options:</source>
@@ -2963,7 +2963,7 @@ Address: %4
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart Dobbscoin Core to complete</source>
-        <translation>יש לכתוב את הארנק מחדש: נא להפעיל את ליבת ביטקוין מחדש כדי להשלים את הפעולה</translation>
+        <translation>יש לכתוב את הארנק מחדש: נא להפעיל את ליבת Dobbscoin מחדש כדי להשלים את הפעולה</translation>
     </message>
     <message>
         <source>Warning</source>

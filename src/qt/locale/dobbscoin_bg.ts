@@ -71,7 +71,7 @@
     </message>
     <message>
         <source>These are your Dobbscoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Това са Вашите Биткойн адреси,благодарение на които ще получавате плащания.Препоръчително е да използвате нови адреси за получаване за всяка транзакция.</translation>
+        <translation>Това са Вашите Dobbscoin адреси,благодарение на които ще получавате плащания.Препоръчително е да използвате нови адреси за получаване за всяка транзакция.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -165,7 +165,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DOBBSCOINS&lt;/b&gt;!</source>
-        <translation>ВНИМАНИЕ: Ако защитите вашият портфейл и изгубите ключовата дума, вие ще &lt;b&gt;ИЗГУБИТЕ ВСИЧКИТЕ СИ БИТКОЙНОВЕ&lt;/b&gt;!</translation>
+        <translation>ВНИМАНИЕ: Ако защитите вашият портфейл и изгубите ключовата дума, вие ще &lt;b&gt;ИЗГУБИТЕ ВСИЧКИТЕ СИ DOBBSCOIN&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -185,7 +185,7 @@
     </message>
     <message>
         <source>Dobbscoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dobbscoins from being stolen by malware infecting your computer.</source>
-        <translation>Биткоин ще се затоври сега за да завърши процеса на криптиране. Запомнете, че криптирането на вашия портефейл не може напълно да предпази вашите Бит-монети от кражба чрез зловреден софтуер, инфектирал вашия компютър</translation>
+        <translation>Dobbscoin ще се затоври сега за да завърши процеса на криптиране. Запомнете, че криптирането на вашия портефейл не може напълно да предпази вашите Бит-монети от кражба чрез зловреден софтуер, инфектирал вашия компютър</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -296,11 +296,11 @@
     </message>
     <message>
         <source>Send coins to a Dobbscoin address</source>
-        <translation>Изпращане към Биткоин адрес</translation>
+        <translation>Изпращане към Dobbscoin адрес</translation>
     </message>
     <message>
         <source>Modify configuration options for Dobbscoin</source>
-        <translation>Променете настройките на Биткойн</translation>
+        <translation>Променете настройките на Dobbscoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -324,7 +324,7 @@
     </message>
     <message>
         <source>Dobbscoin</source>
-        <translation>Биткоин</translation>
+        <translation>Dobbscoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -340,7 +340,7 @@
     </message>
     <message>
         <source>Show information about Dobbscoin Core</source>
-        <translation>Покажете информация за Биткойн ядрото</translation>
+        <translation>Покажете информация за Dobbscoin ядрото</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -356,11 +356,11 @@
     </message>
     <message>
         <source>Sign messages with your Dobbscoin addresses to prove you own them</source>
-        <translation>Пишете съобщения със своя Биткойн адрес за да докажете,че е ваш.</translation>
+        <translation>Пишете съобщения със своя Dobbscoin адрес за да докажете,че е ваш.</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Dobbscoin addresses</source>
-        <translation>Потвърждаване на съобщения  за да се знае,че са написани с дадените Биткойн адреси.</translation>
+        <translation>Потвърждаване на съобщения  за да се знае,че са написани с дадените Dobbscoin адреси.</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -380,11 +380,11 @@
     </message>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>Биткойн ядро</translation>
+        <translation>Dobbscoin ядро</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and dobbscoin: URIs)</source>
-        <translation>Изискване на плащания(генерира QR кодове и биткойн: URIs)</translation>
+        <translation>Изискване на плащания(генерира QR кодове и Dobbscoin: URIs)</translation>
     </message>
     <message>
         <source>&amp;About Dobbscoin Core</source>
@@ -400,7 +400,7 @@
     </message>
     <message>
         <source>Open a dobbscoin: URI or payment request</source>
-        <translation>Отворете биткойн: URI  или заявка за плащане</translation>
+        <translation>Отворете Dobbscoin: URI  или заявка за плащане</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -408,11 +408,11 @@
     </message>
     <message>
         <source>Show the Dobbscoin Core help message to get a list with possible Dobbscoin command-line options</source>
-        <translation>Покажи помощните съобщения на Биткойн за да видиш наличните и валидни команди</translation>
+        <translation>Покажи помощните съобщения на Dobbscoin за да видиш наличните и валидни команди</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dobbscoin network</source>
-        <translation><numerusform>%n връзка към Биткоин мрежата</numerusform><numerusform>%n връзки към Биткоин мрежата</numerusform></translation>
+        <translation><numerusform>%n връзка към Dobbscoin мрежата</numerusform><numerusform>%n връзки към Dobbscoin мрежата</numerusform></translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -749,7 +749,7 @@ Address: %4
     </message>
     <message>
         <source>The entered address "%1" is not a valid Dobbscoin address.</source>
-        <translation>"%1" не е валиден Биткоин адрес.</translation>
+        <translation>"%1" не е валиден Dobbscoin адрес.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -787,7 +787,7 @@ Address: %4
     <name>HelpMessageDialog</name>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>Биткойн ядро</translation>
+        <translation>Dobbscoin ядро</translation>
     </message>
     <message>
         <source>version</source>
@@ -838,7 +838,7 @@ Address: %4
     </message>
     <message>
         <source>Welcome to Dobbscoin Core.</source>
-        <translation>Добре дошли в Биткойн ядрото.</translation>
+        <translation>Добре дошли в Dobbscoin ядрото.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Dobbscoin Core will store its data.</source>
@@ -854,7 +854,7 @@ Address: %4
     </message>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>Биткойн ядро</translation>
+        <translation>Dobbscoin ядро</translation>
     </message>
     <message>
         <source>Error</source>
@@ -880,11 +880,11 @@ Address: %4
     </message>
     <message>
         <source>Automatically start Dobbscoin after logging in to the system.</source>
-        <translation>Автоматично включване на Биткойн след влизане в системата.</translation>
+        <translation>Автоматично включване на Dobbscoin след влизане в системата.</translation>
     </message>
     <message>
         <source>&amp;Start Dobbscoin on system login</source>
-        <translation>&amp;Пускане на Биткоин при вход в системата</translation>
+        <translation>&amp;Пускане на Dobbscoin при вход в системата</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -944,7 +944,7 @@ Address: %4
     </message>
     <message>
         <source>Connect to the Dobbscoin network through a SOCKS5 proxy.</source>
-        <translation>Свързване с Биткойн мрежата чрез SOCKS5  прокси.</translation>
+        <translation>Свързване с Dobbscoin мрежата чрез SOCKS5  прокси.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -992,7 +992,7 @@ Address: %4
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting Dobbscoin.</source>
-        <translation>Промяната на езика ще влезе в сила след рестартиране на Биткоин.</translation>
+        <translation>Промяната на езика ще влезе в сила след рестартиране на Dobbscoin.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1051,7 +1051,7 @@ Address: %4
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dobbscoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Текущата информация на екрана може да не е актуална. Вашият портфейл ще се синхронизира автоматично с мрежата на Биткоин, щом поне една връзката с нея се установи; този процес все още не е приключил.</translation>
+        <translation>Текущата информация на екрана може да не е актуална. Вашият портфейл ще се синхронизира автоматично с мрежата на Dobbscoin, щом поне една връзката с нея се установи; този процес все още не е приключил.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1134,7 +1134,7 @@ Address: %4
     </message>
     <message>
         <source>Cannot start dobbscoin: click-to-pay handler</source>
-        <translation>Биткойн не можe да се стартира: click-to-pay handler</translation>
+        <translation>Dobbscoin не можe да се стартира: click-to-pay handler</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1188,7 +1188,7 @@ Address: %4
     </message>
     <message>
         <source>Enter a Dobbscoin address (e.g. %1)</source>
-        <translation>Въведете Биткойн адрес (например: %1)</translation>
+        <translation>Въведете Dobbscoin адрес (например: %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1410,7 +1410,7 @@ Address: %4
     </message>
     <message>
         <source>Welcome to the Dobbscoin RPC console.</source>
-        <translation>Добре дошли в Биткойн RPC конзолата.</translation>
+        <translation>Добре дошли в Dobbscoin RPC конзолата.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1790,7 +1790,7 @@ Address: %4
     </message>
     <message>
         <source>Warning: Invalid Dobbscoin address</source>
-        <translation>Внимание: Невалиден Биткойн адрес</translation>
+        <translation>Внимание: Невалиден Dobbscoin адрес</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1880,7 +1880,7 @@ Address: %4
     <name>ShutdownWindow</name>
     <message>
         <source>Dobbscoin Core is shutting down...</source>
-        <translation>Биткойн ядрото се изключва...</translation>
+        <translation>Dobbscoin ядрото се изключва...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -1947,7 +1947,7 @@ Address: %4
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Dobbscoin address</source>
-        <translation>Проверете съобщение, за да сте сигурни че е подписано с определен Биткоин адрес</translation>
+        <translation>Проверете съобщение, за да сте сигурни че е подписано с определен Dobbscoin адрес</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2010,7 +2010,7 @@ Address: %4
     <name>SplashScreen</name>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>Биткойн ядро</translation>
+        <translation>Dobbscoin ядро</translation>
     </message>
     <message>
         <source>The Dobbscoin Core developers</source>
@@ -2528,7 +2528,7 @@ Address: %4
     </message>
     <message>
         <source>Copyright (C) 2009-%i The Dobbscoin Core Developers</source>
-        <translation>Всички права запазени (C) 2009-%i Доставчиците на Биткойн</translation>
+        <translation>Всички права запазени (C) 2009-%i Доставчиците на Dobbscoin</translation>
     </message>
     <message>
         <source>Information</source>

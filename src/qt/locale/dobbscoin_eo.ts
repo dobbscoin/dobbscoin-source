@@ -63,11 +63,11 @@
     </message>
     <message>
         <source>These are your Dobbscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Jen viaj Bitmon-adresoj por sendi pagojn. Zorge kontrolu la sumon kaj la alsendan adreson antaŭ ol sendi.</translation>
+        <translation>Jen viaj Dobbscoin-adresoj por sendi pagojn. Zorge kontrolu la sumon kaj la alsendan adreson antaŭ ol sendi.</translation>
     </message>
     <message>
         <source>These are your Dobbscoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Jen viaj bitmonaj adresoj por ricevi pagojn. Estas konsilinde uzi apartan ricevan adreson por ĉiu transakcio.</translation>
+        <translation>Jen viaj Dobbscoin adresoj por ricevi pagojn. Estas konsilinde uzi apartan ricevan adreson por ĉiu transakcio.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -157,7 +157,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DOBBSCOINS&lt;/b&gt;!</source>
-        <translation>Atentu! Se vi ĉifras vian monujon kaj perdas la pasfrazon, vi &lt;b&gt;PERDOS LA TUTON DE VIA BITMONO&lt;b&gt;!</translation>
+        <translation>Atentu! Se vi ĉifras vian monujon kaj perdas la pasfrazon, vi &lt;b&gt;PERDOS LA TUTON DE VIA DOBBSCOIN&lt;b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -177,7 +177,7 @@
     </message>
     <message>
         <source>Dobbscoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dobbscoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitmono nun fermiĝos por fini la ĉifradon. Memoru, ke eĉ ĉifrado ne protektas kontraŭ ĉiu atako, ekz. se viruso infektus vian komputilon.</translation>
+        <translation>Dobbscoin nun fermiĝos por fini la ĉifradon. Memoru, ke eĉ ĉifrado ne protektas kontraŭ ĉiu atako, ekz. se viruso infektus vian komputilon.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -284,7 +284,7 @@
     </message>
     <message>
         <source>Dobbscoin Core client</source>
-        <translation>kliento de bitmon-kerno</translation>
+        <translation>kliento de Dobbscoin-kerno</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -296,11 +296,11 @@
     </message>
     <message>
         <source>Send coins to a Dobbscoin address</source>
-        <translation>Sendi monon al Bitmon-adreso</translation>
+        <translation>Sendi monon al Dobbscoin-adreso</translation>
     </message>
     <message>
         <source>Modify configuration options for Dobbscoin</source>
-        <translation>Modifi agordaĵojn por Bitmono</translation>
+        <translation>Modifi agordaĵojn por Dobbscoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -324,7 +324,7 @@
     </message>
     <message>
         <source>Dobbscoin</source>
-        <translation>Bitmono</translation>
+        <translation>Dobbscoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -352,11 +352,11 @@
     </message>
     <message>
         <source>Sign messages with your Dobbscoin addresses to prove you own them</source>
-        <translation>Subskribi mesaĝojn per via Bitmon-adresoj por pravigi, ke vi estas la posedanto</translation>
+        <translation>Subskribi mesaĝojn per via Dobbscoin-adresoj por pravigi, ke vi estas la posedanto</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Dobbscoin addresses</source>
-        <translation>Kontroli mesaĝojn por kontroli ĉu ili estas subskribitaj per specifaj Bitmon-adresoj</translation>
+        <translation>Kontroli mesaĝojn por kontroli ĉu ili estas subskribitaj per specifaj Dobbscoin-adresoj</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -376,7 +376,7 @@
     </message>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>Kerno de Bitmono</translation>
+        <translation>Kerno de Dobbscoin</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and dobbscoin: URIs)</source>
@@ -384,7 +384,7 @@
     </message>
     <message>
         <source>&amp;About Dobbscoin Core</source>
-        <translation>&amp;Pri la Bitmona Kerno</translation>
+        <translation>&amp;Pri la Dobbscoin Kerno</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -404,7 +404,7 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dobbscoin network</source>
-        <translation><numerusform>%n aktiva konekto al la bitmona reto</numerusform><numerusform>%n aktivaj konektoj al la bitmona reto</numerusform></translation>
+        <translation><numerusform>%n aktiva konekto al la Dobbscoin reto</numerusform><numerusform>%n aktivaj konektoj al la Dobbscoin reto</numerusform></translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -737,7 +737,7 @@ Adreso: %4
     </message>
     <message>
         <source>The entered address "%1" is not a valid Dobbscoin address.</source>
-        <translation>La adreso enigita "%1" ne estas valida Bitmon-adreso.</translation>
+        <translation>La adreso enigita "%1" ne estas valida Dobbscoin-adreso.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -775,7 +775,7 @@ Adreso: %4
     <name>HelpMessageDialog</name>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>Kerno de Bitmono</translation>
+        <translation>Kerno de Dobbscoin</translation>
     </message>
     <message>
         <source>version</source>
@@ -783,7 +783,7 @@ Adreso: %4
     </message>
     <message>
         <source>About Dobbscoin Core</source>
-        <translation>Pri la Bitmona Kerno</translation>
+        <translation>Pri la Dobbscoin Kerno</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -826,7 +826,7 @@ Adreso: %4
     </message>
     <message>
         <source>Welcome to Dobbscoin Core.</source>
-        <translation>Bonvenon al la bitmona kerno, Dobbscoin Core.</translation>
+        <translation>Bonvenon al la Dobbscoin kerno, Dobbscoin Core.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Dobbscoin Core will store its data.</source>
@@ -834,7 +834,7 @@ Adreso: %4
     </message>
     <message>
         <source>Dobbscoin Core will download and store a copy of the Dobbscoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Dobbscoin Core elŝutos kaj konservos kopion de la bitmona blokĉeno. Almenaŭ %1GB da datumoj konserviĝos en tiu loko, kaj tio poiome kreskos. Ankaŭ via monujo konserviĝos en tiu dosierujo.</translation>
+        <translation>Dobbscoin Core elŝutos kaj konservos kopion de la Dobbscoin blokĉeno. Almenaŭ %1GB da datumoj konserviĝos en tiu loko, kaj tio poiome kreskos. Ankaŭ via monujo konserviĝos en tiu dosierujo.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -846,7 +846,7 @@ Adreso: %4
     </message>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>Kerno de Bitmono</translation>
+        <translation>Kerno de Dobbscoin</translation>
     </message>
     <message>
         <source>Error</source>
@@ -888,11 +888,11 @@ Adreso: %4
     </message>
     <message>
         <source>Automatically start Dobbscoin after logging in to the system.</source>
-        <translation>Aŭtomate lanĉi Bitmonon post ensaluto al la sistemo.</translation>
+        <translation>Aŭtomate lanĉi Dobbscoin post ensaluto al la sistemo.</translation>
     </message>
     <message>
         <source>&amp;Start Dobbscoin on system login</source>
-        <translation>&amp;Lanĉi Bitmonon tuj post ensaluto al la sistemo</translation>
+        <translation>&amp;Lanĉi Dobbscoin tuj post ensaluto al la sistemo</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -916,7 +916,7 @@ Adreso: %4
     </message>
     <message>
         <source>Automatically open the Dobbscoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Aŭtomate malfermi la kursilan pordon por Bitmono. Tio funkcias nur se via kursilo havas la UPnP-funkcion, kaj se tiu ĉi estas ŝaltita.</translation>
+        <translation>Aŭtomate malfermi la kursilan pordon por Dobbscoin. Tio funkcias nur se via kursilo havas la UPnP-funkcion, kaj se tiu ĉi estas ŝaltita.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -964,7 +964,7 @@ Adreso: %4
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting Dobbscoin.</source>
-        <translation>Vi povas elekti la lingvon uzata en la aplikaĵo ĉi tie. Tiu ekefikos nur post relanĉo de Bitmono.</translation>
+        <translation>Vi povas elekti la lingvon uzata en la aplikaĵo ĉi tie. Tiu ekefikos nur post relanĉo de Dobbscoin.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -972,7 +972,7 @@ Adreso: %4
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Elekti la defaŭltan manieron por montri bitmonajn sumojn en la interfaco, kaj kiam vi sendos bitmonon.</translation>
+        <translation>Elekti la defaŭltan manieron por montri Dobbscoin sumojn en la interfaco, kaj kiam vi sendos Dobbscoin.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1011,7 +1011,7 @@ Adreso: %4
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dobbscoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Eblas, ke la informoj videblaj ĉi tie estas eksdataj. Via monujo aŭtomate sinkoniĝas kun la bitmona reto kiam ili konektiĝas, sed tiu procezo ankoraŭ ne finfariĝis.</translation>
+        <translation>Eblas, ke la informoj videblaj ĉi tie estas eksdataj. Via monujo aŭtomate sinkoniĝas kun la Dobbscoin reto kiam ili konektiĝas, sed tiu procezo ankoraŭ ne finfariĝis.</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -1222,7 +1222,7 @@ Adreso: %4
     </message>
     <message>
         <source>Open the Dobbscoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Malfermi la sencimiga protokoldosiero de Bitmono el la aktuala dosierujo por datumoj. Tio eble daŭros plurajn sekundojn por granda protokoldosiero.</translation>
+        <translation>Malfermi la sencimiga protokoldosiero de Dobbscoin el la aktuala dosierujo por datumoj. Tio eble daŭros plurajn sekundojn por granda protokoldosiero.</translation>
     </message>
     <message>
         <source>Clear console</source>
@@ -1230,7 +1230,7 @@ Adreso: %4
     </message>
     <message>
         <source>Welcome to the Dobbscoin RPC console.</source>
-        <translation>Bonvenon al la RPC-konzolo de Bitmono.</translation>
+        <translation>Bonvenon al la RPC-konzolo de Dobbscoin.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1470,7 +1470,7 @@ Adreso: %4
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation>Konfirmi sendon de bitmono</translation>
+        <translation>Konfirmi sendon de Dobbscoin</translation>
     </message>
     <message>
         <source>%1 to %2</source>
@@ -1538,7 +1538,7 @@ Adreso: %4
     </message>
     <message>
         <source>Warning: Invalid Dobbscoin address</source>
-        <translation>Averto: Nevalida Bitmon-adreso</translation>
+        <translation>Averto: Nevalida Dobbscoin-adreso</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1663,7 +1663,7 @@ Adreso: %4
     </message>
     <message>
         <source>Sign the message to prove you own this Dobbscoin address</source>
-        <translation>Subskribi la mesaĝon por pravigi, ke vi estas la posedanto de tiu Bitmon-adreso</translation>
+        <translation>Subskribi la mesaĝon por pravigi, ke vi estas la posedanto de tiu Dobbscoin-adreso</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -1687,7 +1687,7 @@ Adreso: %4
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Dobbscoin address</source>
-        <translation>Kontroli la mesaĝon por pravigi, ke ĝi ja estas subskribita per la specifa Bitmon-adreso</translation>
+        <translation>Kontroli la mesaĝon por pravigi, ke ĝi ja estas subskribita per la specifa Dobbscoin-adreso</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -1754,11 +1754,11 @@ Adreso: %4
     <name>SplashScreen</name>
     <message>
         <source>Dobbscoin Core</source>
-        <translation>Kerno de Bitmono</translation>
+        <translation>Kerno de Dobbscoin</translation>
     </message>
     <message>
         <source>The Dobbscoin Core developers</source>
-        <translation>La programistoj de Bitmona Kerno</translation>
+        <translation>La programistoj de Dobbscoin Kerno</translation>
     </message>
     <message>
         <source>[testnet]</source>
@@ -2138,7 +2138,7 @@ Adreso: %4
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation>Sendi Bitmonon</translation>
+        <translation>Sendi Dobbscoin</translation>
     </message>
 </context>
 <context>

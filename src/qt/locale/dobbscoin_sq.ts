@@ -224,7 +224,7 @@
     </message>
     <message>
         <source>&amp;About Dobbscoin Core</source>
-        <translation>Rreth Berthames Bitkoin</translation>
+        <translation>Rreth Berthames Dobbscoin</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -383,7 +383,7 @@
     </message>
     <message>
         <source>About Dobbscoin Core</source>
-        <translation>Rreth Berthames Bitkoin</translation>
+        <translation>Rreth Berthames Dobbscoin</translation>
     </message>
     </context>
 <context>

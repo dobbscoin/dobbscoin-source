@@ -97,7 +97,7 @@
     </message>
     <message>
         <source>Dobbscoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dobbscoins from being stolen by malware infecting your computer.</source>
-        <translation>Цоожлолтын процесыг дуусгахын тулд Биткойн одоо хаагдана. Ѳѳрийн түрүйвчийг цоожлох нь таны биткойнуудыг компьютерийн вирус хулгайлахаас бүрэн сэргийлж чадахгүй гэдгийг санаарай.</translation>
+        <translation>Цоожлолтын процесыг дуусгахын тулд Dobbscoin одоо хаагдана. Ѳѳрийн түрүйвчийг цоожлох нь таны Dobbscoin компьютерийн вирус хулгайлахаас бүрэн сэргийлж чадахгүй гэдгийг санаарай.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -192,7 +192,7 @@
     </message>
     <message>
         <source>Dobbscoin</source>
-        <translation>Биткойн</translation>
+        <translation>Dobbscoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -216,7 +216,7 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dobbscoin network</source>
-        <translation><numerusform>Биткойны сүлжээрүү %n идэвхитэй холболт байна </numerusform><numerusform>Биткойны сүлжээрүү %n идэвхитэй холболтууд байна </numerusform></translation>
+        <translation><numerusform>Dobbscoin сүлжээрүү %n идэвхитэй холболт байна </numerusform><numerusform>Dobbscoin сүлжээрүү %n идэвхитэй холболтууд байна </numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -657,7 +657,7 @@ Address: %4
     </message>
     <message>
         <source>Warning: Invalid Dobbscoin address</source>
-        <translation>Анхаар:Буруу Биткойны хаяг байна</translation>
+        <translation>Анхаар:Буруу Dobbscoin хаяг байна</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -703,7 +703,7 @@ Address: %4
     <name>ShutdownWindow</name>
     <message>
         <source>Dobbscoin Core is shutting down...</source>
-        <translation>Биткойны цѳм хаагдаж байна...</translation>
+        <translation>Dobbscoin цѳм хаагдаж байна...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>

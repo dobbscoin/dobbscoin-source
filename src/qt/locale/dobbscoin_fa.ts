@@ -43,7 +43,7 @@
     </message>
     <message>
         <source>These are your Dobbscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>این‌ها نشانی‌های بیت‌کوین شما برای ارسال وجود هستند. همیشه قبل از ارسال سکه‌ها، نشانی دریافت‌کننده و مقدار ارسالی را بررسی کنید.</translation>
+        <translation>این‌ها نشانی‌های Dobbscoin شما برای ارسال وجود هستند. همیشه قبل از ارسال سکه‌ها، نشانی دریافت‌کننده و مقدار ارسالی را بررسی کنید.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -133,7 +133,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DOBBSCOINS&lt;/b&gt;!</source>
-        <translation>هشدار: اگر کیف پول خود را رمزنگاری کنید و گذرواژه را فراموش کنید، &lt;b&gt;تمام دارایی بیت‌کوین خود را از دست خواهید داد&lt;/b&gt;!</translation>
+        <translation>هشدار: اگر کیف پول خود را رمزنگاری کنید و گذرواژه را فراموش کنید، &lt;b&gt;تمام دارایی Dobbscoin خود را از دست خواهید داد&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -153,7 +153,7 @@
     </message>
     <message>
         <source>Dobbscoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dobbscoins from being stolen by malware infecting your computer.</source>
-        <translation>بیت‌کوین هم اکنون بسته می‌شود تا فرایند رمزگذاری را تمام کند. به خاطر داشته باشید که رمزگذاری کردن کیف پول‌تان نمی‌تواند به طور کامل بیت‌کوین‌های شما را در برابر دزدیده شدن توسط بدافزارهایی که احتمالاً رایانهٔ شما را آلوده می‌کنند، محافظت نماید.</translation>
+        <translation>Dobbscoin هم اکنون بسته می‌شود تا فرایند رمزگذاری را تمام کند. به خاطر داشته باشید که رمزگذاری کردن کیف پول‌تان نمی‌تواند به طور کامل Dobbscoin‌های شما را در برابر دزدیده شدن توسط بدافزارهایی که احتمالاً رایانهٔ شما را آلوده می‌کنند، محافظت نماید.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -252,11 +252,11 @@
     </message>
     <message>
         <source>Send coins to a Dobbscoin address</source>
-        <translation>ارسال وجه به نشانی بیت‌کوین</translation>
+        <translation>ارسال وجه به نشانی Dobbscoin</translation>
     </message>
     <message>
         <source>Modify configuration options for Dobbscoin</source>
-        <translation>تغییر و اصلاح تنظیمات پیکربندی بیت‌کوین</translation>
+        <translation>تغییر و اصلاح تنظیمات پیکربندی Dobbscoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -280,7 +280,7 @@
     </message>
     <message>
         <source>Dobbscoin</source>
-        <translation>بیت‌کوین</translation>
+        <translation>Dobbscoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -308,11 +308,11 @@
     </message>
     <message>
         <source>Sign messages with your Dobbscoin addresses to prove you own them</source>
-        <translation>برای اثبات اینکه پیام‌ها به شما تعلق دارند، آن‌ها را با نشانی بیت‌کوین خود امضا کنید</translation>
+        <translation>برای اثبات اینکه پیام‌ها به شما تعلق دارند، آن‌ها را با نشانی Dobbscoin خود امضا کنید</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Dobbscoin addresses</source>
-        <translation>برای حصول اطمینان از اینکه پیام با نشانی بیت‌کوین مشخص شده امضا است یا خیر، پیام را شناسایی کنید</translation>
+        <translation>برای حصول اطمینان از اینکه پیام با نشانی Dobbscoin مشخص شده امضا است یا خیر، پیام را شناسایی کنید</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -336,7 +336,7 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dobbscoin network</source>
-        <translation><numerusform>%n ارتباط فعال با شبکهٔ بیت‌کوین</numerusform></translation>
+        <translation><numerusform>%n ارتباط فعال با شبکهٔ Dobbscoin</numerusform></translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -505,7 +505,7 @@ Address: %4
     </message>
     <message>
         <source>The entered address "%1" is not a valid Dobbscoin address.</source>
-        <translation>نشانی وارد شده «%1» یک نشانی معتبر بیت‌کوین نیست.</translation>
+        <translation>نشانی وارد شده «%1» یک نشانی معتبر Dobbscoin نیست.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -620,11 +620,11 @@ Address: %4
     </message>
     <message>
         <source>Automatically start Dobbscoin after logging in to the system.</source>
-        <translation>اجرای خودکار بیت‌کوین در زمان ورود به سیستم.</translation>
+        <translation>اجرای خودکار Dobbscoin در زمان ورود به سیستم.</translation>
     </message>
     <message>
         <source>&amp;Start Dobbscoin on system login</source>
-        <translation>&amp;اجرای بیت‌کوین با ورود به سیستم</translation>
+        <translation>&amp;اجرای Dobbscoin با ورود به سیستم</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -644,7 +644,7 @@ Address: %4
     </message>
     <message>
         <source>Automatically open the Dobbscoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>باز کردن خودکار درگاه شبکهٔ بیت‌کوین روی روترها. تنها زمانی کار می‌کند که روتر از پروتکل UPnP پشتیبانی کند و این پروتکل فعال باشد.</translation>
+        <translation>باز کردن خودکار درگاه شبکهٔ Dobbscoin روی روترها. تنها زمانی کار می‌کند که روتر از پروتکل UPnP پشتیبانی کند و این پروتکل فعال باشد.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -692,7 +692,7 @@ Address: %4
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting Dobbscoin.</source>
-        <translation>زبان رابط کاربر می‌تواند در این‌جا تنظیم شود. تنظیمات بعد از ظروع مجدد بیت‌کوین اعمال خواهد شد.</translation>
+        <translation>زبان رابط کاربر می‌تواند در این‌جا تنظیم شود. تنظیمات بعد از ظروع مجدد Dobbscoin اعمال خواهد شد.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -735,7 +735,7 @@ Address: %4
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dobbscoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>اطلاعات نمایش‌داده شده ممکن است قدیمی باشند. بعد از این که یک اتصال با شبکه برقرار شد، کیف پول شما به‌صورت خودکار با شبکهٔ بیت‌کوین همگام‌سازی می‌شود. اما این روند هنوز کامل نشده است.</translation>
+        <translation>اطلاعات نمایش‌داده شده ممکن است قدیمی باشند. بعد از این که یک اتصال با شبکه برقرار شد، کیف پول شما به‌صورت خودکار با شبکهٔ Dobbscoin همگام‌سازی می‌شود. اما این روند هنوز کامل نشده است.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -778,7 +778,7 @@ Address: %4
     </message>
     <message>
         <source>Cannot start dobbscoin: click-to-pay handler</source>
-        <translation>نمی‌توان بیت‌کوین را اجرا کرد: کنترل‌کنندهٔ کلیک-و-پرداخت</translation>
+        <translation>نمی‌توان Dobbscoin را اجرا کرد: کنترل‌کنندهٔ کلیک-و-پرداخت</translation>
     </message>
     </context>
 <context>
@@ -882,7 +882,7 @@ Address: %4
     </message>
     <message>
         <source>Welcome to the Dobbscoin RPC console.</source>
-        <translation>به کنسور RPC بیت‌کوین خوش آمدید.</translation>
+        <translation>به کنسور RPC Dobbscoin خوش آمدید.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1139,7 +1139,7 @@ Address: %4
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Dobbscoin address</source>
-        <translation>برای حصول اطمینان از اینکه پیام با نشانی بیت‌کوین مشخص شده امضا است یا خیر، پیام را شناسایی کنید</translation>
+        <translation>برای حصول اطمینان از اینکه پیام با نشانی Dobbscoin مشخص شده امضا است یا خیر، پیام را شناسایی کنید</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
