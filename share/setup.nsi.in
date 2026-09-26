@@ -45,6 +45,7 @@ Var StartMenuGroup
 !define MUI_PAGE_HEADER_TEXT "Required by The Conspiracy"
 !define MUI_PAGE_HEADER_SUBTEXT "A little paperwork about the license."
 !define MUI_LICENSEPAGE_BUTTON "$(^NextBtn)"
+!define MUI_LICENSEPAGE_TEXT_TOP "The fine print, in plain words:"
 !define MUI_LICENSEPAGE_TEXT_BOTTOM "Nothing to sign. Click Next to continue."
 !insertmacro MUI_PAGE_LICENSE "@abs_top_srcdir@/doc/README_license.txt"
 ; Leaving the location page checks that the wallet is not running, before
