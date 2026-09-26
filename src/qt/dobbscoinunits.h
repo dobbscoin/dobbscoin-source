@@ -52,7 +52,7 @@ public:
     explicit DobbscoinUnits(QObject *parent);
 
     /** Dobbscoin units.
-      @note Source: https://en.dobbscoin.it/wiki/Units . Please add only sensible ones
+      @note Based on https://en.bitcoin.it/wiki/Units . Please add only sensible ones
      */
     enum Unit
     {
