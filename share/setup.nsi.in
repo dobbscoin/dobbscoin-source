@@ -7,7 +7,7 @@ SetCompressor /SOLID lzma
 !define REGKEY "SOFTWARE\$(^Name)"
 !define VERSION @CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@
 !define COMPANY "Dobbscoin Core project"
-!define URL http://www.dobbscoin.org/
+!define URL https://dobbscoin.info
 
 # MUI Symbol Definitions
 !define MUI_ICON "@abs_top_srcdir@/share/pixmaps/dobbscoin.ico"
@@ -40,6 +40,13 @@ Var StartMenuGroup
 
 # Installer pages
 !insertmacro MUI_PAGE_WELCOME
+; The license in plain words. MIT asks for no agreement, so the button is a
+; plain Next, not "I Agree".
+!define MUI_PAGE_HEADER_TEXT "Required by The Conspiracy"
+!define MUI_PAGE_HEADER_SUBTEXT "A little paperwork about the license."
+!define MUI_LICENSEPAGE_BUTTON "$(^NextBtn)"
+!define MUI_LICENSEPAGE_TEXT_BOTTOM "Nothing to sign. Click Next to continue."
+!insertmacro MUI_PAGE_LICENSE "@abs_top_srcdir@/doc/README_license.txt"
 ; Leaving the location page checks that the wallet is not running, before
 ; anything is copied; Abort there keeps the user on the page.
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE CheckNotRunning
@@ -71,7 +78,7 @@ VIAddVersionKey CompanyName "${COMPANY}"
 VIAddVersionKey CompanyWebsite "${URL}"
 VIAddVersionKey FileVersion "${VERSION}"
 VIAddVersionKey FileDescription ""
-VIAddVersionKey LegalCopyright ""
+VIAddVersionKey LegalCopyright "2009-@COPYRIGHT_YEAR@ The Bitcoin Core developers, 2013-@COPYRIGHT_YEAR@ The Dobbscoin developers"
 InstallDirRegKey HKCU "${REGKEY}" Path
 ShowUninstDetails show
 
@@ -119,6 +126,7 @@ Section -Main SEC0000
     File @abs_top_builddir@/release/dobbscoin-qt.exe
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
+    File /oname=license-summary.txt @abs_top_srcdir@/doc/README_license.txt
     SetOutPath $INSTDIR\daemon
     File @abs_top_builddir@/release/dobbscoind.exe
     File @abs_top_builddir@/release/dobbscoin-cli.exe
@@ -128,7 +136,6 @@ Section -Main SEC0000
     ; install's copy goes on upgrade-then-uninstall.
     SetOutPath $INSTDIR\doc
     File @abs_top_srcdir@/doc/files.md
-    File @abs_top_srcdir@/doc/bootstrap.md
     File @abs_top_srcdir@/doc/tor.md
     SetOutPath $INSTDIR
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
@@ -180,6 +187,7 @@ Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\dobbscoin-qt.exe
     Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
+    Delete /REBOOTOK $INSTDIR\license-summary.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon
     RMDir /r /REBOOTOK $INSTDIR\doc
     DeleteRegValue HKCU "${REGKEY}\Components" Main

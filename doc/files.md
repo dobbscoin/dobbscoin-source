@@ -1,24 +1,16 @@
-Used in 0.8.0
----------------------
+Files in the data directory
+---------------------------
+
+The data directory is `%APPDATA%\Dobbscoin` on Windows, `~/.dobbscoin` on Linux
+and `~/Library/Application Support/Dobbscoin` on macOS.
+
 * wallet.dat: personal wallet with keys and transactions; SQLite in releases after 0.13.8, Berkeley DB (BDB) up to 0.13.8
 * wallet.dat.bdb-<unixtime>: the Berkeley DB wallet as it was before the one-time conversion to SQLite; after 0.13.8
-* peers.dat: peer IP address database (custom format); since 0.7.0
-* blocks/blk000??.dat: block data (custom, 128 MiB per file); since 0.8.0
-* blocks/rev000??.dat; block undo data (custom); since 0.8.0 (format changed since pre-0.8)
-* blocks/index/*; block index (LevelDB); since 0.8.0
-* chainstate/*; block chain state database (LevelDB); since 0.8.0
-* database/*: BDB database environment; only used for wallet from 0.8.0 to 0.13.8
-
-Only used in pre-0.8.0
----------------------
-* blktree/*; block chain index (LevelDB); since pre-0.8, replaced by blocks/index/* in 0.8.0
-* coins/*; unspent transaction output database (LevelDB); since pre-0.8, replaced by chainstate/* in 0.8.0
-
-Only used before 0.8.0
----------------------
-* blkindex.dat: block chain index database (BDB); replaced by {chainstate/*,blocks/index/*,blocks/rev000??.dat} in 0.8.0
-* blk000?.dat: block data (custom, 2 GiB per file); replaced by blocks/blk000??.dat in 0.8.0
-
-Only used before 0.7.0
----------------------
-* addr.dat: peer IP address database (BDB); replaced by peers.dat in 0.7.0
+* peers.dat: peer IP address database (custom format)
+* blocks/blk000??.dat: block data (custom, 128 MiB per file)
+* blocks/rev000??.dat: block undo data (custom)
+* blocks/index/*: block index (LevelDB)
+* chainstate/*: block chain state database (LevelDB)
+* database/*: BDB database environment; only used for the wallet up to 0.13.8
+* dobbscoin.conf: optional settings file, read at startup
+* debug.log: the log
