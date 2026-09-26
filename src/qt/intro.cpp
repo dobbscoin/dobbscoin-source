@@ -15,9 +15,12 @@
 #include <QSettings>
 #include <QMessageBox>
 
-/* Minimum free space (in bytes) needed for data directory */
+/* Minimum free space (in bytes) needed for data directory.
+ * The (BOB) mainnet data directory measured about 1.4 GB of blocks/ plus 38 MB
+ * of chainstate/ at height ~1,912,700 (2026-09-26, a fully synced node), so
+ * 2 GB leaves room to grow. Bitcoin's 20 GB figure was inherited in 2015. */
 static const uint64_t GB_BYTES = 1000000000LL;
-static const uint64_t BLOCK_CHAIN_SIZE = 20LL * GB_BYTES;
+static const uint64_t BLOCK_CHAIN_SIZE = 2LL * GB_BYTES;
 
 /* Check free space asynchronously to prevent hanging the UI thread.
 
