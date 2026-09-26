@@ -9,6 +9,9 @@
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "hash.h"
+#include "crypto/common.h"
+#include "crypto/scrypt.h"
+#include "crypto/scrypt_nway.h"
 #include "main.h"
 #include "net.h"
 #include "pow.h"
@@ -371,43 +374,138 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 }
 
+//
+// Scrypt for the miners: the solo miner below (ScanHash) and the stratum pool
+// workers (stratum.cpp). They may hash with a SIMD multi-way scrypt
+// (crypto/scrypt_nway.h). Nothing else does: GetPoWHash(), CheckProofOfWork()
+// and all block validation use the generic scrypt_1024_1_1_256(). Every
+// solution the fast path claims is recomputed with the generic function
+// before it is used (MinerScryptCheck), and so is one hash per 4096-nonce
+// slice. Any disagreement drops both miners to generic for the rest of the
+// session. Outside ENABLE_WALLET because the stratum client does not need a
+// wallet.
+//
+static std::atomic<int> nMinerScryptImpl((int)ScryptImpl::GENERIC);
+static std::atomic<bool> fMinerScryptMismatch(false);
+
+void MinerScryptSelect(const std::string& strRequested)
+{
+    ScryptImpl chosen = ScryptImplBest();
+    bool fForced = false;
+    if (!strRequested.empty() && strRequested != "auto") {
+        ScryptImpl requested;
+        if (!ScryptImplFromName(strRequested, requested))
+            LogPrintf("Scrypt miner: unknown -minerscrypt=%s (expected auto, generic, sse2, avx or avx2), ignoring it\n", strRequested);
+        else if (!ScryptImplSupported(requested))
+            LogPrintf("Scrypt miner: -minerscrypt=%s is not supported by this CPU and OS, ignoring it\n", strRequested);
+        else {
+            chosen = requested;
+            fForced = true;
+        }
+    }
+    if (fMinerScryptMismatch)
+        chosen = ScryptImpl::GENERIC;
+    nMinerScryptImpl = (int)chosen;
+    LogPrintf("Scrypt miner: CPU features: %s\n", ScryptCpuFeatures());
+    LogPrintf("Scrypt miner: using %s%s\n", ScryptImplDescription(chosen), fForced ? " (forced by -minerscrypt)" : "");
+}
+
+std::string MinerScryptImplName()
+{
+    return ScryptImplName(MinerScryptImpl());
+}
+
+ScryptImpl MinerScryptImpl()
+{
+    return (ScryptImpl)nMinerScryptImpl.load(std::memory_order_relaxed);
+}
+
+static void MinerScryptMismatch(ScryptImpl impl, const unsigned char* header, const uint256& hashFast, const uint256& hashGeneric)
+{
+    // Only the first thread to notice logs; all of them see GENERIC afterwards.
+    nMinerScryptImpl = (int)ScryptImpl::GENERIC;
+    if (fMinerScryptMismatch.exchange(true))
+        return;
+    std::string strMsg = strprintf("Scrypt miner: %s scrypt DISAGREES with the generic scrypt (fast %s, generic %s, header %s). "
+                                   "Not submitting; mining with the generic implementation for the rest of this session.",
+                                   ScryptImplDescription(impl), hashFast.GetHex(), hashGeneric.GetHex(),
+                                   HexStr(header, header + 80));
+    LogPrintf("*** %s\n", strMsg);
+    fprintf(stderr, "*** %s\n", strMsg.c_str());
+    strMiscWarning = strMsg;
+}
+
+bool MinerScryptCheck(ScryptImpl impl, const unsigned char* header80, const unsigned char* hash32)
+{
+    if (impl == ScryptImpl::GENERIC)
+        return true;
+    uint256 hashFast, hashGeneric;
+    memcpy(hashFast.begin(), hash32, 32);
+    scrypt_1024_1_1_256((const char*)header80, (char*)hashGeneric.begin());
+    if (hashGeneric == hashFast)
+        return true;
+    MinerScryptMismatch(impl, header80, hashFast, hashGeneric);
+    return false;
+}
+
 #ifdef ENABLE_WALLET
 //////////////////////////////////////////////////////////////////////////////
 //
 // Internal miner
 //
-double dHashesPerSec = 0.0;
-int64_t nHPSTimerStart = 0;
+std::atomic<double> dHashesPerSec(0.0);
+std::atomic<int64_t> nHPSTimerStart(0);
 
 //
-// ScanHash scans nonces looking for a hash with at least some zero bits.
-// The nonce is usually preserved between calls, but periodically or if the
-// nonce is 0xffff0000 or above, the block is rebuilt and nNonce starts over at
-// zero.
+// ScanHash scans nonces looking for a hash that meets hashTarget. It hashes
+// ScryptImplLanes() consecutive nonces per step (1 on the generic path).
+// nNonce is the last nonce hashed (or, on success, the winning nonce) and is
+// preserved between calls; periodically, or once the nonce is 0xffff0000 or
+// above, the caller rebuilds the block and nNonce starts over at zero.
+// scratchpad holds ScryptNwayScratchpadSize() for the widest implementation.
 //
-bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phash, const uint256& hashTarget)
+bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phash, const uint256& hashTarget, unsigned char* scratchpad)
 {
     // Serialize the header once. Only the nonce -- the last 4 of the 80 bytes --
     // changes per iteration, so it is patched in place rather than reserialized.
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << *pblock;
     assert(ss.size() == 80);
-    unsigned char* pheader = (unsigned char*)&ss[0];
+    unsigned char headers[SCRYPT_NWAY_MAX_LANES * 80];
+    unsigned char hashes[SCRYPT_NWAY_MAX_LANES * 32];
+    for (int l = 0; l < SCRYPT_NWAY_MAX_LANES; l++)
+        memcpy(headers + 80 * l, &ss[0], 80);
 
     while (true) {
-        nNonce++;
-        memcpy(pheader + 76, &nNonce, 4);
-        CHashScrypt().Write(pheader, 80).Finalize((unsigned char*)phash);
+        const ScryptImpl impl = MinerScryptImpl();
+        const int nLanes = ScryptImplLanes(impl);
+        const uint32_t nPrev = nNonce;
+        for (int l = 0; l < nLanes; l++)
+            WriteLE32(headers + 80 * l + 76, nPrev + 1 + l);
+        scrypt_1024_1_1_256_nway(impl, headers, hashes, scratchpad);
+        nNonce = nPrev + nLanes;
 
         // Test the target here rather than in the caller: scrypt is far too slow
         // to afford upstream's leading-zero prefilter, and at the (BOB) floor the
         // target is high enough that such a filter would discard real solutions.
-        if (*phash <= hashTarget)
+        for (int l = 0; l < nLanes; l++) {
+            uint256 hash;
+            memcpy(hash.begin(), hashes + 32 * l, 32);
+            if (hash > hashTarget)
+                continue;
+            if (!MinerScryptCheck(impl, headers + 80 * l, hashes + 32 * l))
+                return false; // fast path wrong: not submitted, now on generic
+            nNonce = nPrev + 1 + l;
+            *phash = hash;
             return true;
+        }
 
-        // Hand control back periodically so the caller can refresh nTime, notice
-        // a new tip, and honour an interrupt.
-        if ((nNonce & 0xfff) == 0) {
+        // Hand control back every 4096 nonces so the caller can refresh nTime,
+        // notice a new tip, and honour an interrupt.
+        if ((nPrev >> 12) != (nNonce >> 12)) {
+            // Spot check: a fast path that went wrong would otherwise only
+            // ever show up as missing blocks. One generic hash per slice.
+            MinerScryptCheck(impl, headers, hashes);
             boost::this_thread::interruption_point();
             return false;
         }
@@ -462,6 +560,8 @@ void static DobbscoinMiner(CWallet *pwallet)
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
+    // and scrypt scratchpad, big enough for the widest implementation (768 KiB)
+    std::vector<unsigned char> vchScratchpad(ScryptNwayScratchpadSize(ScryptImpl::AVX2));
 
     try {
         while (true) {
@@ -516,7 +616,7 @@ void static DobbscoinMiner(CWallet *pwallet)
             uint32_t nNonce = 0;
             uint32_t nOldNonce = 0;
             while (true) {
-                bool fFound = ScanHash(pblock, nNonce, &hash, hashTarget);
+                bool fFound = ScanHash(pblock, nNonce, &hash, hashTarget, &vchScratchpad[0]);
                 uint32_t nHashesDone = nNonce - nOldNonce;
                 nOldNonce = nNonce;
 
@@ -543,30 +643,30 @@ void static DobbscoinMiner(CWallet *pwallet)
                     }
                 }
 
-                // Meter hashes/sec
-                static int64_t nHashCounter;
-                if (nHPSTimerStart == 0)
-                {
-                    nHPSTimerStart = GetTimeMillis();
-                    nHashCounter = 0;
-                }
-                else
-                    nHashCounter += nHashesDone;
+                // Meter hashes/sec. nNonce - nOldNonce counts every lane
+                // ScanHash hashed. All miner threads add to one atomic counter.
+                static std::atomic<int64_t> nHashCounter(0);
+                nHashCounter += nHashesDone;
                 if (GetTimeMillis() - nHPSTimerStart > 4000)
                 {
                     static CCriticalSection cs;
                     {
                         LOCK(cs);
-                        if (GetTimeMillis() - nHPSTimerStart > 4000)
+                        const int64_t nNow = GetTimeMillis();
+                        if (nHPSTimerStart == 0)
                         {
-                            dHashesPerSec = 1000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
-                            nHPSTimerStart = GetTimeMillis();
+                            nHPSTimerStart = nNow;
                             nHashCounter = 0;
+                        }
+                        else if (nNow - nHPSTimerStart > 4000)
+                        {
+                            dHashesPerSec = 1000.0 * nHashCounter.exchange(0) / (nNow - nHPSTimerStart);
+                            nHPSTimerStart = nNow;
                             static int64_t nLogTime;
                             if (GetTime() - nLogTime > 30 * 60)
                             {
                                 nLogTime = GetTime();
-                                LogPrintf("hashmeter %6.0f khash/s\n", dHashesPerSec/1000.0);
+                                LogPrintf("hashmeter %6.0f khash/s (%s scrypt)\n", dHashesPerSec/1000.0, MinerScryptImplName());
                             }
                         }
                     }

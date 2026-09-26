@@ -343,6 +343,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -stratumuser=<addr>    " + _("Dobbscoin address the pool pays out to (required with -stratum)") + "\n";
     strUsage += "  -stratumthreads=<n>    " + _("Number of pool-mining worker threads (default: 1, 0 = protocol only)") + "\n";
     strUsage += "  -genproclimit=<n>      " + strprintf(_("Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)"), 1) + "\n";
+    strUsage += "  -minerscrypt=<impl>    " + _("Scrypt implementation for mining (-gen and -stratum): auto, generic, sse2, avx or avx2 (default: auto, the fastest this CPU supports)") + "\n";
 #endif
     strUsage += "  -help-debug            " + _("Show all debugging options (usage: --help -help-debug)") + "\n";
     strUsage += "  -logips                " + strprintf(_("Include IP addresses in debug output (default: %u)"), 0) + "\n";
@@ -1297,6 +1298,10 @@ bool AppInit2(boost::thread_group& threadGroup)
 #endif
 
     StartNode(threadGroup);
+
+    // The miners' scrypt implementation (solo -gen and stratum), chosen and
+    // logged once. Block validation does not use it.
+    MinerScryptSelect(GetArg("-minerscrypt", "auto"));
 
 #ifdef ENABLE_WALLET
     // Generate coins in the background

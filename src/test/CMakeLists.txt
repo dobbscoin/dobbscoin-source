@@ -73,6 +73,7 @@ add_executable(test_dobbscoin
   script_P2SH_tests.cpp
   script_tests.cpp
   scriptnum_tests.cpp
+  scrypt_tests.cpp
   serialize_tests.cpp
   sighash_tests.cpp
   sigopcount_tests.cpp

@@ -100,6 +100,8 @@ add_library(dobbscoin_crypto STATIC EXCLUDE_FROM_ALL
   crypto/sha1.cpp
   crypto/sha256.cpp
   crypto/scrypt.cpp
+  crypto/scrypt_nway.cpp
+  crypto/scrypt-x64.S
   crypto/sha512.cpp
   crypto/hmac_sha256.cpp
   crypto/rfc6979_hmac_sha256.cpp
