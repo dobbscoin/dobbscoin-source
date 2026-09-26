@@ -1,8 +1,8 @@
 Source: dobbscoin
 Section: utils
 Priority: optional
-Maintainer: Jonas Smedegaard <dr@jones.dk>
-Uploaders: Micah Anderson <micah@debian.org>
+Maintainer: BtcBob <dobbscoin@gmail.com>
+Uploaders: BtcBob <dobbscoin@gmail.com>
 Build-Depends: debhelper,
  devscripts,
  automake,
@@ -22,9 +22,9 @@ Build-Depends: debhelper,
  libqrencode-dev,
  libprotobuf-dev, protobuf-compiler
 Standards-Version: 3.9.2
-Homepage: http://www.dobbscoin.org/
-Vcs-Git: git://github.com/dobbscoin/dobbscoin-source.git
-Vcs-Browser: http://github.com/dobbscoin/dobbscoin-source
+Homepage: https://dobbscoin.info
+Vcs-Git: https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source.git
+Vcs-Browser: https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source
 
 Package: dobbscoind
 Architecture: any
@@ -37,7 +37,7 @@ Description: peer-to-peer network based digital currency - daemon
  check for double-spending.
  .
  Full transaction history is stored locally at each client.  This
- requires 20+ GB of space, slowly growing.
+ requires about 2 GB of space, slowly growing.
  .
  This package provides the daemon, dobbscoind, and the CLI tool
  dobbscoin-cli to interact with the daemon.
@@ -53,6 +53,6 @@ Description: peer-to-peer network based digital currency - Qt GUI
  check for double-spending.
  .
  Full transaction history is stored locally at each client.  This
- requires 20+ GB of space, slowly growing.
+ requires about 2 GB of space, slowly growing.
  .
  This package provides Dobbscoin-Qt, a GUI for Dobbscoin based on Qt.
