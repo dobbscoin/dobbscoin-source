@@ -23,7 +23,7 @@ SetCompressor /SOLID lzma
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME StartMenuGroup
 !define MUI_STARTMENUPAGE_DEFAULTFOLDER "@PACKAGE_NAME@"
 !define MUI_FINISHPAGE_RUN $INSTDIR\dobbscoin-qt.exe
-!define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
+!define MUI_UNICON "@abs_top_srcdir@/share/pixmaps/dobbscoin.ico"
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "@abs_top_srcdir@/share/pixmaps/nsis-wizard.bmp"
 !define MUI_UNFINISHPAGE_NOAUTOCLOSE
 
@@ -32,6 +32,7 @@ SetCompressor /SOLID lzma
 !include MUI2.nsh
 !if "@WINDOWS_BITS@" == "64"
 !include x64.nsh
+!include LogicLib.nsh
 !endif
 
 # Variables
@@ -39,6 +40,9 @@ Var StartMenuGroup
 
 # Installer pages
 !insertmacro MUI_PAGE_WELCOME
+; Leaving the location page checks that the wallet is not running, before
+; anything is copied; Abort there keeps the user on the page.
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE CheckNotRunning
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_STARTMENU Application $StartMenuGroup
 !insertmacro MUI_PAGE_INSTFILES
@@ -71,8 +75,45 @@ VIAddVersionKey LegalCopyright ""
 InstallDirRegKey HKCU "${REGKEY}" Path
 ShowUninstDetails show
 
+# A running wallet cannot be overwritten or deleted: Windows refuses write
+# access to a running .exe, and NSIS then stops halfway with "Error opening
+# file for writing". Opening each program for append fails the same way, so
+# test that first and say what to do. Silent installs (/S) answer Cancel.
+!macro CHECK_NOT_RUNNING UN
+Function ${UN}CheckNotRunning
+    retry:
+    StrCpy $R1 ""
+    ${If} ${FileExists} "$INSTDIR\dobbscoin-qt.exe"
+        ClearErrors
+        FileOpen $R0 "$INSTDIR\dobbscoin-qt.exe" a
+        ${If} ${Errors}
+            StrCpy $R1 "dobbscoin-qt.exe"
+        ${Else}
+            FileClose $R0
+        ${EndIf}
+    ${EndIf}
+    ${If} $R1 == ""
+    ${AndIf} ${FileExists} "$INSTDIR\daemon\dobbscoind.exe"
+        ClearErrors
+        FileOpen $R0 "$INSTDIR\daemon\dobbscoind.exe" a
+        ${If} ${Errors}
+            StrCpy $R1 "dobbscoind.exe"
+        ${Else}
+            FileClose $R0
+        ${EndIf}
+    ${EndIf}
+    ${If} $R1 != ""
+        MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Dobbscoin is still running ($R1).$\r$\n$\r$\nClose the wallet with File > Exit, check Task Manager for dobbscoin-qt.exe and dobbscoind.exe, then click Retry." /SD IDCANCEL IDRETRY retry
+        Abort
+    ${EndIf}
+FunctionEnd
+!macroend
+!insertmacro CHECK_NOT_RUNNING ""
+!insertmacro CHECK_NOT_RUNNING "un."
+
 # Installer sections
 Section -Main SEC0000
+    Call CheckNotRunning ; again, for /S installs that skip the pages
     SetOutPath $INSTDIR
     SetOverwrite on
     File @abs_top_builddir@/release/dobbscoin-qt.exe
@@ -135,6 +176,7 @@ done${UNSECTION_ID}:
 
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
+    Call un.CheckNotRunning
     Delete /REBOOTOK $INSTDIR\dobbscoin-qt.exe
     Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
