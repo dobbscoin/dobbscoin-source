@@ -6,6 +6,8 @@
 #ifndef DOBBSCOIN_MINER_H
 #define DOBBSCOIN_MINER_H
 
+#include "crypto/scrypt_nway.h"
+
 #include <atomic>
 #include <stdint.h>
 #include <string>
@@ -39,6 +41,15 @@ void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
 void MinerScryptSelect(const std::string& strRequested);
 /** The implementation the miner uses now, by name ("avx2" ...). */
 std::string MinerScryptImplName();
+/** The implementation the miners (solo and stratum) should hash with now. */
+ScryptImpl MinerScryptImpl();
+/**
+ * Recompute hash32, which impl claimed for header80, with the generic scrypt.
+ * True if they agree (always, for GENERIC). If not: logs it loudly, sets the
+ * GUI/getinfo warning, switches the miners to GENERIC for the rest of the
+ * session, and returns false -- the caller must then not submit.
+ */
+bool MinerScryptCheck(ScryptImpl impl, const unsigned char* header80, const unsigned char* hash32);
 
 // Written by the miner threads, read by RPC and the GUI: atomic.
 extern std::atomic<double> dHashesPerSec;

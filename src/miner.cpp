@@ -374,21 +374,16 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 }
 
-#ifdef ENABLE_WALLET
-//////////////////////////////////////////////////////////////////////////////
 //
-// Internal miner
-//
-std::atomic<double> dHashesPerSec(0.0);
-std::atomic<int64_t> nHPSTimerStart(0);
-
-//
-// Scrypt for the miner. The miner may hash with a SIMD multi-way scrypt
+// Scrypt for the miners: the solo miner below (ScanHash) and the stratum pool
+// workers (stratum.cpp). They may hash with a SIMD multi-way scrypt
 // (crypto/scrypt_nway.h). Nothing else does: GetPoWHash(), CheckProofOfWork()
 // and all block validation use the generic scrypt_1024_1_1_256(). Every
 // solution the fast path claims is recomputed with the generic function
-// before it is returned, and so is one hash per 4096-nonce slice. Any
-// disagreement drops the miner to generic for the rest of the session.
+// before it is used (MinerScryptCheck), and so is one hash per 4096-nonce
+// slice. Any disagreement drops both miners to generic for the rest of the
+// session. Outside ENABLE_WALLET because the stratum client does not need a
+// wallet.
 //
 static std::atomic<int> nMinerScryptImpl((int)ScryptImpl::GENERIC);
 static std::atomic<bool> fMinerScryptMismatch(false);
@@ -417,7 +412,12 @@ void MinerScryptSelect(const std::string& strRequested)
 
 std::string MinerScryptImplName()
 {
-    return ScryptImplName((ScryptImpl)nMinerScryptImpl.load());
+    return ScryptImplName(MinerScryptImpl());
+}
+
+ScryptImpl MinerScryptImpl()
+{
+    return (ScryptImpl)nMinerScryptImpl.load(std::memory_order_relaxed);
 }
 
 static void MinerScryptMismatch(ScryptImpl impl, const unsigned char* header, const uint256& hashFast, const uint256& hashGeneric)
@@ -434,6 +434,27 @@ static void MinerScryptMismatch(ScryptImpl impl, const unsigned char* header, co
     fprintf(stderr, "*** %s\n", strMsg.c_str());
     strMiscWarning = strMsg;
 }
+
+bool MinerScryptCheck(ScryptImpl impl, const unsigned char* header80, const unsigned char* hash32)
+{
+    if (impl == ScryptImpl::GENERIC)
+        return true;
+    uint256 hashFast, hashGeneric;
+    memcpy(hashFast.begin(), hash32, 32);
+    scrypt_1024_1_1_256((const char*)header80, (char*)hashGeneric.begin());
+    if (hashGeneric == hashFast)
+        return true;
+    MinerScryptMismatch(impl, header80, hashFast, hashGeneric);
+    return false;
+}
+
+#ifdef ENABLE_WALLET
+//////////////////////////////////////////////////////////////////////////////
+//
+// Internal miner
+//
+std::atomic<double> dHashesPerSec(0.0);
+std::atomic<int64_t> nHPSTimerStart(0);
 
 //
 // ScanHash scans nonces looking for a hash that meets hashTarget. It hashes
@@ -456,7 +477,7 @@ bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phas
         memcpy(headers + 80 * l, &ss[0], 80);
 
     while (true) {
-        const ScryptImpl impl = (ScryptImpl)nMinerScryptImpl.load(std::memory_order_relaxed);
+        const ScryptImpl impl = MinerScryptImpl();
         const int nLanes = ScryptImplLanes(impl);
         const uint32_t nPrev = nNonce;
         for (int l = 0; l < nLanes; l++)
@@ -472,14 +493,8 @@ bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phas
             memcpy(hash.begin(), hashes + 32 * l, 32);
             if (hash > hashTarget)
                 continue;
-            if (impl != ScryptImpl::GENERIC) {
-                uint256 hashGeneric;
-                scrypt_1024_1_1_256((const char*)(headers + 80 * l), (char*)hashGeneric.begin());
-                if (hashGeneric != hash) {
-                    MinerScryptMismatch(impl, headers + 80 * l, hash, hashGeneric);
-                    return false;
-                }
-            }
+            if (!MinerScryptCheck(impl, headers + 80 * l, hashes + 32 * l))
+                return false; // fast path wrong: not submitted, now on generic
             nNonce = nPrev + 1 + l;
             *phash = hash;
             return true;
@@ -490,13 +505,7 @@ bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phas
         if ((nPrev >> 12) != (nNonce >> 12)) {
             // Spot check: a fast path that went wrong would otherwise only
             // ever show up as missing blocks. One generic hash per slice.
-            if (impl != ScryptImpl::GENERIC) {
-                uint256 hash, hashGeneric;
-                memcpy(hash.begin(), hashes, 32);
-                scrypt_1024_1_1_256((const char*)headers, (char*)hashGeneric.begin());
-                if (hashGeneric != hash)
-                    MinerScryptMismatch(impl, headers, hash, hashGeneric);
-            }
+            MinerScryptCheck(impl, headers, hashes);
             boost::this_thread::interruption_point();
             return false;
         }

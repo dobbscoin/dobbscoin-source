@@ -6,6 +6,11 @@
 #include "stratum.h"
 
 #include "primitives/block.h"
+#include "crypto/common.h"
+#include "crypto/scrypt_nway.h"
+#include "miner.h"
+#include "serialize.h"
+#include "streams.h"
 #include "hash.h"
 #include "utilstrencodings.h"
 #include "clientversion.h"
@@ -19,6 +24,8 @@
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
+#include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstring>
 
@@ -499,6 +506,8 @@ void CStratumClient::ThreadWorker(int nWorkerId)
     LogPrintf("stratum: hash worker %d started\n", nWorkerId);
 
     uint32_t nEn2Counter = 0;
+    // Per-worker scrypt scratchpad, big enough for the widest implementation.
+    std::vector<unsigned char> vchScratchpad(ScryptNwayScratchpadSize(ScryptImpl::AVX2));
 
     while (!fShutdown) {
         // Snapshot the current work; anything missing → idle and retry.
@@ -580,27 +589,64 @@ void CStratumClient::ThreadWorker(int nWorkerId)
         // plenty for share screening; the pool revalidates every submit.
         const double dTargetBound = DIFF1_TARGET * SHARE_MULTIPLIER / dDiff;
 
-        for (uint32_t nNonce = 0; !fShutdown; nNonce++) {
-            header.nNonce = nNonce;
-            uint256 hash = header.GetPoWHash();
-            if (hash.getdouble() <= dTargetBound) {
+        // Hash with the miner's scrypt (-minerscrypt; see MinerScryptCheck in
+        // miner.cpp): ScryptImplLanes() consecutive nonces per step. The pure
+        // 80-byte header is serialized once and only the nonce (bytes 76..79,
+        // little-endian) is patched per lane. The hash compared against the
+        // share bound is the same scrypt(header) GetPoWHash() gives; any share
+        // the fast path claims is recomputed with the generic scrypt first.
+        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+        ss << *(const CPureBlockHeader*)&header;
+        assert(ss.size() == 80);
+        unsigned char headers[SCRYPT_NWAY_MAX_LANES * 80];
+        unsigned char hashes[SCRYPT_NWAY_MAX_LANES * 32];
+        for (int l = 0; l < SCRYPT_NWAY_MAX_LANES; l++)
+            memcpy(headers + 80 * l, &ss[0], 80);
+
+        uint64_t nNext = 0;      // next nonce to hash; 2^32 = nonce space exhausted
+        uint64_t nCounted = 0;   // nonces already added to nHashCounter
+        while (!fShutdown && nNext <= 0xffffffffULL) {
+            const ScryptImpl impl = MinerScryptImpl();
+            const int nUsed = (int)std::min<uint64_t>(ScryptImplLanes(impl), 0x100000000ULL - nNext);
+            for (int l = 0; l < ScryptImplLanes(impl); l++)
+                WriteLE32(headers + 80 * l + 76, (uint32_t)(nNext + l));
+            scrypt_1024_1_1_256_nway(impl, headers, hashes, &vchScratchpad[0]);
+
+            for (int l = 0; l < nUsed; l++) {
+                uint256 hash;
+                memcpy(hash.begin(), hashes + 32 * l, 32);
+                if (hash.getdouble() > dTargetBound)
+                    continue;
+                if (!MinerScryptCheck(impl, headers + 80 * l, hashes + 32 * l))
+                    continue; // fast path wrong: not submitted, now on generic
+                const uint32_t nNonce = (uint32_t)(nNext + l);
                 LogPrintf("stratum: worker %d found share (job %s, nonce %08x, hash %s)\n",
                           nWorkerId, job.strJobId, nNonce, hash.GetHex().substr(0, 24));
                 SubmitShare(job.strJobId, strEn2, job.strNTime, strprintf("%08x", nNonce));
             }
-            if ((nNonce & 0xfff) == 0xfff) {
+
+            const uint64_t nPrev = nNext;
+            nNext += nUsed;
+            if ((nPrev >> 12) != (nNext >> 12)) {
+                // Every 4096 nonces: spot-check one fast hash against generic,
+                // count every lane hashed, and notice a new job.
+                MinerScryptCheck(impl, headers, hashes);
                 bool fStale;
                 {
                     LOCK(cs);
-                    nHashCounter += 0x1000;
+                    nHashCounter += nNext - nCounted;
                     fStale = (nJobsReceived != nJobSeq);
                 }
+                nCounted = nNext;
                 if (fStale)
                     break; // re-snapshot: new job (and a fresh extranonce2)
             }
-            if (nNonce == 0xffffffff)
-                break; // nonce space exhausted: roll extranonce2
         }
+        {
+            LOCK(cs);
+            nHashCounter += nNext - nCounted;
+        }
+        // nonce space exhausted (or stale/shutdown): the outer loop rolls extranonce2
     }
     LogPrintf("stratum: hash worker %d exiting\n", nWorkerId);
 }
