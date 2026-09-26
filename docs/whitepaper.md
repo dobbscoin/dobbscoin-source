@@ -232,18 +232,19 @@ will continue to be issued at the perpetual rate for as long as
 
 Dobbscoin is, by any measure, *old code*. The reference daemon
 (`dobbscoind`) descends from Bitcoin Core 0.10.x, which dates from
-2015. Berkeley DB 4.8 — the wallet-format dependency required to read
-historical wallet files — has been deprecated for years and does not
-build cleanly on modern toolchains without intervention. The recent
+2015. Its wallet format, Berkeley DB 4.8, had been deprecated for years
+and did not build cleanly on modern toolchains without intervention;
+v0.14.0 retired it (item 1 below). The recent
 modernization effort (visible in the repository's commit history at
 versions `0.10.5` through `0.10.808.999`) has focused on:
 
 1. **Build stabilization**: Deterministic Linux builds on Ubuntu 22 / 24
-   and Debian, including a documented BDB-4.8 installer that patches
-   the dependency for compatibility with modern GCC's stricter atomic
-   semantics.
+   and Debian, with CMake beside Autotools. As of v0.14.0 Berkeley DB is
+   gone: wallets are SQLite, and an old `wallet.dat` converts on first
+   start, with the original kept beside it.
 2. **Windows binary reproducibility**: Cross-build via the `depends/`
-   tree, with a stabilized qrencode-3.4.3 toolchain integration.
+   tree (OpenSSL 3.5.8, Boost 1.83, Qt 5.15 as of v0.14.0), shipped as a
+   zip and an installer.
 3. **Backward compatibility above all**: No protocol changes. No fork.
    The wire format, consensus rules, and on-disk storage formats remain
    bit-for-bit compatible with every prior Dobbscoin node ever shipped.
@@ -436,8 +437,8 @@ src/dobbscoind -daemon
 src/dobbscoin-cli getblockchaininfo
 ```
 
-Wallet files are encrypted on disk (Berkeley DB 4.8 format,
-historically) and may be encrypted with a passphrase. Do not lose
+Wallet files are SQLite since v0.14.0 (Berkeley DB 4.8 before that)
+and may be encrypted with a passphrase. Do not lose
 your passphrase. "Bob" does not retrieve forgotten passphrases.
 
 ## Appendix C: Resources
