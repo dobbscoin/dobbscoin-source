@@ -24,7 +24,8 @@ project(DobbscoinCore
   VERSION ${CLIENT_VERSION_MAJOR}.${CLIENT_VERSION_MINOR}.${CLIENT_VERSION_REVISION}.${CLIENT_VERSION_BUILD}
   DESCRIPTION "Dobbscoin client software"
   HOMEPAGE_URL "https://dobbscoin.info"
-  LANGUAGES C CXX
+  # ASM: src/crypto/scrypt-x64.S, the miner's SIMD scrypt (preprocessed by the C compiler).
+  LANGUAGES C CXX ASM
 )
 if(WIN32)
   # The version resources (dobbscoind-res.rc and friends), compiled by windres

@@ -39,6 +39,8 @@ else
 fi
 AC_PROG_CXX
 m4_ifdef([AC_PROG_OBJCXX],[AC_PROG_OBJCXX])
+dnl src/crypto/scrypt-x64.S (the miner's SIMD scrypt) is preprocessed assembly.
+AM_PROG_AS
 
 dnl By default, libtool for mingw refuses to link static libs into a dll for
 dnl fear of mixing pic/non-pic objects, and import/export complications. Since
