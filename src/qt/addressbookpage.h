@@ -62,6 +62,8 @@ private:
 private slots:
     /** Delete currently selected address entry */
     void on_deleteAddress_clicked();
+    /** Forget the selected receiving address's private key (issue #46) */
+    void onForgetKeyAction();
     /** Create a new address for receiving coins and / or add a new address book entry */
     void on_newAddress_clicked();
     /** Copy address of currently selected address entry to clipboard */

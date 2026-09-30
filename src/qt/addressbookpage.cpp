@@ -75,6 +75,7 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     QAction *copyLabelAction = new QAction(tr("Copy &Label"), this);
     QAction *editAction = new QAction(tr("&Edit"), this);
     deleteAction = new QAction(ui->deleteAddress->text(), this);
+    QAction *forgetKeyAction = new QAction(tr("&Forget private key..."), this);
 
     // Build context menu
     contextMenu = new QMenu();
@@ -84,12 +85,15 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     if(tab == SendingTab)
         contextMenu->addAction(deleteAction);
     contextMenu->addSeparator();
+    if(tab == ReceivingTab)
+        contextMenu->addAction(forgetKeyAction);
 
     // Connect signals for context menu actions
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(on_copyAddress_clicked()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(onCopyLabelAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
     connect(deleteAction, SIGNAL(triggered()), this, SLOT(on_deleteAddress_clicked()));
+    connect(forgetKeyAction, SIGNAL(triggered()), this, SLOT(onForgetKeyAction()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
@@ -204,6 +208,37 @@ void AddressBookPage::on_deleteAddress_clicked()
     {
         table->model()->removeRow(indexes.at(0).row());
     }
+}
+
+void AddressBookPage::onForgetKeyAction()
+{
+    if(!model || !ui->tableView->selectionModel())
+        return;
+    QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows(AddressTableModel::Address);
+    if(indexes.isEmpty())
+        return;
+    QString address = indexes.at(0).data(Qt::EditRole).toString();
+
+    QMessageBox::StandardButton confirm = QMessageBox::warning(this, tr("Forget private key"),
+        tr("Remove the private key for %1 from this wallet?").arg(address) + "<br><br>" +
+        tr("Coins at this address can no longer be spent from this wallet. "
+           "Backups made before now still contain the key; keep one if you may need these coins."),
+        QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+    if(confirm != QMessageBox::Yes)
+        return;
+
+    bool keepWatching = QMessageBox::question(this, tr("Forget private key"),
+        tr("Keep watching this address, so its balance and transactions stay visible?"),
+        QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes;
+
+    QString error;
+    if(!model->removePrivKey(address, keepWatching, error))
+    {
+        QMessageBox::critical(this, tr("Forget private key"), error);
+        return;
+    }
+    QMessageBox::information(this, tr("Forget private key"),
+        tr("The private key for %1 was removed from this wallet.").arg(address));
 }
 
 void AddressBookPage::selectionChanged()

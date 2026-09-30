@@ -248,11 +248,13 @@ public:
 
     /**
      * Forget the private key for keyID, in memory and on disk. Refuses the
-     * default key and any key still waiting in the keypool. With
-     * fKeepWatchOnly the address stays in the wallet as watch-only, so its
-     * balance and history remain visible. Returns false with strError set.
+     * default key and any key still waiting in the keypool, and (unless
+     * fForce) a key with no address-book entry, which the wallet treats as
+     * change (see IsChange). With fKeepWatchOnly the address stays in the
+     * wallet as watch-only, so its balance and history remain visible.
+     * Returns false with strError set.
      */
-    bool RemovePrivKey(const CKeyID& keyID, bool fKeepWatchOnly, std::string& strError);
+    bool RemovePrivKey(const CKeyID& keyID, bool fKeepWatchOnly, bool fForce, std::string& strError);
 
     //! Adds a watch-only address to the store, and saves it to disk.
     bool AddWatchOnly(const CScript &dest);

@@ -176,7 +176,7 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
     return CCryptoKeyStore::AddCScript(redeemScript);
 }
 
-bool CWallet::RemovePrivKey(const CKeyID& keyID, bool fKeepWatchOnly, std::string& strError)
+bool CWallet::RemovePrivKey(const CKeyID& keyID, bool fKeepWatchOnly, bool fForce, std::string& strError)
 {
     LOCK(cs_wallet);
     CPubKey vchPubKey;
@@ -186,6 +186,13 @@ bool CWallet::RemovePrivKey(const CKeyID& keyID, bool fKeepWatchOnly, std::strin
     }
     if (vchPubKey == vchDefaultKey) {
         strError = "Refusing to remove the wallet's default key";
+        return false;
+    }
+    // Ours but not in the address book is how IsChange() recognises change.
+    // Nobody picked a change address by hand, so its coins are easy to strand
+    // by accident; removing one takes an explicit force.
+    if (!fForce && !mapAddressBook.count(CTxDestination(keyID))) {
+        strError = "Key has no address-book entry, so the wallet treats it as a change address; pass force=true to remove it anyway";
         return false;
     }
     // A key still in the keypool is about to be handed out as a fresh receiving
