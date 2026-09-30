@@ -173,6 +173,7 @@ public:
     }
     bool GetKey(const CKeyID &address, CKey& keyOut) const;
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
+    bool RemoveKey(const CKeyID &address);
     void GetKeys(std::set<CKeyID> &setAddress) const
     {
         if (!IsCrypted())

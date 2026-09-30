@@ -33,6 +33,12 @@ bool CBasicKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
     return true;
 }
 
+bool CBasicKeyStore::RemoveKey(const CKeyID &address)
+{
+    LOCK(cs_KeyStore);
+    return mapKeys.erase(address) > 0; // CKey keeps its secret in secure memory, cleansed on destruction
+}
+
 bool CBasicKeyStore::AddCScript(const CScript& redeemScript)
 {
     if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)

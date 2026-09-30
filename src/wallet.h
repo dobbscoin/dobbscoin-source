@@ -246,6 +246,16 @@ public:
     //! Look up a destination data tuple in the store, return true if found false otherwise
     bool GetDestData(const CTxDestination &dest, const std::string &key, std::string *value) const;
 
+    /**
+     * Forget the private key for keyID, in memory and on disk. Refuses the
+     * default key and any key still waiting in the keypool, and (unless
+     * fForce) a key with no address-book entry, which the wallet treats as
+     * change (see IsChange). With fKeepWatchOnly the address stays in the
+     * wallet as watch-only, so its balance and history remain visible.
+     * Returns false with strError set.
+     */
+    bool RemovePrivKey(const CKeyID& keyID, bool fKeepWatchOnly, bool fForce, std::string& strError);
+
     //! Adds a watch-only address to the store, and saves it to disk.
     bool AddWatchOnly(const CScript &dest);
     bool RemoveWatchOnly(const CScript &dest);

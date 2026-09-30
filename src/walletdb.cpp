@@ -104,6 +104,19 @@ bool CWalletDB::WriteCryptedKey(const CPubKey& vchPubKey,
     return true;
 }
 
+bool CWalletDB::EraseKey(const CPubKey& vchPubKey)
+{
+    nWalletDBUpdated++;
+    // Erasing a record that is not there succeeds, so a plain wallet (key +
+    // keymeta) and an encrypted one (ckey + keymeta) both come out clean. The
+    // wallet runs with PRAGMA secure_delete = ON, so the freed pages are
+    // overwritten rather than left holding the old secret.
+    return Erase(std::make_pair(std::string("key"), vchPubKey)) &&
+           Erase(std::make_pair(std::string("wkey"), vchPubKey)) &&
+           Erase(std::make_pair(std::string("ckey"), vchPubKey)) &&
+           Erase(std::make_pair(std::string("keymeta"), vchPubKey));
+}
+
 bool CWalletDB::WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey)
 {
     nWalletDBUpdated++;

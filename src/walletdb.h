@@ -95,6 +95,9 @@ public:
 
     bool WriteCScript(const uint160& hash, const CScript& redeemScript);
 
+    //! Erase every record stored under this public key: key, wkey, ckey and keymeta.
+    bool EraseKey(const CPubKey& vchPubKey);
+
     bool WriteWatchOnly(const CScript &script);
     bool EraseWatchOnly(const CScript &script);
 

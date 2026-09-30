@@ -176,6 +176,56 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
     return CCryptoKeyStore::AddCScript(redeemScript);
 }
 
+bool CWallet::RemovePrivKey(const CKeyID& keyID, bool fKeepWatchOnly, bool fForce, std::string& strError)
+{
+    LOCK(cs_wallet);
+    CPubKey vchPubKey;
+    if (!HaveKey(keyID) || !GetPubKey(keyID, vchPubKey)) {
+        strError = "Private key for this address is not in the wallet";
+        return false;
+    }
+    if (vchPubKey == vchDefaultKey) {
+        strError = "Refusing to remove the wallet's default key";
+        return false;
+    }
+    // Ours but not in the address book is how IsChange() recognises change.
+    // Nobody picked a change address by hand, so its coins are easy to strand
+    // by accident; removing one takes an explicit force.
+    if (!fForce && !mapAddressBook.count(CTxDestination(keyID))) {
+        strError = "Key has no address-book entry, so the wallet treats it as a change address; pass force=true to remove it anyway";
+        return false;
+    }
+    // A key still in the keypool is about to be handed out as a fresh receiving
+    // or change address; removing it would make coins sent there unspendable.
+    if (fFileBacked) {
+        CWalletDB walletdb(strWalletFile);
+        BOOST_FOREACH(int64_t nIndex, setKeyPool) {
+            CKeyPool keypool;
+            if (walletdb.ReadPool(nIndex, keypool) && keypool.vchPubKey.GetID() == keyID) {
+                strError = "Key is still in the keypool (not yet handed out); refusing to remove it";
+                return false;
+            }
+        }
+    }
+
+    if (fFileBacked && !CWalletDB(strWalletFile).EraseKey(vchPubKey)) {
+        strError = "Failed to erase the key from the wallet file";
+        return false;
+    }
+    CCryptoKeyStore::RemoveKey(keyID);
+    mapKeyMetadata.erase(keyID);
+
+    if (fKeepWatchOnly) {
+        CScript script = GetScriptForDestination(keyID);
+        if (!HaveWatchOnly(script) && !AddWatchOnly(script)) {
+            strError = "Key removed, but adding the address as watch-only failed";
+            return false;
+        }
+    }
+    MarkDirty(); // cached credit/debit per transaction depends on which keys are ours
+    return true;
+}
+
 bool CWallet::AddWatchOnly(const CScript &dest)
 {
     if (!CCryptoKeyStore::AddWatchOnly(dest))

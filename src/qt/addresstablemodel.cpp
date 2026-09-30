@@ -432,6 +432,30 @@ QString AddressTableModel::labelForAddress(const QString &address) const
     return QString();
 }
 
+bool AddressTableModel::removePrivKey(const QString &address, bool keepWatchOnly, QString &error)
+{
+    CDobbscoinAddress addr(address.toStdString());
+    CKeyID keyID;
+    if (!addr.IsValid() || !addr.GetKeyID(keyID))
+    {
+        error = tr("This is not a key address.");
+        return false;
+    }
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+    if (!ctx.isValid())
+    {
+        error = tr("Wallet unlock was cancelled.");
+        return false;
+    }
+    std::string strError;
+    if (!wallet->RemovePrivKey(keyID, keepWatchOnly, false, strError))
+    {
+        error = QString::fromStdString(strError);
+        return false;
+    }
+    return true;
+}
+
 int AddressTableModel::lookupAddress(const QString &address) const
 {
     QModelIndexList lst = match(index(0, Address, QModelIndex()),
