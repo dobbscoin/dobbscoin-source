@@ -338,6 +338,47 @@ Value dumpprivkey(const Array& params, bool fHelp)
 }
 
 
+Value removeprivkey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "removeprivkey \"dobbscoinaddress\" ( keepwatchonly )\n"
+            "\nRemoves the private key for 'dobbscoinaddress' from the wallet, in memory and on disk.\n"
+            "Use it after importprivkey to take a key back out, so coins at that address are no\n"
+            "longer spendable from this wallet. Backups made before the removal still hold the key.\n"
+            "Refuses the wallet's default key and any key still in the keypool.\n"
+            "\nArguments:\n"
+            "1. \"dobbscoinaddress\"   (string, required) The address whose private key to remove\n"
+            "2. keepwatchonly        (boolean, optional, default=false) Keep the address as watch-only,\n"
+            "                        so its balance and transactions stay visible\n"
+            "\nExamples:\n"
+            + HelpExampleCli("removeprivkey", "\"myaddress\"")
+            + HelpExampleCli("removeprivkey", "\"myaddress\" true")
+            + HelpExampleRpc("removeprivkey", "\"myaddress\", true")
+        );
+
+    EnsureWalletIsUnlocked();
+
+    string strAddress = params[0].get_str();
+    CDobbscoinAddress address;
+    if (!address.SetString(strAddress))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dobbscoin address");
+    CKeyID keyID;
+    if (!address.GetKeyID(keyID))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
+
+    bool fKeepWatchOnly = false;
+    if (params.size() > 1)
+        fKeepWatchOnly = params[1].get_bool();
+
+    string strError;
+    if (!pwalletMain->RemovePrivKey(keyID, fKeepWatchOnly, strError))
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
+    return Value::null;
+}
+
+
 Value dumpwallet(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)

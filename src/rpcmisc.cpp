@@ -310,6 +310,47 @@ Value createmultisig(const Array& params, bool fHelp)
     return result;
 }
 
+Value signmessagewithprivkey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "signmessagewithprivkey \"privkey\" \"message\"\n"
+            "\nSign a message with a private key passed in the call. The key is not imported\n"
+            "and never touches the wallet, so a cold key can sign without becoming hot.\n"
+            "\nArguments:\n"
+            "1. \"privkey\"         (string, required) The private key to sign with (WIF)\n"
+            "2. \"message\"         (string, required) The message to sign\n"
+            "\nResult:\n"
+            "\"signature\"          (string) The signature of the message encoded in base 64\n"
+            "\nExamples:\n"
+            + HelpExampleCli("signmessagewithprivkey", "\"privkey\" \"my message\"") +
+            "\nVerify the signature\n"
+            + HelpExampleCli("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"signature\" \"my message\"") +
+            "\nAs json rpc\n"
+            + HelpExampleRpc("signmessagewithprivkey", "\"privkey\", \"my message\"")
+        );
+
+    string strPrivkey = params[0].get_str();
+    string strMessage = params[1].get_str();
+
+    CDobbscoinSecret vchSecret;
+    if (!vchSecret.SetString(strPrivkey))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+    CKey key = vchSecret.GetKey();
+    if (!key.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic;
+    ss << strMessage;
+
+    vector<unsigned char> vchSig;
+    if (!key.SignCompact(ss.GetHash(), vchSig))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
+
+    return EncodeBase64(&vchSig[0], vchSig.size());
+}
+
 Value verifymessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)

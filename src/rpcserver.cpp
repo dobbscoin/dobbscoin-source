@@ -309,6 +309,7 @@ static const CRPCCommand vRPCCommands[] =
     { "util",               "createmultisig",         &createmultisig,         true,      true ,      false },
     { "util",               "validateaddress",        &validateaddress,        true,      false,      false }, /* uses wallet if enabled */
     { "util",               "verifymessage",          &verifymessage,          true,      false,      false },
+    { "util",               "signmessagewithprivkey", &signmessagewithprivkey, true,      false,      false },
     { "util",               "estimatefee",            &estimatefee,            true,      true,       false },
     { "util",               "estimatepriority",       &estimatepriority,       true,      true,       false },
 
@@ -322,6 +323,7 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "addmultisigaddress",     &addmultisigaddress,     true,      false,      true },
     { "wallet",             "backupwallet",           &backupwallet,           true,      false,      true },
     { "wallet",             "dumpprivkey",            &dumpprivkey,            true,      false,      true },
+    { "wallet",             "removeprivkey",          &removeprivkey,          true,      false,      true },
     { "wallet",             "dumpwallet",             &dumpwallet,             true,      false,      true },
     { "wallet",             "encryptwallet",          &encryptwallet,          true,      false,      true },
     { "wallet",             "getaccountaddress",      &getaccountaddress,      true,      false,      true },

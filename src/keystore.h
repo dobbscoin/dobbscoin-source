@@ -96,6 +96,9 @@ public:
         }
         return false;
     }
+    //! Forget a private key (memory only; CWallet::RemovePrivKey also erases it from disk).
+    virtual bool RemoveKey(const CKeyID &address);
+
     virtual bool AddCScript(const CScript& redeemScript);
     virtual bool HaveCScript(const CScriptID &hash) const;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const;

@@ -310,6 +310,14 @@ bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const std::vector<
     return true;
 }
 
+bool CCryptoKeyStore::RemoveKey(const CKeyID &address)
+{
+    LOCK(cs_KeyStore);
+    if (!IsCrypted())
+        return CBasicKeyStore::RemoveKey(address);
+    return mapCryptedKeys.erase(address) > 0;
+}
+
 bool CCryptoKeyStore::GetKey(const CKeyID &address, CKey& keyOut) const
 {
     {

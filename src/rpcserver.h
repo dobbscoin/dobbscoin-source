@@ -146,6 +146,7 @@ extern json_spirit::Value getaddednodeinfo(const json_spirit::Array& params, boo
 extern json_spirit::Value getnettotals(const json_spirit::Array& params, bool fHelp);
 
 extern json_spirit::Value dumpprivkey(const json_spirit::Array& params, bool fHelp); // in rpcdump.cpp
+extern json_spirit::Value removeprivkey(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value importprivkey(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value importaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value dumpwallet(const json_spirit::Array& params, bool fHelp);
@@ -175,6 +176,7 @@ extern json_spirit::Value getaddressesbyaccount(const json_spirit::Array& params
 extern json_spirit::Value sendtoaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value signmessage(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value verifymessage(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value signmessagewithprivkey(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getreceivedbyaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getreceivedbyaccount(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getbalance(const json_spirit::Array& params, bool fHelp);
