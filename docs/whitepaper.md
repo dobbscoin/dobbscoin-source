@@ -289,12 +289,14 @@ a corresponding token on a chain that has actual DeFi rails.
 
 This means (BOB) holders may now:
 
-- Provide liquidity in Gnosis-native DEXes (current liquidity is on
-  Oku, with execution available via CoW Swap at
-  `https://swap.cow.fi/#/100/swap/xDAI/wBOB`).
+- Provide liquidity in Gnosis-native DEXes. Today all of it comes from
+  SubGenius.Finance (subgeniusfinance.eth): the wBOB/GNO, wBOB/WXDAI,
+  BILL/wBOB and wBOB/HONKLER pools. That liquidity is not locked, and the
+  1% pool fee on every trade goes to SubGenius.Finance. Anyone may add
+  more. Execution is also available via CoW Swap at
+  `https://swap.cow.fi/#/100/swap/xDAI/wBOB`.
 - Use (BOB) as collateral in Gnosis-native lending markets (when one
   emerges that recognizes the asset).
-- Participate in xDAI-denominated yield strategies without selling (BOB).
 
 The bridge's existence is a force multiplier on Slack: (BOB) no longer has
 to leave the SubGenius cosmology to participate in the broader DeFi
@@ -323,12 +325,13 @@ Anyone proposing to "add tokenomics" to Dobbscoin's *consensus layer*
 is, by definition, proposing to make Dobbscoin into a different coin.
 We're not interested. The chain is the chain.
 
-(There is, separately, a community-coordination DAO being chartered on
-Gnosis Chain — the CoSG-DAO — that holds a community treasury, funds
-ecosystem work, and is otherwise opinionated about Slack. That DAO
-sits *alongside* (BOB), funded by donations and opt-in revenue streams,
-and never touches the chain's consensus rules or supply schedule.
-Details in the wBOB Bridge whitepaper, §7.)
+(Separately, SubGenius.Finance keeps a treasury on Gnosis Chain,
+subgeniusfinance.eth. It funded every wBOB pool with its own money,
+unlocked and at risk, and it never touches the chain's consensus rules
+or supply schedule. The community DAO described in the wBOB Bridge
+whitepaper, §7, is not chartered yet. Replacing the treasury's at-risk
+stake with 4-year locked liquidity, paid for by NFT sales and other
+projects, is a plan, not built.)
 
 "Bob" approves.
 
