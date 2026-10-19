@@ -245,11 +245,16 @@ versions `0.10.5` through `0.10.808.999`) has focused on:
 2. **Windows binary reproducibility**: Cross-build via the `depends/`
    tree (OpenSSL 3.5.8, Boost 1.83, Qt 5.15 as of v0.14.0), shipped as a
    zip and an installer.
-3. **Backward compatibility above all**: No protocol changes. No fork.
-   The wire format, consensus rules, and on-disk storage formats remain
-   bit-for-bit compatible with every prior Dobbscoin node ever shipped.
-   A 2015-era `dobbscoind` and a 2026-era `dobbscoind` see the same
-   chain and validate identically.
+3. **Backward compatibility, until the forks**: Until v0.11.0, every
+   release kept the wire format and consensus rules compatible with every
+   earlier Dobbscoin node. Then the chain changed its rules on purpose, at
+   announced heights. Block 1,888,808 (LWMA-3 difficulty and 100-block
+   finality) and block 1,888,888 (emergency-difficulty recovery) are
+   behind us. Block 2,000,000 (AuxPoW merge-mining and
+   CHECKLOCKTIMEVERIFY) is next. A node that doesn't know those rules is
+   no longer on the chain, so run the current release (v0.14.0). Wallets
+   moved from Berkeley DB to SQLite in v0.14.0, and an old `wallet.dat`
+   converts on first start.
 
 The principle is simple: a coin's value is in part a function of how
 hard it is to break, and the easiest way to break a coin is to "improve"
