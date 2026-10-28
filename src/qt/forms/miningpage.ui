@@ -15,6 +15,59 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_mining">
    <item>
+    <layout class="QHBoxLayout" name="miningAutoStartRow">
+     <item>
+      <widget class="QLabel" name="miningAutoStartLabel">
+       <property name="text">
+        <string>When the wallet opens:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="miningAutoStart">
+       <property name="toolTip">
+        <string>Starts with the threads, pool and pay-to address set below. Solo waits until the wallet has caught up with the network. A gen= or stratum= line in dobbscoin.conf takes over from this.</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Don't start mining</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Start solo mining</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Start pool mining</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <spacer name="miningAutoStartSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Line" name="miningSep0">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="miningHeader">
      <property name="font">
       <font>

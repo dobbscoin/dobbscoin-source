@@ -10,13 +10,16 @@
 #include "walletmodel.h"
 
 #include "init.h"
+#include "main.h"
 #include "miner.h"
+#include "net.h"
 #include "stratum.h"
 #include "util.h"
 #include "utilstrencodings.h"
 #include "wallet.h"
 
 #include <QSettings>
+#include <QStandardItemModel>
 #include <QThread>
 #include <QTimer>
 
@@ -26,11 +29,24 @@
 // build, so it is always here.
 static const int kMiningPollMs = 2000;
 
+// "When the wallet opens" choices, in the order of the miningAutoStart combo box.
+enum { AUTOSTART_OFF = 0, AUTOSTART_SOLO = 1, AUTOSTART_POOL = 2 };
+static const char* const kAutoStartNames[] = { "off", "solo", "pool" };
+static const int kAutoStartPollMs = 5000;
+// How long a peer has to have been connected before a matching block height
+// means "caught up". Right after connecting, the best header we know of is
+// still our own tip until the peer's headers arrive, so tip == best header
+// says nothing for the first few seconds.
+static const int64_t kAutoStartPeerSettleSecs = 30;
+
 MiningPage::MiningPage(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::MiningPage),
     model(0),
-    pollTimer(0)
+    pollTimer(0),
+    autoStartTimer(0),
+    fAutoStartDone(false),
+    nPeersSince(0)
 {
     ui->setupUi(this);
 
@@ -57,6 +73,13 @@ MiningPage::MiningPage(QWidget *parent) :
             ui->miningThreads->setValue(qBound(1, nArgThreads, idealThreads));
             ui->miningThreads->blockSignals(false);
         }
+    }
+    else
+    {
+        QSettings settings;
+        ui->miningThreads->blockSignals(true);
+        ui->miningThreads->setValue(qBound(1, settings.value("soloMiningThreads", 1).toInt(), idealThreads));
+        ui->miningThreads->blockSignals(false);
     }
 
     // Pool mode: restore last-used settings; reflect a client already started
@@ -94,6 +117,24 @@ MiningPage::MiningPage(QWidget *parent) :
         }
     }
 
+    // When the wallet opens: restore the saved choice. Off unless someone
+    // picked otherwise -- a fresh install never starts using the CPU unasked.
+    {
+        QSettings settings;
+        QString strSaved = settings.value("miningAutoStart", "off").toString();
+        int nChoice = AUTOSTART_OFF;
+        for (int i = 0; i < 3; i++)
+            if (strSaved == kAutoStartNames[i]) nChoice = i;
+        updateAutoStartChoices();
+        ui->miningAutoStart->blockSignals(true);
+        ui->miningAutoStart->setCurrentIndex(nChoice);
+        ui->miningAutoStart->blockSignals(false);
+    }
+
+    autoStartTimer = new QTimer(this);
+    autoStartTimer->setInterval(kAutoStartPollMs);
+    connect(autoStartTimer, SIGNAL(timeout()), this, SLOT(autoStartSoloWhenCaughtUp()));
+
     updateMiningStatus();
     updatePoolMiningStatus();
 }
@@ -106,6 +147,8 @@ MiningPage::~MiningPage()
 void MiningPage::setModel(WalletModel *model)
 {
     this->model = model;
+    if (model)
+        autoStart();
 }
 
 void MiningPage::showEvent(QShowEvent *event)
@@ -131,6 +174,9 @@ void MiningPage::hideEvent(QHideEvent *event)
 
 void MiningPage::on_miningEnable_toggled(bool checked)
 {
+    // A hand on the checkbox overrides a solo start still waiting to catch up.
+    if (autoStartTimer)
+        autoStartTimer->stop();
     int nThreads = ui->miningThreads->value();
     // Same two lines setgenerate runs, so getgenerate/getmininginfo stay honest.
     mapArgs["-gen"] = (checked ? "1" : "0");
@@ -144,7 +190,9 @@ void MiningPage::on_miningThreads_valueChanged(int value)
 {
     // If we're currently mining, restart generation to pick up the thread-count
     // change. Otherwise the new value just sits in the spinner and takes effect
-    // on the next toggle-on.
+    // on the next toggle-on. Saved either way, for the next time the wallet
+    // opens and starts solo mining by itself.
+    QSettings().setValue("soloMiningThreads", value);
     if (ui->miningEnable->isChecked())
     {
         mapArgs["-genproclimit"] = itostr(value);
@@ -156,7 +204,10 @@ void MiningPage::updateMiningStatus()
 {
     if (!ui->miningEnable->isChecked())
     {
-        ui->miningStatus->setText(tr("Mining stopped."));
+        if (autoStartTimer && autoStartTimer->isActive())
+            ui->miningStatus->setText(tr("Mining starts once the wallet has caught up with the network…"));
+        else
+            ui->miningStatus->setText(tr("Mining stopped."));
         return;
     }
 
@@ -237,6 +288,7 @@ void MiningPage::on_poolMiningToggle_clicked(bool checked)
     settings.setValue("poolMiningEndpoint", strEndpoint);
     settings.setValue("poolMiningAddress", strAddress);
     settings.setValue("poolMiningThreads", ui->poolMiningThreads->value());
+    updateAutoStartChoices();
 
     ui->poolMiningToggle->setText(tr("Stop Pool Mining"));
     ui->poolMiningEndpoint->setEnabled(false);
@@ -282,4 +334,90 @@ void MiningPage::updatePoolMiningStatus()
         .arg(g_pStratumClient->GetDifficulty())
         .arg(g_pStratumClient->GetSharesAccepted())
         .arg(g_pStratumClient->GetSharesRejected()));
+}
+
+// ============================================================================
+// When the wallet opens (#47).
+// Starts one mode, with the settings the page already remembers. It never
+// stops anything: changing the choice only changes what happens next time.
+// ============================================================================
+
+void MiningPage::on_miningAutoStart_currentIndexChanged(int index)
+{
+    if (index < 0 || index > AUTOSTART_POOL)
+        return;
+    QSettings().setValue("miningAutoStart", kAutoStartNames[index]);
+}
+
+void MiningPage::updateAutoStartChoices()
+{
+    QStandardItemModel *choices = qobject_cast<QStandardItemModel*>(ui->miningAutoStart->model());
+    if (!choices || !choices->item(AUTOSTART_POOL))
+        return;
+    bool fHaveAddress = !QSettings().value("poolMiningAddress", "").toString().isEmpty();
+    choices->item(AUTOSTART_POOL)->setEnabled(fHaveAddress);
+    choices->item(AUTOSTART_POOL)->setToolTip(fHaveAddress ? QString() :
+        tr("Pool mine once with the form below first. That saves the pay-to address this uses."));
+}
+
+void MiningPage::autoStart()
+{
+    if (fAutoStartDone)
+        return;
+    fAutoStartDone = true;
+
+    // gen= or stratum= in dobbscoin.conf or on the command line is in charge;
+    // this choice never starts a second miner beside it.
+    if (mapArgs.count("-gen") || mapArgs.count("-stratum"))
+        return;
+
+    switch (ui->miningAutoStart->currentIndex())
+    {
+    case AUTOSTART_SOLO:
+        if (!ui->miningEnable->isChecked())
+        {
+            autoStartTimer->start();
+            autoStartSoloWhenCaughtUp();
+            updateMiningStatus();
+        }
+        break;
+    case AUTOSTART_POOL:
+        // Same path as pressing Start Pool Mining, so the same checks run and
+        // a bad saved pool or address shows up in the status line.
+        if (!ui->poolMiningToggle->isChecked())
+            ui->poolMiningToggle->click();
+        break;
+    }
+}
+
+void MiningPage::autoStartSoloWhenCaughtUp()
+{
+    // Not IsInitialBlockDownload(): on this chain it stays true whenever the
+    // newest block is more than a day old, and (BOB) can sit that long with
+    // nobody mining (see the note in miner.cpp). Caught up here means: a peer
+    // has been connected long enough to tell us its headers, and we have every
+    // block up to the best header we know of.
+    if (fImporting || fReindex)
+        return;
+    bool fHavePeers;
+    {
+        LOCK(cs_vNodes);
+        fHavePeers = !vNodes.empty();
+    }
+    if (!fHavePeers)
+    {
+        nPeersSince = 0;
+        return;
+    }
+    if (nPeersSince == 0)
+        nPeersSince = GetTime();
+    if (GetTime() - nPeersSince < kAutoStartPeerSettleSecs)
+        return;
+    {
+        LOCK(cs_main);
+        if (!chainActive.Tip() || !pindexBestHeader || chainActive.Height() < pindexBestHeader->nHeight)
+            return;
+    }
+    autoStartTimer->stop();
+    ui->miningEnable->setChecked(true);   // runs on_miningEnable_toggled
 }

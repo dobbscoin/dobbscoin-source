@@ -9,6 +9,8 @@
 
 #include <QWidget>
 
+#include <stdint.h>
+
 QT_BEGIN_NAMESPACE
 class QHideEvent;
 class QShowEvent;
@@ -49,10 +51,22 @@ private slots:
     void on_poolMiningToggle_clicked(bool checked);
     void updatePoolMiningStatus();
 
+    /** Start mining when the wallet opens (#47) */
+    void on_miningAutoStart_currentIndexChanged(int index);
+    void autoStartSoloWhenCaughtUp();
+
 private:
+    /** Pool is only offered once a pay-to address has been saved. */
+    void updateAutoStartChoices();
+    /** Runs once, from setModel: pool needs the model to check the address. */
+    void autoStart();
+
     Ui::MiningPage *ui;
     WalletModel *model;
     QTimer *pollTimer;
+    QTimer *autoStartTimer;
+    bool fAutoStartDone;
+    int64_t nPeersSince;
 };
 
 #endif // DOBBSCOIN_QT_MININGPAGE_H
