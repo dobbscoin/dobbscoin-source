@@ -238,7 +238,9 @@ void AddressBookPage::onForgetKeyAction()
         return;
     }
     QMessageBox::information(this, tr("Forget private key"),
-        tr("The private key for %1 was removed from this wallet.").arg(address));
+        tr("The private key for %1 was removed from this wallet.").arg(address) + "<br><br>" +
+        (keepWatching ? tr("The address stays in this list as watch-only.")
+                      : tr("The address and its label were removed from this list.")));
 }
 
 void AddressBookPage::selectionChanged()
