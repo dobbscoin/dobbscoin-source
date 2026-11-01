@@ -351,7 +351,8 @@ Value removeprivkey(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. \"dobbscoinaddress\"   (string, required) The address whose private key to remove\n"
             "2. keepwatchonly        (boolean, optional, default=false) Keep the address as watch-only,\n"
-            "                        so its balance and transactions stay visible\n"
+            "                        so its balance and transactions stay visible. Without it the\n"
+            "                        address's label (address-book entry) is deleted as well\n"
             "3. force                (boolean, optional, default=false) Also remove a change address's key\n"
             "\nExamples:\n"
             + HelpExampleCli("removeprivkey", "\"myaddress\"")

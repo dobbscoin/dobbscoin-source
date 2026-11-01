@@ -222,6 +222,15 @@ bool CWallet::RemovePrivKey(const CKeyID& keyID, bool fKeepWatchOnly, bool fForc
             return false;
         }
     }
+    if (HaveKey(keyID)) {
+        strError = "The key is still in the wallet after removing it";
+        return false;
+    }
+    // Without watch-only the address is no longer ours in any way. Drop its address-book entry
+    // too, or it lingers in Receiving addresses and turns up under Sending on the next start.
+    CTxDestination dest = keyID;
+    if (!fKeepWatchOnly && mapAddressBook.count(dest))
+        DelAddressBook(dest);
     MarkDirty(); // cached credit/debit per transaction depends on which keys are ours
     return true;
 }

@@ -12,8 +12,10 @@ imported can be taken back out.
  2. removeprivkey on a plain wallet: the coins become unspendable here,
     dumpprivkey fails, the key's records and its secret bytes are gone from
     wallet.dat, and all of that survives a restart. Removing it twice fails.
- 3. keepwatchonly=true: the balance stays visible as watch-only. A change
-    address (no address-book entry) is refused unless force=true.
+    The address's label (address-book entry) goes with the key.
+ 3. keepwatchonly=true: the balance stays visible as watch-only and the
+    label stays. A change address (no address-book entry) is refused unless
+    force=true.
  4. importprivkey brings a removed key (and its coins) back.
  5. Encrypted wallet: refused while locked, works once unlocked, persists.
 """
@@ -109,6 +111,7 @@ class RemovePrivKeyTest(DobbscoinTestFramework):
         pub_a = n1.validateaddress(a)["pubkey"]
         n1.removeprivkey(a)
         assert_equal(rpc_error_code(n1.dumpprivkey, a), -4)
+        assert a not in n1.getaddressesbyaccount("")         # its address-book entry went too
         assert not n1.validateaddress(a)["ismine"]
         assert_equal(float(n1.getbalance()), 0.0)
         self.restart(1)
@@ -126,6 +129,7 @@ class RemovePrivKeyTest(DobbscoinTestFramework):
         n1.removeprivkey(b, True)
         v = n1.validateaddress(b)
         assert not v["ismine"] and v["iswatchonly"]
+        assert b in n1.getaddressesbyaccount("")             # a watched address keeps its entry
         assert_equal(float(n1.getbalance()), 0.0)
         assert_equal(float(n1.getbalance("*", 1, True)), 5.0)
 
