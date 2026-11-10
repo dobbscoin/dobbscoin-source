@@ -7,6 +7,8 @@
 #include "miningpage.h"
 #include "ui_miningpage.h"
 
+#include "guiutil.h"
+
 #include "walletmodel.h"
 
 #include "init.h"
@@ -49,6 +51,16 @@ MiningPage::MiningPage(QWidget *parent) :
     nPeersSince(0)
 {
     ui->setupUi(this);
+
+    // This checkbox sits straight on the background tile, which is near-black
+    // in the dark theme. Fusion draws the box outline as the Window color
+    // darkened, so lift Window (and the box fill) for this widget only (#49).
+    if (GUIUtil::IsDarkTheme()) {
+        QPalette pal = ui->miningEnable->palette();
+        pal.setColor(QPalette::Window, QColor(0x8a, 0x8a, 0x8a));
+        pal.setColor(QPalette::Base, QColor(0x3a, 0x3a, 0x3a));
+        ui->miningEnable->setPalette(pal);
+    }
 
     int idealThreads = QThread::idealThreadCount();
     if (idealThreads < 1) idealThreads = 1;
