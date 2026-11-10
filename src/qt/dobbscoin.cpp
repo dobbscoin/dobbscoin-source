@@ -544,7 +544,7 @@ int main(int argc, char *argv[])
     QApplication::setOrganizationDomain(QAPP_ORG_DOMAIN);
     QApplication::setApplicationName(QAPP_APP_NAME_DEFAULT);
     GUIUtil::SubstituteFonts(GetLangTerritory());
-    qApp->setStyleSheet("QMainWindow { background-image: url(\":/images/bgtile\"); }");
+    GUIUtil::ApplyTheme(GUIUtil::GetThemeSetting());
     /// 4. Initialization of translations, so that intro dialog is in user's language
     // Now that QSettings are accessible, initialize translations
     QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
@@ -602,6 +602,8 @@ int main(int argc, char *argv[])
     QApplication::setApplicationName(networkStyle->getAppName());
     // Re-initialize translations after changing application name (language in network-specific settings can be different)
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
+    // Same for the theme
+    GUIUtil::ApplyTheme(GUIUtil::GetThemeSetting());
 
 #ifdef ENABLE_WALLET
     /// 8. URI IPC sending

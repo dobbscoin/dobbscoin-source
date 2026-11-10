@@ -260,7 +260,24 @@ RES_ICONS = \
   qt/res/icons/tx_mined.png \
   qt/res/icons/unit_bob.png \
   qt/res/icons/unit_mbob.png \
-  qt/res/icons/unit_ubob.png
+  qt/res/icons/unit_ubob.png \
+  qt/res/icons-dark/address-book.png \
+  qt/res/icons-dark/connect4_16.png \
+  qt/res/icons-dark/debugwindow.png \
+  qt/res/icons-dark/overview.png \
+  qt/res/icons-dark/receive.png \
+  qt/res/icons-dark/send.png \
+  qt/res/icons-dark/synced.png \
+  qt/res/icons-dark/transaction0.png \
+  qt/res/icons-dark/transaction2.png \
+  qt/res/icons-dark/transaction_conflicted.png \
+  qt/res/icons-dark/tx_inout.png \
+  qt/res/icons-dark/tx_input.png \
+  qt/res/icons-dark/tx_mined.png \
+  qt/res/icons-dark/tx_output.png \
+  qt/res/icons-dark/unit_bob.png \
+  qt/res/icons-dark/unit_mbob.png \
+  qt/res/icons-dark/unit_ubob.png
 
 DOBBSCOIN_QT_CPP = \
   qt/dobbscoinaddressvalidator.cpp \
@@ -322,7 +339,11 @@ RES_IMAGES = \
   qt/res/images/bgtile.png \
   qt/res/images/overviewLeftBottom.png \
   qt/res/images/overviewLeftTop.png \
-  qt/res/images/overviewRight.png
+  qt/res/images/overviewRight.png \
+  qt/res/images-dark/bgtile.png \
+  qt/res/images-dark/overviewLeftBottom.png \
+  qt/res/images-dark/overviewLeftTop.png \
+  qt/res/images-dark/overviewRight.png
 
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 

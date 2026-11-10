@@ -210,7 +210,7 @@ RPCConsole::RPCConsole(QWidget *parent) :
     GUIUtil::restoreWindowGeometry("nRPCConsoleWindow", this->size(), this);
 
 #ifndef Q_OS_MAC
-    ui->openDebugLogfileButton->setIcon(QIcon(":/icons/export"));
+    ui->openDebugLogfileButton->setIcon(GUIUtil::ThemedIcon(":/icons/export"));
 #endif
 
     // Install event filter for up and down arrow
@@ -348,17 +348,19 @@ void RPCConsole::clear()
         ui->messagesWidget->document()->addResource(
                     QTextDocument::ImageResource,
                     QUrl(ICON_MAPPING[i].url),
-                    QImage(ICON_MAPPING[i].source).scaled(ICON_SIZE, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+                    QImage(GUIUtil::ThemedResource(ICON_MAPPING[i].source)).scaled(ICON_SIZE, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     }
 
     // Set default style sheet
+    // Teal for commands; a lighter teal reads on the dark theme (#49)
+    const QString cmdColor = GUIUtil::IsDarkTheme() ? "#60c8c8" : "#006060";
     ui->messagesWidget->document()->setDefaultStyleSheet(
-                "table { }"
+                QString("table { }"
                 "td.time { color: #808080; padding-top: 3px; } "
                 "td.message { font-family: monospace; font-size: 12px; } " // Todo: Remove fixed font-size
-                "td.cmd-request { color: #006060; } "
+                "td.cmd-request { color: %1; } "
                 "td.cmd-error { color: red; } "
-                "b { color: #006060; } "
+                "b { color: %1; } ").arg(cmdColor)
                 );
 
     message(CMD_REPLY, (tr("Welcome to the Dobbscoin RPC console.") + "<br>" +

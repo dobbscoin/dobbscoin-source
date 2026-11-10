@@ -49,9 +49,14 @@
 #include <QDesktopWidget>
 #include <QDoubleValidator>
 #include <QFileDialog>
+#include <QFile>
 #include <QFont>
+#include <QIcon>
 #include <QLineEdit>
+#include <QPalette>
 #include <QSettings>
+#include <QStyle>
+#include <QStyleFactory>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
 
@@ -860,6 +865,135 @@ QString formatServicesStr(quint64 mask)
 QString formatPingTime(double dPingTime)
 {
     return dPingTime == 0 ? QObject::tr("N/A") : QString(QObject::tr("%1 ms")).arg(QString::number((int)(dPingTime * 1000), 10));
+}
+
+// ---- Color theme (#49) ------------------------------------------------------
+
+static bool fDarkTheme = false;
+static bool fThemeSaved = false;
+static QPalette nativePalette;
+static QString nativeStyleName;
+
+static bool PaletteIsDark(const QPalette& p)
+{
+    return p.color(QPalette::Window).lightness() < 128;
+}
+
+// Qt 5 has no API for the OS color scheme (QStyleHints::colorScheme is 6.5+).
+// macOS and most Linux desktops already hand Qt a dark palette when the OS is
+// dark, so that palette is the signal. Windows does not, so read the registry.
+static bool SystemPrefersDark()
+{
+#ifdef WIN32
+    QSettings personalize("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat);
+    if (personalize.contains("AppsUseLightTheme"))
+        return personalize.value("AppsUseLightTheme").toInt() == 0;
+#endif
+    return PaletteIsDark(nativePalette);
+}
+
+static QPalette DarkPalette()
+{
+    const QColor window(0x35, 0x35, 0x35), base(0x2a, 0x2a, 0x2a), text(0xe8, 0xe8, 0xe8), dim(0x80, 0x80, 0x80);
+    QPalette p;
+    p.setColor(QPalette::Window, window);
+    p.setColor(QPalette::WindowText, text);
+    p.setColor(QPalette::Base, base);
+    p.setColor(QPalette::AlternateBase, window);
+    p.setColor(QPalette::ToolTipBase, base);
+    p.setColor(QPalette::ToolTipText, text);
+    p.setColor(QPalette::Text, text);
+    p.setColor(QPalette::Button, window);
+    p.setColor(QPalette::ButtonText, text);
+    p.setColor(QPalette::BrightText, QColor(0xff, 0x60, 0x60));
+    p.setColor(QPalette::Light, QColor(0x50, 0x50, 0x50));
+    p.setColor(QPalette::Midlight, QColor(0x45, 0x45, 0x45));
+    p.setColor(QPalette::Mid, QColor(0x2f, 0x2f, 0x2f));
+    p.setColor(QPalette::Dark, QColor(0x23, 0x23, 0x23));
+    p.setColor(QPalette::Shadow, QColor(0x14, 0x14, 0x14));
+    p.setColor(QPalette::Link, QColor(0xf0, 0xa0, 0x50));
+    p.setColor(QPalette::LinkVisited, QColor(0xd0, 0x90, 0x60));
+    p.setColor(QPalette::Highlight, QColor(0xd9, 0x82, 0x2b));
+    p.setColor(QPalette::HighlightedText, Qt::black);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
+    p.setColor(QPalette::PlaceholderText, dim);
+#endif
+    p.setColor(QPalette::Disabled, QPalette::WindowText, dim);
+    p.setColor(QPalette::Disabled, QPalette::Text, dim);
+    p.setColor(QPalette::Disabled, QPalette::ButtonText, dim);
+    p.setColor(QPalette::Disabled, QPalette::Highlight, QColor(0x50, 0x50, 0x50));
+    p.setColor(QPalette::Disabled, QPalette::HighlightedText, dim);
+    return p;
+}
+
+QString GetThemeSetting()
+{
+    QSettings settings;
+    QString theme = settings.value("theme", "system").toString();
+    theme = QString::fromStdString(GetArg("-theme", theme.toStdString())).toLower();
+    if (theme != "light" && theme != "dark")
+        theme = "system";
+    return theme;
+}
+
+void ApplyTheme(const QString& theme)
+{
+    if (!fThemeSaved) {
+        // Remember what the platform gave us before we change anything, so
+        // "system" can be re-resolved and "light" can restore it.
+        nativePalette = QApplication::palette();
+        nativeStyleName = QApplication::style()->objectName();
+        fThemeSaved = true;
+    }
+
+    const bool nativeDark = PaletteIsDark(nativePalette);
+    const bool wantDark = theme == "dark" || (theme != "light" && SystemPrefersDark());
+    fDarkTheme = wantDark;
+
+    if (wantDark && nativeDark) {
+        // The platform is already dark (macOS, a dark KDE/GTK theme): keep its
+        // look and only switch the artwork.
+        QApplication::setStyle(QStyleFactory::create(nativeStyleName));
+        QApplication::setPalette(nativePalette);
+    } else if (wantDark) {
+        QApplication::setStyle(QStyleFactory::create("Fusion"));
+        QApplication::setPalette(DarkPalette());
+    } else if (nativeDark) {
+        // Light requested on a dark desktop: Fusion's own light palette.
+        QStyle* fusion = QStyleFactory::create("Fusion");
+        QApplication::setStyle(fusion);
+        QApplication::setPalette(fusion->standardPalette());
+    } else {
+        QApplication::setStyle(QStyleFactory::create(nativeStyleName));
+        QApplication::setPalette(nativePalette);
+    }
+
+    qApp->setStyleSheet(QString("QMainWindow { background-image: url(\"%1\"); }").arg(ThemedResource(":/images/bgtile")));
+}
+
+bool IsDarkTheme()
+{
+    return fDarkTheme;
+}
+
+QString ThemedResource(const QString& path)
+{
+    if (!fDarkTheme)
+        return path;
+    static const QString icons(":/icons/"), images(":/images/");
+    QString dark;
+    if (path.startsWith(icons))
+        dark = ":/icons-dark/" + path.mid(icons.size());
+    else if (path.startsWith(images))
+        dark = ":/images-dark/" + path.mid(images.size());
+    else
+        return path;
+    return QFile::exists(dark) ? dark : path;
+}
+
+QIcon ThemedIcon(const QString& path)
+{
+    return QIcon(ThemedResource(path));
 }
 
 } // namespace GUIUtil

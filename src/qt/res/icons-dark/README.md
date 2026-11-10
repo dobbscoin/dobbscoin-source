@@ -7,6 +7,6 @@ Only the line art needs a variant. The colored icons (clocks, locks, eyes, key, 
 How each was made (first pass, ImageMagick 6):
 
 - **Inverted** (silhouettes, `overviewLeftTop`, `bgtile`): `convert in.png -alpha on -channel RGB -negate -evaluate multiply 0.91 +channel out.png`. Black becomes `#e8e8e8`, not pure white.
-- **Halo** (`tx_input`, `unit_bob`, `unit_mbob`, `unit_ubob`, `dobbscoin_testnet`, `overviewRight`, `overviewLeftBottom`): the original art over a `#d8d8d8` outline from the alpha dilated by 1px (2px at 128px and wider). Inverting these turned Dobbs into a photo negative.
+- **Halo** (`tx_input`, `unit_bob`, `unit_mbob`, `unit_ubob`, `overviewRight`, `overviewLeftBottom`): the original art over a `#d8d8d8` outline from the alpha dilated by 1px (2px at 128px and wider). Inverting these turned Dobbs into a photo negative.
 
-Not wired into `dobbscoin.qrc` yet. That lands with the theme-switch code.
+Registered in `dobbscoin.qrc` under `/icons-dark/` and `/images-dark/` with the same aliases as the originals. `GUIUtil::ThemedResource()` and `ThemedIcon()` pick them up.

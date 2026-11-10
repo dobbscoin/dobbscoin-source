@@ -21,6 +21,9 @@ SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // Artwork set in the .ui file has a dark-theme variant (#49)
+    ui->addressBookButton->setIcon(GUIUtil::ThemedIcon(":/icons/address-book"));
+
     setCurrentWidget(ui->SendCoins);
 
 #ifdef Q_OS_MAC

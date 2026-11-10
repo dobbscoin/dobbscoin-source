@@ -121,6 +121,11 @@ OverviewPage::OverviewPage(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // Artwork set in the .ui file has a dark-theme variant (#49)
+    ui->label_6->setPixmap(QPixmap(GUIUtil::ThemedResource(":/images/overviewLeftTop")));
+    ui->label_7->setPixmap(QPixmap(GUIUtil::ThemedResource(":/images/overviewLeftBottom")));
+    ui->label_8->setPixmap(QPixmap(GUIUtil::ThemedResource(":/images/overviewRight")));
+
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);
     ui->listTransactions->setIconSize(QSize(DECORATION_SIZE, DECORATION_SIZE));

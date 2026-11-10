@@ -56,6 +56,31 @@
         <file alias="overviewLeftBottom">res/images/overviewLeftBottom.png</file>
         <file alias="overviewRight">res/images/overviewRight.png</file>
     </qresource>
+    <qresource prefix="/icons-dark">
+        <file alias="send">res/icons-dark/send.png</file>
+        <file alias="receiving_addresses">res/icons-dark/receive.png</file>
+        <file alias="address-book">res/icons-dark/address-book.png</file>
+        <file alias="connect_4">res/icons-dark/connect4_16.png</file>
+        <file alias="debugwindow">res/icons-dark/debugwindow.png</file>
+        <file alias="overview">res/icons-dark/overview.png</file>
+        <file alias="synced">res/icons-dark/synced.png</file>
+        <file alias="transaction_0">res/icons-dark/transaction0.png</file>
+        <file alias="transaction_confirmed">res/icons-dark/transaction2.png</file>
+        <file alias="transaction_conflicted">res/icons-dark/transaction_conflicted.png</file>
+        <file alias="tx_inout">res/icons-dark/tx_inout.png</file>
+        <file alias="tx_input">res/icons-dark/tx_input.png</file>
+        <file alias="tx_mined">res/icons-dark/tx_mined.png</file>
+        <file alias="tx_output">res/icons-dark/tx_output.png</file>
+        <file alias="unit_bob">res/icons-dark/unit_bob.png</file>
+        <file alias="unit_mbob">res/icons-dark/unit_mbob.png</file>
+        <file alias="unit_ubob">res/icons-dark/unit_ubob.png</file>
+    </qresource>
+    <qresource prefix="/images-dark">
+        <file alias="bgtile">res/images-dark/bgtile.png</file>
+        <file alias="overviewLeftTop">res/images-dark/overviewLeftTop.png</file>
+        <file alias="overviewLeftBottom">res/images-dark/overviewLeftBottom.png</file>
+        <file alias="overviewRight">res/images-dark/overviewRight.png</file>
+    </qresource>
     <qresource prefix="/movies">
         <file alias="spinner-000">res/movies/spinner-000.png</file>
         <file alias="spinner-001">res/movies/spinner-001.png</file>

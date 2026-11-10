@@ -37,6 +37,7 @@ public:
         DisplayUnit,            // DobbscoinUnits::Unit
         ThirdPartyTxUrls,       // QString
         Language,               // QString
+        Theme,                  // QString: system, light, dark
         CoinControlFeatures,    // bool
         ThreadsScriptVerif,     // int
         DatabaseCache,          // int
