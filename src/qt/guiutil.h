@@ -24,6 +24,7 @@ QT_BEGIN_NAMESPACE
 class QAbstractItemView;
 class QDateTime;
 class QFont;
+class QIcon;
 class QLineEdit;
 class QUrl;
 class QWidget;
@@ -108,6 +109,16 @@ namespace GUIUtil
 
     // Replace invalid default fonts with known good ones
     void SubstituteFonts(const QString& language);
+
+    /** Color theme (#49). The setting is "system", "light" or "dark";
+      anything else is treated as "system". */
+    QString GetThemeSetting();          // QSettings "theme", overridden by -theme
+    void ApplyTheme(const QString& theme);
+    bool IsDarkTheme();
+    /** Dark variant of a :/icons/ or :/images/ resource when the dark theme is
+      active and a variant exists (:/icons-dark/, :/images-dark/), else the path unchanged. */
+    QString ThemedResource(const QString& path);
+    QIcon ThemedIcon(const QString& path);
 
     /** Qt event filter that intercepts ToolTipChange events, and replaces the tooltip with a rich text
       representation if needed. This assures that Qt can word-wrap long tooltip messages.

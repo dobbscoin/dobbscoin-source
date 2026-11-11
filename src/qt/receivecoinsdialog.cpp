@@ -28,6 +28,9 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // Artwork set in the .ui file has a dark-theme variant (#49)
+    ui->receiveButton->setIcon(GUIUtil::ThemedIcon(":/icons/receiving_addresses"));
+
 #ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
     ui->clearButton->setIcon(QIcon());
     ui->receiveButton->setIcon(QIcon());

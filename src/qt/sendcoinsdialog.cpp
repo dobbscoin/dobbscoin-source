@@ -34,6 +34,9 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // Artwork set in the .ui file has a dark-theme variant (#49)
+    ui->sendButton->setIcon(GUIUtil::ThemedIcon(":/icons/send"));
+
 #ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
     ui->addButton->setIcon(QIcon());
     ui->clearButton->setIcon(QIcon());

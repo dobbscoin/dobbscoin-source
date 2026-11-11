@@ -25,6 +25,11 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // Artwork set in the .ui file has a dark-theme variant (#49)
+    ui->addressBookButton_SM->setIcon(GUIUtil::ThemedIcon(":/icons/address-book"));
+    ui->addressBookButton_VM->setIcon(GUIUtil::ThemedIcon(":/icons/address-book"));
+    ui->verifyMessageButton_VM->setIcon(GUIUtil::ThemedIcon(":/icons/transaction_0"));
+
 #if QT_VERSION >= 0x040700
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
 #endif
