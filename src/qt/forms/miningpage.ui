@@ -83,7 +83,7 @@
    <item>
     <widget class="QLabel" name="miningHelp">
      <property name="text">
-      <string>&quot;Bob&quot; does not need your CPU. He notices that you offered it. The whole (BOB) network is currently a few hundred hashes a second, so one core is genuinely enough to find blocks — this is the rare stretch where a laptop competes with the Conspiracy. Slack accrues to whoever bothers to show up.</string>
+      <string>&quot;Bob&quot; does not need your CPU. He notices that you offered it. Solo, your wallet works alone and keeps the whole 1.5 (BOB) of any block it finds. On one computer that can be a long wait. Slack accrues to whoever bothers to show up, eventually.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -179,7 +179,7 @@
    <item>
     <widget class="QLabel" name="poolMiningHelp">
      <property name="text">
-      <string>A pool folds many small contributions into one, tallies them as shares, and pays out to the address you name. Fair warning: the live (BOB) pool port is sized for ASICs, so a CPU will connect, work honestly, and never land a share. Solo above is the one that pays you today.</string>
+      <string>A pool folds many small contributions into one, tallies them as shares, and pays out to the address you name. The box is already set to the pool's low-difficulty port, so a CPU lands shares within minutes and gets paid in small amounts as the pool finds blocks. This is the one that pays a laptop.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
