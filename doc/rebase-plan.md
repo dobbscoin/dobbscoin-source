@@ -71,3 +71,29 @@ modern wallet/RPC/p2p. We re-apply (BOB)'s identity + **full historical consensu
 - The 2M CLTV+AuxPoW fork lands ~Jan 2027 regardless — the rebased node must honor it identically.
 - Months-long effort. This is chain infrastructure, not a feature branch.
 - Downstream: SegWit+CSV unblock the native XMR↔(BOB) atomic-swap DEX (see the Haveno/DEX plan).
+
+## Appendix: verified consensus constants (extracted from source 2026-11-14)
+
+**Reward (`GetBlockValue`, main.cpp:1281, mainnet):**
+- Base 50 COIN; `nSubsidy >>= nHeight/210000` (halving) applies only while `nHeight <= 951752`.
+- Explicit 10-COIN steps at height 68425 and >=69791.
+- **Height >= 951753: hardset 1.5 COIN forever** (+ failsafe to 1.5 by 10,500,000). Current tip (1.95M) reward = **1.5 BOB**. Confirms the "1.5 forever" memory.
+
+**Block spacing / retarget by height (pow.cpp `GetNextWorkRequired` DiffMode switch, mainnet):**
+| Height range | DiffMode | Algo | Target spacing |
+|---|---|---|---|
+| [0, 13579) | 1 | V1 (Bitcoin-style) | 600s (10 min) |
+| [13579, 31597) | 2 | KimotoGravityWell | 600s |
+| [31597, 68425) | 3 | DigiShield ("dobbshield") V3 | 600s |
+| [68425, 1888808) | 4 | DigiShield V4 | **120s (2 min)** |
+| [1888808, ∞) | 5 | **LWMA-3** (N=60, T=120s) + max-reorg | 120s |
+
+So (BOB) is 10-min blocks until 68425, **2-min since**. All 5 regimes must be reproduced by height for a from-genesis sync to match.
+
+**PoW:** scrypt **N=1024, r=1, p=1** (`scrypt_1024_1_1_256`) — identical to Litecoin/Dogecoin; Dogecoin Core provides it natively.
+
+**AuxPoW:** `AUXPOW_CHAIN_ID = 0x00B0` (176, "B0"=BOB); Namecoin/Doge-style merged mining (`CAuxPow::check`); **activates at height 2,000,000** (same block as CLTV). Dogecoin Core's AuxPoW is the same construction — set chain-id 0x00B0 + activation height.
+
+**Checkpoints (mainnet, 13):** 2016, 4032, 8064, 12096, 13422, 14496, 15809, 15882, 30800, 66138, 68900, 318371, **1848000** (`0xf4e2e967…3615`). (Height-0 rows in chainparams are testnet/regtest.)
+
+**Fork heights (mainnet):** KGW 13579 · DigiShield 31597 · 2-min/V4 68425 · LWMA-3 1,888,808 (active) · CLTV 2,000,000 · AuxPoW 2,000,000.
