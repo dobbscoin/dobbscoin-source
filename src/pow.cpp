@@ -98,6 +98,11 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
 {
+    // (BOB)/Dobbscoin genesis is PoW-exempt, carried from dobbscoin-source pow.cpp
+    // (HASHGENESISBLOCKPOW). Its genesis header does not satisfy the target; (BOB)
+    // bypasses the check for exactly this one scrypt pow-hash.
+    if (hash == uint256S("0xb83bb8028229439a4e645a56d48ee31b884efdb0e395c8538a10a462166563f3"))
+        return true;
     bool fNegative;
     bool fOverflow;
     arith_uint256 bnTarget;
