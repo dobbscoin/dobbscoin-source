@@ -11,10 +11,60 @@
 #include <primitives/block.h>
 #include <uint256.h>
 
+static unsigned int BobGetNextWorkRequired_V1(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params)
+{
+    // (BOB) V1 retarget: original Bitcoin-style, 2016-block interval, 14-day timespan.
+    // Ported from dobbscoin-source pow.cpp GetNextWorkRequired_V1.
+    // VALIDATED 2026-11-14 against real (BOB) retargets at heights 2016/4032/6048/8064/10080/12096 (6/6 exact).
+    const arith_uint256 powLimit = UintToArith256(params.powLimit);
+    const unsigned int nProofOfWorkLimit = powLimit.GetCompact();
+    const int64_t nTargetTimespan = 14 * 24 * 60 * 60; // 1209600
+    const int64_t nTargetSpacing  = 10 * 60;           // 600
+    const int64_t nInterval       = nTargetTimespan / nTargetSpacing; // 2016
+
+    if (pindexLast == nullptr) return nProofOfWorkLimit;
+
+    if ((pindexLast->nHeight + 1) % nInterval != 0) {
+        if (params.fPowAllowMinDifficultyBlocks) {
+            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + nTargetSpacing * 2)
+                return nProofOfWorkLimit;
+            const CBlockIndex* pindex = pindexLast;
+            while (pindex->pprev && pindex->nHeight % nInterval != 0 && pindex->nBits == nProofOfWorkLimit)
+                pindex = pindex->pprev;
+            return pindex->nBits;
+        }
+        return pindexLast->nBits;
+    }
+
+    // Go back nInterval-1 blocks (the classic Bitcoin off-by-one, as (BOB) V1 does).
+    const CBlockIndex* pindexFirst = pindexLast;
+    for (int i = 0; pindexFirst && i < nInterval - 1; i++)
+        pindexFirst = pindexFirst->pprev;
+    assert(pindexFirst);
+
+    int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
+    if (nActualTimespan < nTargetTimespan / 4) nActualTimespan = nTargetTimespan / 4;
+    if (nActualTimespan > nTargetTimespan * 4) nActualTimespan = nTargetTimespan * 4;
+
+    arith_uint256 bnNew;
+    bnNew.SetCompact(pindexLast->nBits);
+    bnNew *= (uint32_t)nActualTimespan;                 // wraps mod 2^256 (matches validated math)
+    bnNew /= arith_uint256((uint64_t)nTargetTimespan);
+    if (bnNew > powLimit) bnNew = powLimit;
+    return bnNew.GetCompact();
+}
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
+
+    // --- (BOB) retarget dispatcher ---
+    // V1 ported + validated against real history (heights < 13579). KGW/DigiShield/LWMA3
+    // for heights >= 13579 are NOT yet ported (see doc/retarget-port-spec.md); the stock
+    // Dogecoin retarget below stands in as a PLACEHOLDER for those heights only.
+    if (!params.fPowNoRetargeting && (pindexLast->nHeight + 1) < 13579)
+        return BobGetNextWorkRequired_V1(pindexLast, pblock, params);
 
     // Dogecoin: Special rules for minimum difficulty blocks with Digishield
     if (AllowDigishieldMinDifficultyForBlock(pindexLast, pblock, params))
