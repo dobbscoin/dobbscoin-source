@@ -97,3 +97,23 @@ So (BOB) is 10-min blocks until 68425, **2-min since**. All 5 regimes must be re
 **Checkpoints (mainnet, 13):** 2016, 4032, 8064, 12096, 13422, 14496, 15809, 15882, 30800, 66138, 68900, 318371, **1848000** (`0xf4e2e967…3615`). (Height-0 rows in chainparams are testnet/regtest.)
 
 **Fork heights (mainnet):** KGW 13579 · DigiShield 31597 · 2-min/V4 68425 · LWMA-3 1,888,808 (active) · CLTV 2,000,000 · AuxPoW 2,000,000.
+
+## Base CONFIRMED + build blocker (2026-11-14, autonomous prep)
+**Pinned base: Dogecoin Core `v1.14.9`.** Cloned to chaos `~/bob-rebase/dogecoin`. Feature-check
+against the tree confirms it ships what the rebase needs:
+`SCRIPT_VERIFY_WITNESS` ✓, `DEPLOYMENT_SEGWIT` ✓, `DEPLOYMENT_CSV` ✓, versionbits/BIP9 ✓,
+`auxpow.cpp` ✓, `scrypt_1024_1_1` ✓, `CTxWitness` ✓. (`bech32.cpp` ABSENT — SegWit still usable
+via raw P2WSH, which the atomic swap uses; native bech32 addresses are a later nicety.)
+
+🧱 **BUILD BLOCKER (btcbob decision needed):** Doge Core 1.14.9's `depends` pins **Boost 1.63.0**,
+whose Boost.Build (`b2`) bootstrap FAILS to compile on chaos's modern GCC (`fileunix.c` implicit
+declarations → errors). Chaos has **system Boost 1.83** available. The build-strategy options are a
+judgment call:
+- **A.** Patch the old Boost 1.63 bootstrap to compile on modern GCC (fiddly, contained).
+- **B.** Build against system libs (Boost 1.83 + libevent/openssl/BerkeleyDB 4.8 for the wallet) and
+  skip `depends` — likely needs source patches (Boost 1.63→1.83 API drift) **and** `sudo apt`
+  dev packages (privileged → a stop-point).
+- **C.** Reconsider the base: use a maintained, modern Doge-derived fork (if one tracks a newer Core)
+  instead of 1.14.9, to get a buildable modern toolchain out of the box.
+Recommendation: try **A** first (smallest, no sudo, keeps the pinned base); fall back to **B**.
+Everything else (the consensus-delta spec) is ready; this build toolchain choice gates stage 1.
