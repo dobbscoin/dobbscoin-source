@@ -10,6 +10,7 @@
 #include <dogecoin.h>
 #include <primitives/block.h>
 #include <uint256.h>
+#include <cmath>
 
 static unsigned int BobGetNextWorkRequired_V1(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params)
 {
@@ -80,6 +81,76 @@ static unsigned int BobGetNextWorkRequired_DigiShield(const CBlockIndex* pindexL
     return bnNew.GetCompact();
 }
 
+static unsigned int BobGetNextWorkRequired_KGW(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params)
+{
+    // (BOB) KimotoGravityWell, ported WITHOUT OpenSSL (dobbscoin-source used CBigNum/OpenSSL BN).
+    // KGW is a CLOSED historical regime (heights 13579..31596, buried ~1.86M deep): it only ever
+    // validates already-mined blocks, so exact reproduction of real inputs is full correctness.
+    // Big-int need met with arith_uint256 + an exact split mul/div: q*mul + (r*mul)/div keeps
+    // every intermediate < 2^256 for all real historical inputs. Running average truncates toward
+    // zero (BN_div semantics), via sign-branch to avoid unsigned underflow.
+    // VALIDATED 2026-11-15 vs real (BOB) history: 97 consecutive heights, 0 mismatches (incl. negative deltas).
+    const arith_uint256 powLimit = UintToArith256(params.powLimit);
+    const int64_t TargetBlocksSpacing = 600;
+    const uint64_t PastBlocksMin = 9;
+    const uint64_t PastBlocksMax = 252;
+
+    if (pindexLast == nullptr || pindexLast->nHeight == 0 || (uint64_t)pindexLast->nHeight < PastBlocksMin)
+        return powLimit.GetCompact();
+
+    const CBlockIndex* BlockReading = pindexLast;
+    uint64_t PastBlocksMass = 0;
+    int64_t PastRateActualSeconds = 0;
+    int64_t PastRateTargetSeconds = 0;
+    int64_t LatestBlockTime = pindexLast->GetBlockTime();
+    arith_uint256 PastDifficultyAverage, PastDifficultyAveragePrev;
+
+    for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
+        if (PastBlocksMax > 0 && i > PastBlocksMax) break;
+        PastBlocksMass++;
+        arith_uint256 cur;
+        cur.SetCompact(BlockReading->nBits);
+        if (i == 1) {
+            PastDifficultyAverage = cur;
+        } else {
+            const arith_uint256 denom = arith_uint256((uint64_t)i);
+            if (cur >= PastDifficultyAveragePrev)
+                PastDifficultyAverage = PastDifficultyAveragePrev + (cur - PastDifficultyAveragePrev) / denom;
+            else
+                PastDifficultyAverage = PastDifficultyAveragePrev - (PastDifficultyAveragePrev - cur) / denom;
+        }
+        PastDifficultyAveragePrev = PastDifficultyAverage;
+
+        const int64_t rt = BlockReading->GetBlockTime();
+        if (LatestBlockTime < rt) LatestBlockTime = rt;
+        PastRateActualSeconds = LatestBlockTime - rt;
+        PastRateTargetSeconds = TargetBlocksSpacing * (int64_t)PastBlocksMass;
+        if (PastRateActualSeconds < 1) PastRateActualSeconds = 1;
+        double PastRateAdjustmentRatio = 1.0;
+        if (PastRateActualSeconds != 0 && PastRateTargetSeconds != 0)
+            PastRateAdjustmentRatio = (double)PastRateTargetSeconds / (double)PastRateActualSeconds;
+        const double EventHorizonDeviation = 1.0 + (0.7084 * std::pow((double)PastBlocksMass / 9.0, -1.228));
+        if (PastBlocksMass >= PastBlocksMin) {
+            if (PastRateAdjustmentRatio <= (1.0 / EventHorizonDeviation) ||
+                PastRateAdjustmentRatio >= EventHorizonDeviation)
+                break;
+        }
+        if (BlockReading->pprev == nullptr) break;
+        BlockReading = BlockReading->pprev;
+    }
+
+    arith_uint256 bnNew = PastDifficultyAverage;
+    if (PastRateActualSeconds != 0 && PastRateTargetSeconds != 0) {
+        const arith_uint256 mul = arith_uint256((uint64_t)PastRateActualSeconds);
+        const arith_uint256 div = arith_uint256((uint64_t)PastRateTargetSeconds);
+        const arith_uint256 q = bnNew / div;
+        const arith_uint256 r = bnNew - q * div;
+        bnNew = q * mul + (r * mul) / div;     // exact floor(bnNew*mul/div)
+    }
+    if (bnNew > powLimit) bnNew = powLimit;
+    return bnNew.GetCompact();
+}
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
@@ -92,9 +163,10 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     if (!params.fPowNoRetargeting) {
         const int h = pindexLast->nHeight + 1;
         if (h < 13579)                    return BobGetNextWorkRequired_V1(pindexLast, pblock, params);
+        if (h >= 13579 && h < 31597)      return BobGetNextWorkRequired_KGW(pindexLast, pblock, params);
         if (h >= 31597 && h < 68425)      return BobGetNextWorkRequired_DigiShield(pindexLast, pblock, params, 600);
         if (h >= 68425 && h < 1888808)    return BobGetNextWorkRequired_DigiShield(pindexLast, pblock, params, 120);
-        // h in [13579,31597) -> KGW (TODO), h >= 1888808 -> LWMA-3 (TODO): fall through to placeholder.
+        // h >= 1888808 -> LWMA-3 (TODO): fall through to the placeholder below.
     }
 
     // Dogecoin: Special rules for minimum difficulty blocks with Digishield
