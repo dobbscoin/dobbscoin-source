@@ -23,7 +23,7 @@ import copy
 import hashlib
 from io import BytesIO
 import math
-import ltc_scrypt
+import hashlib  # BOB: ltc_scrypt C-module replaced by stdlib hashlib.scrypt (LTC/(BOB) params N=1024,r=1,p=1)
 import random
 import socket
 import struct
@@ -724,7 +724,7 @@ class CBlockHeader:
             r += struct.pack("<I", self.nNonce)
             self.sha256 = uint256_from_str(hash256(r))
             self.hash = encode(hash256(r)[::-1], 'hex_codec').decode('ascii')
-            self.scrypt256 = uint256_from_str(ltc_scrypt.getPoWHash(r))
+            self.scrypt256 = uint256_from_str(hashlib.scrypt(r, salt=r, n=1024, r=1, p=1, maxmem=2097152, dklen=32))
 
     def rehash(self):
         self.sha256 = None
