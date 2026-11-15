@@ -151,6 +151,53 @@ static unsigned int BobGetNextWorkRequired_KGW(const CBlockIndex* pindexLast, co
     return bnNew.GetCompact();
 }
 
+static unsigned int BobGetNextWorkRequired_LWMA3(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params)
+{
+    // (BOB) LWMA-3 (Zawy), the LIVE retarget regime (heights >= 1888808): per-block linearly
+    // weighted moving average. Ported from dobbscoin-source GetNextWorkRequired_LWMA3.
+    // Plain arith_uint256 (no bignum): target/(N*k) keeps terms small and sumTarget*weightedTime
+    // stays < 2^256 for real inputs (scalars fit uint32). Unlike the closed regimes this one also
+    // computes FUTURE blocks, so validated near the live tip. VALIDATED 2026-11-15 vs real (BOB):
+    // 40 recent heights + the bootstrap->LWMA3 fork boundary (1888867/68/69), all exact.
+    enum { N = 60 };
+    const int64_t T = 120;
+    const int64_t k = (int64_t(N) * (N + 1) * T) / 2;   // 219600
+    const int64_t NK = int64_t(N) * k;                  // 13,176,000
+    const int FORK = 1888808;                           // HARDFORK_LWMA3_MAIN
+    const arith_uint256 powLimit = UintToArith256(params.powLimit);
+
+    if (pindexLast == nullptr) return powLimit.GetCompact();
+
+    // Bootstrap: for the first N blocks past the fork, inherit the previous bits.
+    if (pindexLast->nHeight + 1 < FORK + N)
+        return pindexLast->nBits;
+
+    // Walk back N+1 indices: blocks[N] = pindexLast, blocks[0] = pindexLast - N.
+    const CBlockIndex* blocks[N + 1];
+    blocks[N] = pindexLast;
+    for (int i = N - 1; i >= 0; --i)
+        blocks[i] = blocks[i + 1]->pprev;
+
+    arith_uint256 sumTarget;
+    int64_t weightedTime = 0;
+    int64_t previousTime = blocks[0]->GetBlockTime();
+    for (int64_t i = 1; i <= N; ++i) {
+        int64_t thisTime = blocks[i]->GetBlockTime();
+        int64_t solvetime = thisTime - previousTime;
+        if (solvetime >  6 * T) solvetime =  6 * T;
+        if (solvetime < -6 * T) solvetime = -6 * T;
+        previousTime = thisTime;
+        weightedTime += solvetime * i;
+        arith_uint256 target;
+        target.SetCompact(blocks[i]->nBits);
+        sumTarget += target / arith_uint256((uint64_t)NK);
+    }
+    if (weightedTime < k / 3) weightedTime = k / 3;
+    arith_uint256 nextTarget = sumTarget * arith_uint256((uint64_t)weightedTime);
+    if (nextTarget > powLimit) nextTarget = powLimit;
+    return nextTarget.GetCompact();
+}
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
@@ -166,7 +213,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         if (h >= 13579 && h < 31597)      return BobGetNextWorkRequired_KGW(pindexLast, pblock, params);
         if (h >= 31597 && h < 68425)      return BobGetNextWorkRequired_DigiShield(pindexLast, pblock, params, 600);
         if (h >= 68425 && h < 1888808)    return BobGetNextWorkRequired_DigiShield(pindexLast, pblock, params, 120);
-        // h >= 1888808 -> LWMA-3 (TODO): fall through to the placeholder below.
+        if (h >= 1888808)                 return BobGetNextWorkRequired_LWMA3(pindexLast, pblock, params);
+        // All five (BOB) retarget regimes are now covered above; the stock Dogecoin retarget
+        // below is only reached under fPowNoRetargeting (regtest).
     }
 
     // Dogecoin: Special rules for minimum difficulty blocks with Digishield
