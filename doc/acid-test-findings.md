@@ -189,3 +189,33 @@ proof followed by a good one on the same template, 5 blocks merge-mined through 
 read-back after a restart. The differential now also compares `createauxblock` answers from both
 daemons on the same tip (identical, 3 of 3), compares 5 RPC error responses (identical), and feeds
 blocks merge-mined through the rebase RPC to 0.14 (accepted). **186 checks, 0 divergences.**
+
+## Live-pool MiningCore across the AuxPoW fork (2026-11-15)
+
+The live pool (vps1, upstream oliverw MiningCore on .NET 5) has **no merge-mining support**: its
+source has no `createauxblock`/`auxpow` code. After block 2,000,000 it will keep solo-mining (BOB)
+through `getblocktemplate` + `submitblock`. So that path is the one this test covers, using the
+live build unchanged.
+
+`contrib/bob-differential/pooltest_miningcore.py` runs the 0.14.1 reference and this rebase on one
+regtest, connected by **P2P**. MiningCore runs against one of them, with the live config shape
+(`blockRefreshInterval` 250, `jobRebroadcastTimeout` 10) but no payments and dummy persistence. A
+minimal stratum v1 miner finds blocks through it, crossing the AuxPoW fork at height 10. Every block
+must carry the right chain ID (0 before the fork, 0x00B0 from it), MiningCore must log it as
+"Daemon accepted block", and the other daemon must follow it over P2P.
+
+Result: **PASS in both directions.** Pool on the rebase: 37/37 blocks accepted, heights 2-9
+`0x00000004`, 10-38 `0x00b00004`, and 0.14 followed all 37. Pool on 0.14 (baseline): 37/37, and the
+rebase followed all 37.
+
+The run also showed the following:
+- **P2P between 0.14 (protocol 70005) and the rebase works** on regtest, in both directions.
+- The rebase still announces `/Shibetoshi:0.21.2/` as its user agent. Rename before a release.
+- The rebase's `getblocktemplate` (Doge 0.21) refuses with no peers or during IBD, even on
+  regtest. That is fine for mainnet, but test setups need a peer plus one fresh block first.
+- .NET 5 cannot load OpenSSL 3. The live pool loads OpenSSL 1.0.2 from
+  `~patrykw/dobbscoin-source/deps/openssl102/lib`. The test copy uses the same two libraries.
+
+Setup (not in the repo): `<base>/pooltest/{dotnet5,miningcore/build,lib}`, copied from the live pool
+without its `config.json`, then
+`python3 -I contrib/bob-differential/pooltest_miningcore.py --pool-on rebase|old --blocks 25 <base> <workdir>`.
