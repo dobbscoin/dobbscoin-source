@@ -93,10 +93,10 @@ public:
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.BIP16Exception = uint256();
         // BIP34 is never enforced in Dogecoin v2 blocks, so we enforce from v3
-        consensus.BIP34Height = 1034383;
-        consensus.BIP34Hash = uint256S("0x80d1364201e5df97e696c03bdd24dc885e8617b9de51e453c10a4f629b1e797a");
-        consensus.BIP65Height = 3464751; // 34cd2cbba4ba366f47e5aa0db5f02c19eba2adf679ceb6653ac003bdc9a0ef1f - first v4 block after the last v3 block
-        consensus.BIP66Height = 1034383; // 80d1364201e5df97e696c03bdd24dc885e8617b9de51e453c10a4f629b1e797a - this is the last block that could be v2, 1900
+        consensus.BIP34Height = 1; // (BOB): genesis is the only v1 block; v2+ (BIP34 height-in-coinbase) from block 1
+        consensus.BIP34Hash = uint256S("0xe613b5a195556386f422875d8df68e3e154f37b4981dec641fe041211672870f"); // (BOB) block 1
+        consensus.BIP65Height = 2000000; // (BOB) CLTV @ HARDFORK_CLTV_MAIN (not yet active)
+        consensus.BIP66Height = 68425; // (BOB) v3/DERSIG from the 68425 fork (last v2 block = 68424)
         consensus.CSVHeight = std::numeric_limits<int>::max(); // Disabled on Dogecoin
         consensus.SegwitHeight = std::numeric_limits<int>::max(); // Disabled on Dogecoin
         consensus.MinBIP9WarningHeight = std::numeric_limits<int>::max(); // Dogecoin does not use BIP9
@@ -125,9 +125,9 @@ public:
         consensus.fSimplifiedRewards = false;
         consensus.fShortEarlyCoinbase = true;
 
-        consensus.nAuxpowChainId = 0x0062; // 98 - Josh Wise!
+        consensus.nAuxpowChainId = 0x00B0; // (BOB) AUXPOW_CHAIN_ID
         consensus.fStrictChainId = true;
-        consensus.nAuxPowHeight = 371337;
+        consensus.nAuxPowHeight = 2000000; // (BOB) HARDFORK_AUXPOW_MAIN
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
