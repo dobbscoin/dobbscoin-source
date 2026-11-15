@@ -54,17 +54,48 @@ static unsigned int BobGetNextWorkRequired_V1(const CBlockIndex* pindexLast, con
     return bnNew.GetCompact();
 }
 
+static unsigned int BobGetNextWorkRequired_DigiShield(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params, int64_t T)
+{
+    // (BOB) DigiShield: per-block retarget (interval=1), amplitude filter, clamp [0.75T, 1.5T].
+    // Ported from dobbscoin-source GetNextWorkRequired_V3 (T=600, 10-min) and _V4 (T=120, 2-min).
+    // (BOB)'s interval=1 makes the min-difficulty branch dead code, so it is omitted here.
+    // VALIDATED 2026-11-15 vs real (BOB) history across V3, V4 and both regime boundaries (23/23).
+    const arith_uint256 powLimit = UintToArith256(params.powLimit);
+    const unsigned int nProofOfWorkLimit = powLimit.GetCompact();
+    if (pindexLast == nullptr) return nProofOfWorkLimit;
+
+    const CBlockIndex* pindexFirst = pindexLast->pprev;   // blockstogoback == 1
+    assert(pindexFirst);
+
+    int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
+    nActualTimespan = T + (nActualTimespan - T) / 8;       // amplitude filter (C truncates toward 0)
+    if (nActualTimespan < (T - T / 4)) nActualTimespan = T - T / 4;
+    if (nActualTimespan > (T + T / 2)) nActualTimespan = T + T / 2;
+
+    arith_uint256 bnNew;
+    bnNew.SetCompact(pindexLast->nBits);
+    bnNew *= (uint32_t)nActualTimespan;
+    bnNew /= arith_uint256((uint64_t)T);
+    if (bnNew > powLimit) bnNew = powLimit;
+    return bnNew.GetCompact();
+}
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
-    // --- (BOB) retarget dispatcher ---
-    // V1 ported + validated against real history (heights < 13579). KGW/DigiShield/LWMA3
-    // for heights >= 13579 are NOT yet ported (see doc/retarget-port-spec.md); the stock
-    // Dogecoin retarget below stands in as a PLACEHOLDER for those heights only.
-    if (!params.fPowNoRetargeting && (pindexLast->nHeight + 1) < 13579)
-        return BobGetNextWorkRequired_V1(pindexLast, pblock, params);
+    // --- (BOB) retarget dispatcher (by height) ---
+    // Ported + validated vs real history: V1 (<13579), DigiShield V3 [31597,68425), V4 [68425,1888808).
+    // NOT yet ported: KGW [13579,31597) (portable/no-OpenSSL port pending) and LWMA-3 (>=1888808).
+    // The stock Dogecoin retarget below is a PLACEHOLDER for those two ranges only. See doc/retarget-port-spec.md.
+    if (!params.fPowNoRetargeting) {
+        const int h = pindexLast->nHeight + 1;
+        if (h < 13579)                    return BobGetNextWorkRequired_V1(pindexLast, pblock, params);
+        if (h >= 31597 && h < 68425)      return BobGetNextWorkRequired_DigiShield(pindexLast, pblock, params, 600);
+        if (h >= 68425 && h < 1888808)    return BobGetNextWorkRequired_DigiShield(pindexLast, pblock, params, 120);
+        // h in [13579,31597) -> KGW (TODO), h >= 1888808 -> LWMA-3 (TODO): fall through to placeholder.
+    }
 
     // Dogecoin: Special rules for minimum difficulty blocks with Digishield
     if (AllowDigishieldMinDifficultyForBlock(pindexLast, pblock, params))
