@@ -172,3 +172,20 @@ restored produced 3 divergences plus a FATAL on the first 0.14-mined block after
 Run: `python3 -I contrib/bob-differential/diff_vs_014.py src <ref-0.14-dir> <workdir>`. The ref dir
 holds `dobbscoind`, `dobbscoin-cli` and `lib/` (only `libminiupnpc.so.17` is needed on Debian
 trixie).
+
+## Merge-mining RPC (2026-11-15)
+
+`createauxblock <address>` and `submitauxblock <hash> <auxpow>` are ported from 0.14
+`src/rpc_auxpow.cpp` into `src/rpc/mining.cpp`. They keep 0.14's arguments, its 7 result fields
+(`target` in reversed byte order), its error codes and messages, and its check order (address,
+then peers/IBD/fork height; auxpow decoded before the hash lookup). The template cache is also the
+same: a new template on every call, keyed by hash, dropped on a new tip or on a mempool change
+older than 60 s. One deliberate change: `submitauxblock` attaches the proof to a copy of the cached
+block, so a rejected proof cannot change the template. 0.14 mutates the cached block in place.
+Regtest address prefixes are now 0.14's (111/196/239).
+
+`test/functional/feature_auxpow_rpc_bob.py` covers 0.14 `regtest-smoke.sh` tests 1-6, a failed
+proof followed by a good one on the same template, 5 blocks merge-mined through the RPC, and
+read-back after a restart. The differential now also compares `createauxblock` answers from both
+daemons on the same tip (identical, 3 of 3), compares 5 RPC error responses (identical), and feeds
+blocks merge-mined through the rebase RPC to 0.14 (accepted). **186 checks, 0 divergences.**

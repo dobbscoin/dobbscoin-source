@@ -261,10 +261,28 @@ class Diff:
                 return self.coinbases.pop(i)[1]
         raise SystemExit("no mature coinbase at height %d" % self.height)
 
+    def rpc_error(self, n, method, *params):
+        try:
+            n.call(method, *params)
+            return None
+        except RuntimeError as e:
+            msg = str(e)
+            j = json.loads(msg[msg.index("{"):].replace("'", '"'))
+            return (j["code"], j["message"])
+
+    def compare_errors(self, label, method, *params):
+        eo, en = self.rpc_error(self.old, method, *params), self.rpc_error(self.new, method, *params)
+        ok = eo == en and eo is not None
+        self.rows.append((self.height, label, "same", (ok, eo), (ok, en), ok))
+        print("%s h=%-4d %-58s old=%s new=%s" % ("  " if ok else "!!", self.height, label[:58], eo, en), flush=True)
+        if not ok:
+            self.divergences.append((self.height, label, eo, en))
+
     # -------------------------------------------------------------- the run
     def run(self):
         S = self.submit_both
         print("== pre-fork (AuxPoW at %d)" % AUXPOW_FORK)
+        self.compare_errors("RPC error: createauxblock before activation", "createauxblock", self.addr)
         for base in (1, 2, 3, 4):
             S(self.solved(ver(base)), "legacy base %d, chain 0" % base, "ACC")
         S(self.solved(ver(3, BOB), 1), "solo, chain 0x00B0 before fork", "rej")
@@ -310,6 +328,29 @@ class Diff:
             print("   submitauxblock #%d -> %s" % (i + 1, ok))
             assert ok is True, "0.14 refused its own merge-mined block"
             self.feed(self.old, self.new, [t["hash"]], "0.14 createauxblock+submitauxblock block")
+
+        print("== rebase merge-mining RPC vs 0.14: same template answers, blocks -> 0.14")
+        self.compare_errors("RPC error: createauxblock bad address", "createauxblock", "notanaddress")
+        self.compare_errors("RPC error: submitauxblock decode before lookup", "submitauxblock", "11" * 32, "00")
+        good_ap = self.make_auxpow(0x11, int(time.time()), 0x207fffff).serialize().hex()
+        self.compare_errors("RPC error: submitauxblock unknown hash", "submitauxblock", "11" * 32, good_ap)
+        self.compare_errors("RPC error: submitauxblock non-hex auxpow", "submitauxblock", "11" * 32, "zz")
+        for i in range(3):
+            to = self.old.call("createauxblock", self.addr)
+            tn = self.new.call("createauxblock", self.addr)
+            same_keys = sorted(to) == sorted(tn)
+            fields = ("chainid", "previousblockhash", "coinbasevalue", "bits", "height", "target")
+            diffs = [f for f in fields if to.get(f) != tn.get(f)]
+            ok = same_keys and not diffs
+            self.rows.append((tn["height"], "createauxblock fields old vs rebase", "same", (ok, None), (ok, diffs), ok))
+            print("%s h=%-4d %-58s %s" % ("  " if ok else "!!", tn["height"], "createauxblock fields old vs rebase",
+                                         "identical" if ok else "DIFFER %s keys=%s/%s" % (diffs, sorted(to), sorted(tn))), flush=True)
+            if not ok:
+                self.divergences.append((tn["height"], "createauxblock fields", to, tn))
+            ap = self.make_auxpow(int(tn["hash"], 16), int(time.time()), int(tn["bits"], 16))
+            ok = self.new.call("submitauxblock", tn["hash"], ap.serialize().hex())
+            assert ok is True, "rebase refused its own merge-mined block"
+            self.feed(self.new, self.old, [tn["hash"]], "rebase createauxblock+submitauxblock block")
 
         print("== post-fork miners, up to CLTV")
         self.new_mines(3, "rebase miner block, post-fork")

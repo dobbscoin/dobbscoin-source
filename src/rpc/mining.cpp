@@ -4,6 +4,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <amount.h>
+#include <arith_uint256.h>
+#include <auxpow.h>
+#include <streams.h>
+#include <sync.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
@@ -27,6 +31,7 @@
 #include <txmempool.h>
 #include <univalue.h>
 #include <util/fees.h>
+#include <util/memory.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/system.h>
@@ -1209,6 +1214,172 @@ static RPCHelpMan estimaterawfee()
     };
 }
 
+// ---------------------------------------------------------------------------
+// (BOB) merge-mining RPC: createauxblock / submitauxblock.
+// Port of the (BOB) 0.14 src/rpc_auxpow.cpp contract, which pools are written
+// against: same arguments, result fields, error codes and check order.
+// ---------------------------------------------------------------------------
+namespace {
+
+RecursiveMutex cs_bobauxpow;
+// Unsolved templates handed out by createauxblock, keyed by block hash (with
+// VERSION_AUXPOW set) so submitauxblock can find them.
+std::map<uint256, std::shared_ptr<const CBlock>> mapAuxBlocks GUARDED_BY(cs_bobauxpow);
+const CBlockIndex* pindexPrevAux GUARDED_BY(cs_bobauxpow) = nullptr;
+unsigned int nAuxExtraNonce GUARDED_BY(cs_bobauxpow) = 0;
+int64_t nAuxStart GUARDED_BY(cs_bobauxpow) = 0;
+unsigned int nAuxTransactionsUpdatedLast GUARDED_BY(cs_bobauxpow) = 0;
+
+void AuxMiningCheck(const JSONRPCRequest& request)
+{
+    if (!Params().MineBlocksOnDemand()) {
+        NodeContext& node = EnsureNodeContext(request.context);
+        if (!node.connman)
+            throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+        if (node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
+            throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Dobbscoin is not connected");
+        if (::ChainstateActive().IsInitialBlockDownload())
+            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dobbscoin is downloading blocks");
+    }
+
+    LOCK(cs_main);
+    if (::ChainActive().Height() + 1 < Params().GetConsensus().nAuxPowHeight)
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "AuxPoW activation height not yet reached");
+}
+
+} // namespace
+
+static RPCHelpMan createauxblock()
+{
+    return RPCHelpMan{"createauxblock",
+        "\nCreate a new block and return information required to merge-mine it.\n",
+        {
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "coinbase payout address"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR_HEX, "hash", "hash of the created block"},
+                {RPCResult::Type::NUM, "chainid", "(BOB)'s AuxPoW chain ID (0x00B0 = 176)"},
+                {RPCResult::Type::STR_HEX, "previousblockhash", "hash of the previous block"},
+                {RPCResult::Type::NUM, "coinbasevalue", "value of the coinbase output, in dobbalinas"},
+                {RPCResult::Type::STR, "bits", "compressed difficulty target"},
+                {RPCResult::Type::NUM, "height", "height of the new block"},
+                {RPCResult::Type::STR_HEX, "target", "target in reversed byte order, 64 hex chars"},
+            }},
+        RPCExamples{
+            HelpExampleCli("createauxblock", "\"BobAddress...\"")
+            + HelpExampleRpc("createauxblock", "\"BobAddress...\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const CTxDestination dest = DecodeDestination(request.params[0].get_str());
+    if (!IsValidDestination(dest))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid coinbase payout address");
+    const CScript scriptPubKey = GetScriptForDestination(dest);
+
+    AuxMiningCheck(request);
+    const CTxMemPool& mempool = EnsureMemPool(request.context);
+
+    LOCK(cs_bobauxpow);
+    std::shared_ptr<CBlock> pblock;
+    int nHeight;
+    {
+        LOCK(cs_main);
+        const CBlockIndex* tip = ::ChainActive().Tip();
+        const bool fStale = pindexPrevAux != tip
+            || (mempool.GetTransactionsUpdated() != nAuxTransactionsUpdatedLast && GetTime() - nAuxStart > 60);
+        if (fStale)
+            mapAuxBlocks.clear();
+
+        std::unique_ptr<CBlockTemplate> tmpl = BlockAssembler(mempool, Params()).CreateNewBlock(scriptPubKey);
+        if (!tmpl)
+            throw JSONRPCError(RPC_OUT_OF_MEMORY, "out of memory");
+
+        nAuxTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
+        pindexPrevAux = tip;
+        nAuxStart = GetTime();
+
+        // Stamp the extra-nonce, flip the AuxPoW bit, then hash. The chain ID is
+        // already in nVersion (CreateNewBlock sets it from nAuxPowHeight on).
+        IncrementExtraNonce(&tmpl->block, tip, nAuxExtraNonce);
+        tmpl->block.SetAuxpowFlag(true);
+
+        pblock = std::make_shared<CBlock>(tmpl->block);
+        mapAuxBlocks[pblock->GetHash()] = pblock;
+        nHeight = tip->nHeight + 1;
+    }
+
+    bool fNegative = false, fOverflow = false;
+    arith_uint256 arithTarget;
+    arithTarget.SetCompact(pblock->nBits, &fNegative, &fOverflow);
+    if (fNegative || fOverflow || arithTarget == 0)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "invalid difficulty bits in block");
+    const uint256 target = ArithToUint256(arithTarget);
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("hash", pblock->GetHash().GetHex());
+    result.pushKV("chainid", pblock->GetChainId());
+    result.pushKV("previousblockhash", pblock->hashPrevBlock.GetHex());
+    result.pushKV("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue);
+    result.pushKV("bits", strprintf("%08x", pblock->nBits));
+    result.pushKV("height", nHeight);
+    result.pushKV("target", HexStr(Span<const unsigned char>(target.begin(), target.end())));
+    return result;
+},
+    };
+}
+
+static RPCHelpMan submitauxblock()
+{
+    return RPCHelpMan{"submitauxblock",
+        "\nSubmit a solved auxpow for a previously created block.\n",
+        {
+            {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "hash returned by createauxblock"},
+            {"auxpow", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "hex-encoded serialized CAuxPow"},
+        },
+        RPCResult{RPCResult::Type::BOOL, "", "whether the block was accepted into the chain"},
+        RPCExamples{
+            HelpExampleCli("submitauxblock", "\"hash\" \"auxpowhex\"")
+            + HelpExampleRpc("submitauxblock", "\"hash\" \"auxpowhex\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const uint256 hash = ParseHashV(request.params[0], "hash");
+
+    const std::string strHex = request.params[1].get_str();
+    auto auxpow = MakeUnique<CAuxPow>();
+    if (!IsHex(strHex))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "AuxPow decode failed");
+    try {
+        CDataStream ss(ParseHex(strHex), SER_NETWORK, PROTOCOL_VERSION);
+        ss >> *auxpow;
+    } catch (const std::exception&) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "AuxPow decode failed");
+    }
+
+    AuxMiningCheck(request);
+
+    std::shared_ptr<const CBlock> cached;
+    {
+        LOCK(cs_bobauxpow);
+        const auto it = mapAuxBlocks.find(hash);
+        if (it == mapAuxBlocks.end())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "block hash unknown");
+        cached = it->second;
+    }
+
+    // Attach to a copy: a rejected proof must not alter the cached template.
+    auto block = std::make_shared<CBlock>(*cached);
+    block->SetAuxpow(std::move(auxpow));
+    if (block->GetHash() != hash)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "cached block hash drifted under attached auxpow");
+
+    return EnsureChainman(request.context).ProcessNewBlock(Params(), block, /* fForceProcessing */ true, /* fNewBlock */ nullptr);
+},
+    };
+}
+
 void RegisterMiningRPCCommands(CRPCTable &t)
 {
 // clang-format off
@@ -1221,6 +1392,8 @@ static const CRPCCommand commands[] =
     { "mining",             "getblocktemplate",       &getblocktemplate,       {"template_request"} },
     { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },
     { "mining",             "submitheader",           &submitheader,           {"hexdata"} },
+    { "mining",             "createauxblock",         &createauxblock,         {"address"} },
+    { "mining",             "submitauxblock",         &submitauxblock,         {"hash","auxpow"} },
 
 
     { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
