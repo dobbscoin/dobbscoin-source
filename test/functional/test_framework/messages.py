@@ -74,7 +74,7 @@ WITNESS_SCALE_FACTOR = 4
 # Constants for the auxpow block version.
 VERSION_AUXPOW = (1 << 8)
 VERSION_CHAIN_START = (1 << 16)
-CHAIN_ID = 98
+CHAIN_ID = 0xB0  # (BOB) AUXPOW_CHAIN_ID
 
 # Serialization/deserialization tools
 def sha256(s):

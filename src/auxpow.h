@@ -53,6 +53,14 @@ private:
   /** Merkle tree index of the aux block header in the coinbase.  */
   int nChainIndex;
 
+  /**
+   * (BOB): index of the parent coinbase in the parent block's merkle tree,
+   * as serialized.  Dogecoin 0.21 read this field and threw it away; (BOB)
+   * 0.14 rejects any value other than 0 ("AuxPow is not a generate"), so
+   * keep it and check it in check().
+   */
+  int nIndex = 0;
+
   /** Parent block header (on which the real PoW is done).  */
   CPureBlockHeader parentBlock;
 
@@ -86,10 +94,9 @@ public:
     uint256 hashBlock;
 
     /* The index of the parent coinbase tx is always zero.  */
-    int nIndex = 0;
 
     /* Data from the coinbase transaction as Merkle tx.  */
-    READWRITE (obj.coinbaseTx, hashBlock, obj.vMerkleBranch, nIndex);
+    READWRITE (obj.coinbaseTx, hashBlock, obj.vMerkleBranch, obj.nIndex);
 
     /* Additional data for the auxpow itself.  */
     READWRITE (obj.vChainMerkleBranch, obj.nChainIndex, obj.parentBlock);

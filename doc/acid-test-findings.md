@@ -87,8 +87,58 @@ To validate the real chain offline these were changed and are **NOT production v
   live chain (tip ~1.95M), so this sync validates everything EXCEPT those two future rules. No real
   blocks exist to test them against yet. `fStrictChainId`, AuxPoW parent-chain checks, and the CLTV
   soft-fork path are ported-by-inheritance (Doge) + chain-id/height set, but UNVALIDATED against (BOB).
-- testnet/regtest auxpow chain-id left at Doge's (only CMainParams was switched to 0x00B0).
+- testnet auxpow chain-id still Doge-default; regtest switched to 0x00B0 (see 2M-fork harness below).
 - SegWit/CSV: disabled on (BOB) (Segwit/CSV heights = INT_MAX). The whole point of the rebase is to
   ENABLE them going forward via a future (BOB) fork height — a deliberate new activation, not history.
 - The base's nPowTargetSpacing/timespan + BIP9 deployment windows are Doge's; inert for (BOB) mainnet
   (custom retarget dispatcher covers all heights; CSV/Segwit gated off), but review before a release.
+
+## 2M-fork harness, AuxPoW half (2026-11-15)
+
+Reading the base's AuxPoW path against the (BOB) 0.14 daemon (the code the network runs at the
+fork) turned up five consensus differences. Every one stays hidden until block 2,000,000, so the
+acid test could not catch them. All five are fixed here, and `test/functional/feature_auxpow_bob.py`
+exercises each one.
+
+1. **AuxPoW was never checked.** Dogecoin 1.21-dev deserializes the auxpow trailer but
+   `CheckBlockHeader` and `ReadBlockOrHeader` only test the header's own scrypt hash. Nothing called
+   `CAuxPow::check()` or tested the parent's PoW. As a result, a merge-mined block (whose own hash
+   misses the target) was rejected, and the commitment chain was never verified.
+   Fix: `BobCheckAuxPowProofOfWork` (pow.cpp), a port of 0.14 `CheckAuxPowProofOfWork`, used at both
+   call sites.
+2. **Chain-ID schedule missing.** 0.14 requires chain ID 0 before the fork and exactly 0x00B0 at and
+   after it, for solo and merge-mined blocks alike. The base only had Doge's "v1, or v2 with chain 0,
+   is legacy" test. Without the fix, a chain-ID-0 v3/v4 block after 2M was accepted, and so was a
+   nonzero chain ID before 2M. Fix: the 0.14 rules in ContextualCheckBlockHeader
+   (`premature-auxpow`, `premature-chainid`, `bad-chainid`).
+3. **`nIndex` dropped.** The base read the parent-coinbase merkle index and discarded it. 0.14
+   rejects any value other than 0 ("AuxPow is not a generate"). Fix: keep it in `CAuxPow` and check
+   it.
+4. **Chain split at 2M: base version 4 required at BIP65Height.** The Doge rule `GetBaseVersion() < 4
+   && nHeight >= BIP65Height` would reject every block the 0.14 fleet mines after 2M, because 0.14's
+   `CURRENT_VERSION` is 3 and its CLTV is height-gated with no version rule. Fix: drop the v4 rule
+   for (BOB) and keep base version >= 3 from BIP66Height (0.14 enforces that by supermajority).
+5. **Miner stamped chain ID before the fork.** CreateNewBlock always set 0x00B0, so a pre-2M block
+   it mined would fail 0.14's `premature-chainid` check. Fix: chain ID only from nAuxPowHeight on.
+
+Regtest now uses chain ID 0x00B0 and takes `-auxpowheight=<n>` (default 0, i.e. always on).
+The test framework's `CHAIN_ID` is 0xB0.
+
+`feature_auxpow_bob.py` (fork at 1400, past regtest BIP65Height 1351) asserts:
+base-3 blocks accepted past BIP65Height; before the fork, chain ID 0x00B0 is rejected
+(premature-chainid) and a merge-mined block is rejected (premature-auxpow); at the fork, chain ID 0
+and Doge's 0x0062 are rejected (bad-chainid) and base 2 is rejected (bad-version). Malformed
+auxpow is rejected in each of these cases: parent misses target while our own header would pass;
+parent carries our chain ID; nIndex 1; commitment to another hash; magic twice; wrong chain index.
+A merge-mined block whose OWN hash misses the target is accepted on its parent's PoW. A solo
+chain-ID block is accepted. After a restart, blocks read back from disk and pass `verifychain 4`.
+
+Still open for the fork:
+- **Differential vs the 0.14 daemon.** The tests above encode 0.14's rules as read from source. The
+  two regtests have different genesis blocks, so the same blocks cannot simply be fed to both. Next
+  step: either a shared regtest genesis, or 0.14's `qa/auxpow-smoke/` vectors replayed here.
+- **No merge-mining RPC.** The base has no `createauxblock`/`submitauxblock`/`getauxblock`. Pools
+  need one at 2M (0.14 has `submitauxblock`). Not consensus, but required before a release.
+- Unit tests `subsidy_limit_test`, `miner_tests/CreateNewBlock_validity` and
+  `validation_block_tests` fail identically before and after this change. They are Doge-mainnet
+  expectations left from the earlier ports and need (BOB) values.

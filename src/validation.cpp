@@ -1166,7 +1166,7 @@ static bool ReadBlockOrHeader(T& block, const FlatFilePos& pos, const Consensus:
     }
 
     // Check the header
-    if (fCheckPOW && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
+    if (fCheckPOW && !BobCheckAuxPowProofOfWork(block, consensusParams))
         return error("ReadBlockOrHeader: Errors in block header at %s", pos.ToString());
 
     // Signet only: check block solution
@@ -3363,7 +3363,7 @@ static bool FindUndoPos(BlockValidationState &state, int nFile, FlatFilePos &pos
 static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
+    if (fCheckPOW && !BobCheckAuxPowProofOfWork(block, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
 
     return true;
@@ -3521,19 +3521,23 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     const int nHeight = pindexPrev->nHeight + 1;
     const Consensus::Params& consensusParams = params.GetConsensus();
 
-    // Disallow legacy blocks after merge-mining start.
-    if (nHeight >= consensusParams.nAuxPowHeight) {
-        if (block.IsLegacy())
+    // (BOB) 0.14 AuxPoW activation: before the fork, VERSION_AUXPOW must be
+    // unset and the chain ID zero; at and after it, every block (merge-mined
+    // or solo) must declare our chain ID.
+    if (nHeight < consensusParams.nAuxPowHeight) {
+        if (block.IsAuxpow())
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER,
-                                 "late-legacy-block",
-                                 "legacy block after auxpow start");
+                                 "premature-auxpow",
+                                 "VERSION_AUXPOW set before activation height");
+        if (block.GetChainId() != 0)
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER,
+                                 "premature-chainid",
+                                 "nonzero chain ID before activation height");
     } else {
-        // Dogecoin: Disallow AuxPow blocks before it is activated.
-        if (block.IsAuxpow()) {
+        if (block.GetChainId() != consensusParams.nAuxpowChainId)
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER,
-                                "early-auxpow-block",
-                                "auxpow block before auxpow start");
-        }
+                                 "bad-chainid",
+                                 strprintf("wrong chain ID %d (expected %d)", block.GetChainId(), consensusParams.nAuxpowChainId));
     }
 
     // Check proof of work
@@ -3564,8 +3568,10 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2, 3 and 4 upgrades
     // Dogecoin: Version 2 enforcement was never used
-    if ((block.GetBaseVersion() < 3 && nHeight >= consensusParams.BIP66Height) ||
-       (block.GetBaseVersion() < 4 && nHeight >= consensusParams.BIP65Height))
+    // (BOB): no version-4 rule at BIP65Height.  (BOB) 0.14 gates CLTV by height
+    // alone and its miners stamp base version 3 past block 2,000,000; the
+    // Doge rule here would reject every one of those blocks (chain split).
+    if (block.GetBaseVersion() < 3 && nHeight >= consensusParams.BIP66Height)
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
 

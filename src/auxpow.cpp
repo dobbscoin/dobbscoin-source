@@ -42,6 +42,10 @@ bool
 CAuxPow::check(const uint256& hashAuxBlock, int nChainId,
                 const Consensus::Params& params) const
 {
+    // (BOB) 0.14 parity: the parent coinbase must sit at index 0.
+    if (nIndex != 0)
+        return error("Aux POW is not a generate");
+
     if (params.fStrictChainId && parentBlock.GetChainId() == nChainId)
         return error("Aux POW parent has our chain ID");
 

@@ -21,4 +21,13 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
 
+class CBlockHeader;
+/**
+ * (BOB) 0.14 CheckAuxPowProofOfWork: with VERSION_AUXPOW set, the auxpow must
+ * be attached, its commitment chain must check against our chain ID, and the
+ * PARENT block's scrypt hash must meet nBits.  Otherwise the header's own
+ * scrypt hash must.  Height rules live in ContextualCheckBlockHeader.
+ */
+bool BobCheckAuxPowProofOfWork(const CBlockHeader& block, const Consensus::Params&);
+
 #endif // BITCOIN_POW_H

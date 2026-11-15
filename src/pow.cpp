@@ -6,6 +6,8 @@
 #include <pow.h>
 
 #include <arith_uint256.h>
+#include <auxpow.h>
+#include <util/system.h>
 #include <chain.h>
 #include <dogecoin.h>
 #include <primitives/block.h>
@@ -313,6 +315,18 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
         bnNew = bnPowLimit;
 
     return bnNew.GetCompact();
+}
+
+bool BobCheckAuxPowProofOfWork(const CBlockHeader& block, const Consensus::Params& params)
+{
+    if (block.IsAuxpow()) {
+        if (!block.auxpow)
+            return error("%s: VERSION_AUXPOW set but no auxpow attached", __func__);
+        if (!block.auxpow->check(block.GetHash(), params.nAuxpowChainId, params))
+            return error("%s: auxpow commitment chain failed", __func__);
+        return CheckProofOfWork(block.auxpow->getParentBlockPoWHash(), block.nBits, params);
+    }
+    return CheckProofOfWork(block.GetPoWHash(), block.nBits, params);
 }
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)

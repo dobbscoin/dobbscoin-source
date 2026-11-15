@@ -445,9 +445,9 @@ public:
         consensus.fSimplifiedRewards = true;
         consensus.fShortEarlyCoinbase = false;
 
-        consensus.nAuxpowChainId = 0x0062; // 98 - Josh Wise!
+        consensus.nAuxpowChainId = 0x00B0; // (BOB) AUXPOW_CHAIN_ID
         consensus.fStrictChainId = true;
-        consensus.nAuxPowHeight = 0;
+        consensus.nAuxPowHeight = 0; // -auxpowheight overrides (2M-fork harness)
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
@@ -508,6 +508,12 @@ public:
 
 void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 {
+    if (args.IsArgSet("-auxpowheight")) {
+        int64_t height = args.GetArg("-auxpowheight", consensus.nAuxPowHeight);
+        if (height < 0 || height >= std::numeric_limits<int>::max())
+            throw std::runtime_error(strprintf("AuxPoW activation height %ld is out of valid range.", height));
+        consensus.nAuxPowHeight = static_cast<int>(height);
+    }
     if (args.IsArgSet("-segwitheight")) {
         int64_t height = args.GetArg("-segwitheight", consensus.SegwitHeight);
         if (height < -1 || height >= std::numeric_limits<int>::max()) {
