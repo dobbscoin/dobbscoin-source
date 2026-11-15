@@ -198,6 +198,23 @@ static unsigned int BobGetNextWorkRequired_LWMA3(const CBlockIndex* pindexLast, 
     return nextTarget.GetCompact();
 }
 
+bool BobIsEmergencyDifficultyBlock(const CBlockHeader& block, const CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    // (BOB) emergency-difficulty valve (dobbscoin-source IsEmergencyDifficultyBlock,
+    // HARDFORK_EMERGENCY_DIFF_MAIN=1888888). A block that (a) is past the activation
+    // height, (b) follows a stall of strictly more than 6h, and (c) carries exactly
+    // powLimit, is accepted even though the retarget algorithm would demand a harder
+    // target -- it lets the chain unstick after a hashrate-departure event. This is a
+    // VALIDATION EXEMPTION, not a change to GetNextWorkRequired: a stalled block may
+    // instead carry the normal (stuck) target and still pass the ordinary nBits check.
+    if (pindexPrev == nullptr) return false;
+    const int forkHeight = params.fPowAllowMinDifficultyBlocks ? 20 : 1888888; // EMERGENCY_DIFF {TESTNET,MAIN}
+    if (pindexPrev->nHeight + 1 < forkHeight) return false;
+    const int64_t gap = (int64_t)block.nTime - (int64_t)pindexPrev->GetBlockTime();
+    if (gap <= 6 * 60 * 60) return false;                          // EMERGENCY_DIFFICULTY_GAP = 21600s, strict >
+    return block.nBits == UintToArith256(params.powLimit).GetCompact();   // (c) must claim min difficulty
+}
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
