@@ -118,12 +118,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000051737530b00a8ed4e3e");
-        consensus.defaultAssumeValid = uint256S("0x014c0753de886b81dffa11e99f37416930b67d55bda17589d886aeb053414942"); // 3,692,828
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000"); // (BOB) acid test: no min-work gate
+        consensus.defaultAssumeValid = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000"); // (BOB) acid test: assume nothing, full validation
         consensus.nAssumeValidMinTime = 60 * 60 * 24 * 7 * 2;
 
         consensus.fSimplifiedRewards = false;
-        consensus.fShortEarlyCoinbase = true;
+        consensus.fShortEarlyCoinbase = false; // (BOB): flat maturity 100, no Doge sub-145000 30-block rule
 
         consensus.nAuxpowChainId = 0x00B0; // (BOB) AUXPOW_CHAIN_ID
         consensus.fStrictChainId = true;
@@ -173,25 +173,7 @@ public:
 
         checkpointData = {
             {
-                {      0, uint256S("0x1a91e3dace36e2be3bf030a65679fe821aa1d6ef92e7c9902eb318182c355691")},
-                { 104679, uint256S("0x35eb87ae90d44b98898fec8c39577b76cb1eb08e1261cfc10706c8ce9a1d01cf")},
-                { 145000, uint256S("0xcc47cae70d7c5c92828d3214a266331dde59087d4a39071fa76ddfff9b7bde72")},
-                { 371337, uint256S("0x60323982f9c5ff1b5a954eac9dc1269352835f47c2c5222691d80f0d50dcf053")},
-                { 450000, uint256S("0xd279277f8f846a224d776450aa04da3cf978991a182c6f3075db4c48b173bbd7")},
-                { 771275, uint256S("0x1b7d789ed82cbdc640952e7e7a54966c6488a32eaad54fc39dff83f310dbaaed")},
-                { 1000000, uint256S("0x6aae55bea74235f0c80bd066349d4440c31f2d0f27d54265ecd484d8c1d11b47")},
-                { 1250000, uint256S("0x00c7a442055c1a990e11eea5371ca5c1c02a0677b33cc88ec728c45edc4ec060")},
-                { 1500000, uint256S("0xf1d32d6920de7b617d51e74bdf4e58adccaa582ffdc8657464454f16a952fca6")},
-                { 1750000, uint256S("0x5c8e7327984f0d6f59447d89d143e5f6eafc524c82ad95d176c5cec082ae2001")},
-                { 2000000, uint256S("0x9914f0e82e39bbf21950792e8816620d71b9965bdbbc14e72a95e3ab9618fea8")},
-                { 2031142, uint256S("0x893297d89afb7599a3c571ca31a3b80e8353f4cf39872400ad0f57d26c4c5d42")},
-                { 2250000, uint256S("0x0a87a8d4e40dca52763f93812a288741806380cd569537039ee927045c6bc338")},
-                { 2510150, uint256S("0x77e3f4a4bcb4a2c15e8015525e3d15b466f6c022f6ca82698f329edef7d9777e")},
-                { 2750000, uint256S("0xd4f8abb835930d3c4f92ca718aaa09bef545076bd872354e0b2b85deefacf2e3")},
-                { 3000000, uint256S("0x195a83b091fb3ee7ecb56f2e63d01709293f57f971ccf373d93890c8dc1033db")},
-                { 3250000, uint256S("0x7f3e28bf9e309c4b57a4b70aa64d3b2ea5250ae797af84976ddc420d49684034")},
-                { 3500000, uint256S("0xeaa303b93c1c64d2b3a2cdcf6ccf21b10cc36626965cc2619661e8e1879abdfb")},
-                { 3606083, uint256S("0x954c7c66dee51f0a3fb1edb26200b735f5275fe54d9505c76ebd2bcabac36f1e")},
+                {      0, uint256S("0x6d2d7d525900712451b9697d0b5b2304ebae6efb349540da445bf575c0159969")}, // (BOB) genesis only -- all later blocks validated by consensus/PoW
             }
         };
 
