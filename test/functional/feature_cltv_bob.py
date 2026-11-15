@@ -17,7 +17,8 @@ from test_framework.script import (CScript, CScriptNum, OP_1NEGATE,
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
-CLTV_HEIGHT = 1351   # regtest consensus.BIP65Height
+AUXPOW_HEIGHT = 10   # regtest consensus.nAuxPowHeight ((BOB) 0.14 HARDFORK_AUXPOW_TESTNET)
+CLTV_HEIGHT = 150    # regtest consensus.BIP65Height ((BOB) 0.14 HARDFORK_CLTV_TESTNET)
 
 class BobCltvTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -40,6 +41,8 @@ class BobCltvTest(BitcoinTestFramework):
             cb.rehash()          # force txid recompute (calc_sha256 no-ops once sha256 is set)
             # version 4 satisfies BIP34(>=2 @1000) / BIP66(>=3 @1251) / BIP65(>=4 @1351)
             block = create_block(self.tip, cb, self.block_time, version=4, txlist=(txs or []))
+            if self.height < AUXPOW_HEIGHT:      # chain ID 0 before the AuxPoW fork
+                block.nVersion = 4
             block.solve()
             res = node.submitblock(block.serialize().hex())
             return block, res

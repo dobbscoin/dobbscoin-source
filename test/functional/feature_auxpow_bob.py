@@ -22,8 +22,8 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
 BOB_CHAIN_ID = 0x00B0
-FORK = 1400          # -auxpowheight; past regtest BIP65Height (1351)
-BIP65_HEIGHT = 1351
+FORK = 1400          # -auxpowheight; past regtest BIP65Height (150) and BIP66Height (1251)
+BIP65_HEIGHT = 150
 MM_MAGIC = b'\xfa\xbe' + b'mm'
 
 

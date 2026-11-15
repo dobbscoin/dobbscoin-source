@@ -414,11 +414,12 @@ public:
         // Dogecoin: Raise this a long way so it's below 3 * COINBASE_MATURITY still
         consensus.BIP34Height = 1000; // BIP34 activated on regtest (Used in functional tests)
         consensus.BIP34Hash = uint256();
-        consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in functional tests)
+        consensus.BIP65Height = 150; // (BOB) 0.14 HARDFORK_CLTV_TESTNET; -bip65height overrides
         consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in functional tests)
         // Dogecoin: Note this needs to be a multiple of nMinerConfirmationWindow
-        consensus.CSVHeight = 720; // CSV activated on regtest (Used in rpc activation tests)
-        consensus.SegwitHeight = 0; // SEGWIT is always activated on regtest unless overridden
+        // (BOB): off as on mainnet and in 0.14 (no SegWit/CSV); -segwitheight still overrides.
+        consensus.CSVHeight = std::numeric_limits<int>::max();
+        consensus.SegwitHeight = std::numeric_limits<int>::max();
         consensus.MinBIP9WarningHeight = 0;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan =  4 * 60 * 60; // pre-digishield: 4 hours
@@ -447,7 +448,7 @@ public:
 
         consensus.nAuxpowChainId = 0x00B0; // (BOB) AUXPOW_CHAIN_ID
         consensus.fStrictChainId = true;
-        consensus.nAuxPowHeight = 0; // -auxpowheight overrides (2M-fork harness)
+        consensus.nAuxPowHeight = 10; // (BOB) 0.14 HARDFORK_AUXPOW_TESTNET; -auxpowheight overrides
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
@@ -460,10 +461,11 @@ public:
 
         UpdateActivationParametersFromArgs(args);
 
-        genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 88 * COIN);
+        // (BOB) 0.14 regtest genesis: mainnet coinbase, nTime 1296688603, nonce 2.
+        genesis = CreateBobGenesisBlock(1296688603, 2, 0x207fffff, 1, 1);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x3d2160a3b5dc4a9d62e7e66a295f70313ac808440ef7400d6c0772171ce973a5"));
-        assert(genesis.hashMerkleRoot == uint256S("0x5b2a3f53f605d62c53e62932dac6925e3d74afa5a4b459745c36d42d0ed26a69"));
+        assert(consensus.hashGenesisBlock == uint256S("0x63c57ac1f1acc24a6ad8f9e938237f42370ad80a3fba52b818c35140db98a07f"));
+        assert(genesis.hashMerkleRoot == uint256S("0x21e66ff8b6f14eb3fa0edf35dc93440a751fdddb421965c88029ad0048d98ca1"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
@@ -475,7 +477,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("3d2160a3b5dc4a9d62e7e66a295f70313ac808440ef7400d6c0772171ce973a5")},
+                {0, uint256S("63c57ac1f1acc24a6ad8f9e938237f42370ad80a3fba52b818c35140db98a07f")},
             }
         };
 
@@ -508,6 +510,12 @@ public:
 
 void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 {
+    if (args.IsArgSet("-bip65height")) {
+        int64_t height = args.GetArg("-bip65height", consensus.BIP65Height);
+        if (height < 0 || height >= std::numeric_limits<int>::max())
+            throw std::runtime_error(strprintf("BIP65 activation height %ld is out of valid range.", height));
+        consensus.BIP65Height = static_cast<int>(height);
+    }
     if (args.IsArgSet("-auxpowheight")) {
         int64_t height = args.GetArg("-auxpowheight", consensus.nAuxPowHeight);
         if (height < 0 || height >= std::numeric_limits<int>::max())

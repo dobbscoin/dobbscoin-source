@@ -142,3 +142,33 @@ Still open for the fork:
 - Unit tests `subsidy_limit_test`, `miner_tests/CreateNewBlock_validity` and
   `validation_block_tests` fail identically before and after this change. They are Doge-mainnet
   expectations left from the earlier ports and need (BOB) values.
+
+## Differential vs the (BOB) 0.14.1 daemon (2026-11-15)
+
+`contrib/bob-differential/diff_vs_014.py` runs the 0.14.1 release (`1a300eb0`, the CI build) and
+this rebase side by side on the same regtest. It builds every probe block once, submits it to both
+daemons, and treats the 0.14 verdict as the reference. Blocks from each daemon's own miner go to the
+other daemon: 0.14 `setgenerate` and `createauxblock`+`submitauxblock`, and the rebase's
+`generatetodescriptor`. At the end both chains must match block for block.
+
+To make that possible, regtest is now (BOB) 0.14's regtest: genesis `63c57ac1…a07f` (the mainnet
+coinbase, nTime 1296688603, nonce 2), AuxPoW at 10, CLTV at 150 (`-bip65height` overrides), and
+SegWit/CSV off as on mainnet. The CLTV test now runs at 150.
+
+Result: **178 checks, 0 divergences, chains identical (157 blocks).** Covered:
+- pre-fork base versions 1-4, plus chain-ID and merge-mined blocks before the fork
+- 13 malformed-auxpow cases at the fork
+- 5 valid merge-mining shapes: own hash missing the target, the no-header legacy commitment, a
+  chain branch of 2, a parent tree with a sibling, and own hash also valid
+- solo blocks with chain ID at base 1, 2 and 3
+- 0.14 RPC merge-mined blocks
+- 0.14 miner blocks after both forks, at base 3 (the chain-split case)
+- the rebase miner's blocks before and after the fork
+- 6 CLTV cases around height 150
+
+The harness catches real bugs: a mutant with the `nIndex` check removed and the base-v4 rule
+restored produced 3 divergences plus a FATAL on the first 0.14-mined block after CLTV.
+
+Run: `python3 -I contrib/bob-differential/diff_vs_014.py src <ref-0.14-dir> <workdir>`. The ref dir
+holds `dobbscoind`, `dobbscoin-cli` and `lib/` (only `libminiupnpc.so.17` is needed on Debian
+trixie).
