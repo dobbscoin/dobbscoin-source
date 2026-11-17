@@ -120,8 +120,8 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain240Setup)
         BOOST_CHECK(result.last_failed_block.IsNull());
         BOOST_CHECK_EQUAL(result.last_scanned_block, newTip->GetBlockHash());
         BOOST_CHECK_EQUAL(*result.last_scanned_height, newTip->nHeight);
-        // Dogecoin: Immature balance varies due to random rewards
-        BOOST_CHECK(wallet.GetBalance().m_mine_immature <= (240 * 1000000 * COIN));
+        // (BOB): fixed 50-coin regtest reward, as in Bitcoin Core (Dogecoin had random rewards).
+        BOOST_CHECK_EQUAL(wallet.GetBalance().m_mine_immature, 100 * COIN);
     }
 
     // Prune the older block file.
@@ -147,8 +147,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain240Setup)
         BOOST_CHECK_EQUAL(result.last_failed_block, oldTip->GetBlockHash());
         BOOST_CHECK_EQUAL(result.last_scanned_block, newTip->GetBlockHash());
         BOOST_CHECK_EQUAL(*result.last_scanned_height, newTip->nHeight);
-	// Dogecoin: Scaled up by 10,000
-        BOOST_CHECK_EQUAL(wallet.GetBalance().m_mine_immature, 250000 * COIN);
+        BOOST_CHECK_EQUAL(wallet.GetBalance().m_mine_immature, 50 * COIN);
     }
 
     // Prune the remaining block file.
@@ -300,10 +299,10 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain240Setup)
         RemoveWallet(wallet, nullopt);
 
         BOOST_CHECK_EQUAL(wallet->mapWallet.size(), 3U);
-        BOOST_CHECK_EQUAL(m_coinbase_txns.size(), 243U);
+        BOOST_CHECK_EQUAL(m_coinbase_txns.size(), COINBASE_MATURITY + 3U); // (BOB): maturity 100
         for (size_t i = 0; i < m_coinbase_txns.size(); ++i) {
             bool found = wallet->GetWalletTx(m_coinbase_txns[i]->GetHash());
-            bool expected = i >= 240;
+            bool expected = i >= COINBASE_MATURITY;
             BOOST_CHECK_EQUAL(found, expected);
         }
     }
@@ -340,8 +339,7 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain240Setup)
     // credit amount is calculated.
     wtx.MarkDirty();
     BOOST_CHECK(spk_man->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey()));
-    // Dogecoin: Scaled up by 10,000
-    BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(), 250000*COIN);
+    BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(), 50*COIN);
 }
 
 static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64_t blockTime)
@@ -568,8 +566,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
     BOOST_CHECK_EQUAL(list.begin()->second.size(), 1U);
 
     // Check initial balance from one mature coinbase transaction.
-    // Dogecoin has random rewards so we can only test against maximum
-    BOOST_CHECK(1000000 * COIN >= wallet->GetAvailableBalance());
+    BOOST_CHECK_EQUAL(50 * COIN, wallet->GetAvailableBalance());
 
     // Add a transaction creating a change address, and confirm ListCoins still
     // returns the coin associated with the change address underneath the
