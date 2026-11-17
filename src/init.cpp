@@ -430,6 +430,7 @@ void SetupServerArgs(NodeContext& node)
             "Warning: Reverting this setting requires re-downloading the entire blockchain. "
             "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >=%u = automatically prune block files to stay under the specified target size in MiB)", MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex", "Rebuild chain state and block index from the blk*.dat files on disk", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-upgradechainstate", "Convert a Dobbscoin 0.14 UTXO database in the data directory without asking. One-way: 0.14 can then use this data directory only after a full -reindex.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex-chainstate", "Rebuild chain state from the currently indexed blocks. When in pruning mode or if blocks on disk might be corrupted, use full -reindex instead.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-settings=<file>", strprintf("Specify path to dynamic settings data file. Can be disabled with -nosettings. File is written at runtime and not meant to be edited by users (use %s instead for custom settings). Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME, BITCOIN_SETTINGS_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #if HAVE_SYSTEM
@@ -595,6 +596,9 @@ void SetupServerArgs(NodeContext& node)
 #endif
 
     // Add the hidden options
+    // (BOB): 0.14 built-in-miner options, accepted and ignored so old configs load quietly.
+    hidden_args.emplace_back("-gen");
+    hidden_args.emplace_back("-genproclimit");
     argsman.AddHiddenArgs(hidden_args);
 }
 
@@ -1600,6 +1604,30 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     LogPrintf("* Using %.1f MiB for chain state database\n", nCoinDBCache * (1.0 / 1024 / 1024));
     LogPrintf("* Using %.1f MiB for in-memory UTXO set (plus up to %.1f MiB of unused mempool space)\n", nCoinCacheUsage * (1.0 / 1024 / 1024), nMempoolSizeMax * (1.0 / 1024 / 1024));
 
+    // (BOB): converting a 0.14 UTXO database is one-way (0.14 then needs a full -reindex
+    // to use this data directory again), so never do it silently. Probe before any lock is
+    // taken: the GUI question must not be asked while cs_main is held.
+    if (!fReindex && !fReindexChainState && !args.GetBoolArg("-upgradechainstate", false)) {
+        bool legacy = false;
+        {
+            CCoinsViewDB probe(GetDataDir() / "chainstate", 1 << 20, false, false);
+            legacy = probe.HasLegacyCoins();
+        }
+        if (legacy) {
+            const bool convert = uiInterface.ThreadSafeQuestion(
+                _("This data directory holds a Dobbscoin 0.14 UTXO database. Converting it to the new format is one-way: afterwards Dobbscoin 0.14 can only use this data directory again after a full -reindex. Back up the data directory first if you still want to run 0.14 with it.") +
+                    Untranslated("\n\n") + _("Convert it now?"),
+                "This data directory holds a Dobbscoin 0.14 UTXO database. Converting it is one-way (0.14 would then need a full -reindex). "
+                "Back it up, then restart with -upgradechainstate to convert it, or use a different -datadir.",
+                "", CClientUIInterface::MSG_WARNING | CClientUIInterface::BTN_ABORT);
+            if (!convert) {
+                LogPrintf("Not converting the Dobbscoin 0.14 UTXO database (no -upgradechainstate, or declined). Exiting.\n");
+                return false;
+            }
+            LogPrintf("Converting the Dobbscoin 0.14 UTXO database (confirmed).\n");
+        }
+    }
+
     bool fLoaded = false;
     while (!fLoaded && !ShutdownRequested()) {
         bool fReset = fReindex;
@@ -1614,6 +1642,11 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
             const int64_t load_block_index_start_time = GetTimeMillis();
             try {
                 LOCK(cs_main);
+                // (BOB): a second pass (after the GUI "rebuild the block database?" prompt)
+                // must start from an empty ChainstateManager; otherwise
+                // InitializeChainstate() throws "should not be overwriting a chainstate".
+                UnloadBlockIndex(node.mempool.get(), chainman);
+                chainman.Reset();
                 chainman.InitializeChainstate(*Assert(node.mempool));
                 chainman.m_total_coinstip_cache = nCoinCacheUsage;
                 chainman.m_total_coinsdb_cache = nCoinDBCache;
@@ -1663,6 +1696,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 // (otherwise we use the one already on disk).
                 // This is called again in ThreadImport after the reindex completes.
                 if (!fReindex && !LoadGenesisBlock(chainparams)) {
+                    LogPrintf("Error initializing block database: could not load or write the genesis block (see errors above)\n");
                     strLoadError = _("Error initializing block database");
                     break;
                 }
@@ -1706,6 +1740,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                     if (!is_coinsview_empty(chainstate)) {
                         // LoadChainTip initializes the chain based on CoinsTip()'s best block
                         if (!chainstate->LoadChainTip(chainparams)) {
+                            LogPrintf("Error initializing block database: the chainstate tip could not be loaded (see LoadChainTip above)\n");
                             strLoadError = _("Error initializing block database");
                             failed_chainstate_init = true;
                             break; // out of the per-chainstate loop

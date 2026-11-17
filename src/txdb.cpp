@@ -351,6 +351,13 @@ public:
  *
  * Currently implemented: from the per-tx utxo model (0.8..0.14.x) to per-txout.
  */
+bool CCoinsViewDB::HasLegacyCoins() {
+    std::unique_ptr<CDBIterator> pcursor(m_db->NewIterator());
+    pcursor->Seek(std::make_pair(DB_COINS, uint256()));
+    std::pair<unsigned char, uint256> key;
+    return pcursor->Valid() && pcursor->GetKey(key) && key.first == DB_COINS;
+}
+
 bool CCoinsViewDB::Upgrade() {
     std::unique_ptr<CDBIterator> pcursor(m_db->NewIterator());
     pcursor->Seek(std::make_pair(DB_COINS, uint256()));

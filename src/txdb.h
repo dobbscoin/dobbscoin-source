@@ -64,6 +64,9 @@ public:
 
     //! Attempt to update from an older database format. Returns whether an error occurred.
     bool Upgrade();
+    //! (BOB): true if this chainstate still holds pre-0.15-format ('c') coin records,
+    //! i.e. it was written by (BOB) 0.14 and Upgrade() would convert it (one-way).
+    bool HasLegacyCoins();
     size_t EstimateSize() const override;
 
     //! Dynamically alter the underlying leveldb cache size.

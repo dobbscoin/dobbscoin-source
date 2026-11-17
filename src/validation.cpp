@@ -4279,6 +4279,9 @@ bool CChainState::LoadChainTip(const CChainParams& chainparams)
     // Load pointer to end of best chain
     CBlockIndex* pindex = LookupBlockIndex(coins_cache.GetBestBlock());
     if (!pindex) {
+        LogPrintf("ERROR: %s: the chainstate's best block %s is not in the block index; "
+                  "the chainstate and block index disagree (-reindex-chainstate rebuilds the chainstate)\n",
+                  __func__, coins_cache.GetBestBlock().ToString());
         return false;
     }
     m_chain.SetTip(pindex);
