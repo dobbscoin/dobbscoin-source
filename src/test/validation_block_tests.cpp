@@ -85,7 +85,10 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     CMutableTransaction txCoinbase(*pblock->vtx[0]);
     txCoinbase.vout.resize(2);
     txCoinbase.vout[1].scriptPubKey = pubKey;
-    txCoinbase.vout[1].nValue = txCoinbase.vout[0].nValue;
+    // Dogecoin: Override the calculated reward with a fixed value we know is going to be safe for every block.
+    // We need this as the blocks are not added to the chain as they're built, and as such the random subsidy
+    // calculation uses an incorrect previous block hash.
+    txCoinbase.vout[1].nValue = 10000 * COIN;
     txCoinbase.vout[0].nValue = 0;
     txCoinbase.vin[0].scriptWitness.SetNull();
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
@@ -100,7 +103,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::FinalizeBlock(std::shared_ptr<CBlock>
 
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 
-    while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+    while (!CheckProofOfWork(pblock->GetPoWHash(), pblock->nBits, Params().GetConsensus())) {
         ++(pblock->nNonce);
     }
 

@@ -72,7 +72,7 @@ class TestNode():
 
         self.index = i
         self.datadir = datadir
-        self.bitcoinconf = os.path.join(self.datadir, "bitcoin.conf")
+        self.bitcoinconf = os.path.join(self.datadir, "dogecoin.conf")
         self.stdout_dir = os.path.join(self.datadir, "stdout")
         self.stderr_dir = os.path.join(self.datadir, "stderr")
         self.chain = chain
@@ -134,18 +134,18 @@ class TestNode():
     AddressKeyPair = collections.namedtuple('AddressKeyPair', ['address', 'key'])
     PRIV_KEYS = [
             # address , privkey
-            AddressKeyPair('mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z', 'cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW'),
-            AddressKeyPair('msX6jQXvxiNhx3Q62PKeLPrhrqZQdSimTg', 'cUxsWyKyZ9MAQTaAhUQWJmBbSvHMwSmuv59KgxQV7oZQU3PXN3KE'),
-            AddressKeyPair('mnonCMyH9TmAsSj3M59DsbH8H63U3RKoFP', 'cTrh7dkEAeJd6b3MRX9bZK8eRmNqVCMH3LSUkE3dSFDyzjU38QxK'),
-            AddressKeyPair('mqJupas8Dt2uestQDvV2NH3RU8uZh2dqQR', 'cVuKKa7gbehEQvVq717hYcbE9Dqmq7KEBKqWgWrYBa2CKKrhtRim'),
-            AddressKeyPair('msYac7Rvd5ywm6pEmkjyxhbCDKqWsVeYws', 'cQDCBuKcjanpXDpCqacNSjYfxeQj8G6CAtH1Dsk3cXyqLNC4RPuh'),
-            AddressKeyPair('n2rnuUnwLgXqf9kk2kjvVm8R5BZK1yxQBi', 'cQakmfPSLSqKHyMFGwAqKHgWUiofJCagVGhiB4KCainaeCSxeyYq'),
-            AddressKeyPair('myzuPxRwsf3vvGzEuzPfK9Nf2RfwauwYe6', 'cQMpDLJwA8DBe9NcQbdoSb1BhmFxVjWD5gRyrLZCtpuF9Zi3a9RK'),
-            AddressKeyPair('mumwTaMtbxEPUswmLBBN3vM9oGRtGBrys8', 'cSXmRKXVcoouhNNVpcNKFfxsTsToY5pvB9DVsFksF1ENunTzRKsy'),
-            AddressKeyPair('mpV7aGShMkJCZgbW7F6iZgrvuPHjZjH9qg', 'cSoXt6tm3pqy43UMabY6eUTmR3eSUYFtB2iNQDGgb3VUnRsQys2k'),
-            AddressKeyPair('mq4fBNdckGtvY2mijd9am7DRsbRB4KjUkf', 'cN55daf1HotwBAgAKWVgDcoppmUNDtQSfb7XLutTLeAgVc3u8hik'),
-            AddressKeyPair('mpFAHDjX7KregM3rVotdXzQmkbwtbQEnZ6', 'cT7qK7g1wkYEMvKowd2ZrX1E5f6JQ7TM246UfqbCiyF7kZhorpX3'),
-            AddressKeyPair('mzRe8QZMfGi58KyWCse2exxEFry2sfF2Y7', 'cPiRWE8KMjTRxH1MWkPerhfoHFn5iHPWVK5aPqjW8NxmdwenFinJ'),
+            AddressKeyPair('nY8xUFpK7LVNNvbmmGaWY8P2wb4MMphFJT', 'cnyWHLn3E8Cy5Mm5ypVU8VHkGqKkm4E5qbhoUo3vtJcVFy4PwZN7'),
+            AddressKeyPair('ngCJhd8WP5JTaugG5DzHJeQH7r5J16Yac3', 'cn88fJ3muTBSMVbhodCHu7NZwngfcHKNExPaos6g6m4q2hoCXmPX'),
+            AddressKeyPair('nbUzAaZrZpgvWK1DPuorqqphY6ZMYACsp9', 'cm1xFxU2Wx8u3d4tXfwP9fKcvdn9A2tjNDgjs8jpRCjQZPrRvhi1'),
+            AddressKeyPair('ndz7noTheExfHkAaGm9fLXazj9RT8cYoJV', 'co4aTtqUwxXWMxXND9uV8xnCe6F5VwrgWD5moRYjAXXcszJ9y3pu'),
+            AddressKeyPair('ngDnaL2W3SuhPy6QpbQcvx8mULMQLL2NPE', 'chNTLE3R5td6UFqjwjQA35jeTWp2o6deVmXGLnSEbVVFu2b1uVnT'),
+            AddressKeyPair('nqXzshPWm3TbJ22v5bQZU1fzLC5CVUwTZX', 'chk1uz7EgkfbF1NnP5xcudsUybCxy388p9wyHy1PZgJ1CrusvJeR'),
+            AddressKeyPair('nng7NB2XJ1ygZ9GQxq4JHPvEHSBpzyqb5E', 'chX5Mf2jWS3TbBQ9WkRb2wCACdfGAa3fQZgEyFFPsnQfiEBy5Nfa'),
+            AddressKeyPair('niT9RnxU2KA97kDwP1r12Atj4Gwmg3K9xK', 'cjh2ZeFHy7eBeQQ2vmA6r29qxjs7CvNNW2TkzAT4DxjoUSv9uRXT'),
+            AddressKeyPair('ndAKYV3Gn7DxCYsgA5mMXwQWAPod12EVeQ', 'cjxo2RcZQ8gF15VtgkKtEpejuv3k9NoLVuxdX7xsZzzuM6Kwmum6'),
+            AddressKeyPair('ndjs9bECAdpgAu3tnTpDjMm18bw4Q5jhgW', 'cfELmuNoe7jD8ChhRfHToxzoKdsftiwtzUMnTpaeKbg74GSnM8tR'),
+            AddressKeyPair('ncvNFSL6XgnQKDL2YeZGWExM1cTn2W1Zdr', 'ckH6TSPpJ4NWJxMM3mpMSsCCaXVc4wzoLwLjnkHPhvkYKE7F5Cjd'),
+            AddressKeyPair('no6r6d9w5ddpmCFgFiJfdDVoWsUvFD6EMk', 'cgsgeYr7i3HhuK2tcuBST3rmn8BPP7vxpCKqWkRh7LUCCc7y3ELb'),
     ]
 
     def get_deterministic_priv_key(self):
@@ -218,7 +218,7 @@ class TestNode():
         for _ in range(poll_per_s * self.rpc_timeout):
             if self.process.poll() is not None:
                 raise FailedToStartError(self._node_msg(
-                    'bitcoind exited with status {} during initialization'.format(self.process.returncode)))
+                    'dogecoind exited with status {} during initialization'.format(self.process.returncode)))
             try:
                 rpc = get_rpc_proxy(
                     rpc_url(self.datadir, self.index, self.chain, self.rpchost),
@@ -276,7 +276,7 @@ class TestNode():
                 if "No RPC credentials" not in str(e):
                     raise
             time.sleep(1.0 / poll_per_s)
-        self._raise_assertion_error("Unable to connect to bitcoind after {}s".format(self.rpc_timeout))
+        self._raise_assertion_error("Unable to connect to dogecoind after {}s".format(self.rpc_timeout))
 
     def wait_for_cookie_credentials(self):
         """Ensures auth cookie credentials can be read, e.g. for testing CLI with -rpcwait before RPC connection is up."""
@@ -432,7 +432,7 @@ class TestNode():
 
         if not test_success('readelf -S {} | grep .debug_str'.format(shlex.quote(self.binary))):
             self.log.warning(
-                "perf output won't be very useful without debug symbols compiled into bitcoind")
+                "perf output won't be very useful without debug symbols compiled into dogecoind")
 
         output_path = tempfile.NamedTemporaryFile(
             dir=self.datadir,
@@ -486,7 +486,7 @@ class TestNode():
                 self.stop_node()
                 self.wait_until_stopped()
             except FailedToStartError as e:
-                self.log.debug('bitcoind failed to start: %s', e)
+                self.log.debug('dogecoind failed to start: %s', e)
                 self.running = False
                 self.process = None
                 # Check stderr for expected message
@@ -507,9 +507,9 @@ class TestNode():
                                 'Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
             else:
                 if expected_msg is None:
-                    assert_msg = "bitcoind should have exited with an error"
+                    assert_msg = "dogecoind should have exited with an error"
                 else:
-                    assert_msg = "bitcoind should have exited with expected error " + expected_msg
+                    assert_msg = "dogecoind should have exited with expected error " + expected_msg
                 self._raise_assertion_error(assert_msg)
 
     def add_p2p_connection(self, p2p_conn, *, wait_for_verack=True, **kwargs):
@@ -584,7 +584,7 @@ class TestNodeCLI():
         self.binary = binary
         self.datadir = datadir
         self.input = None
-        self.log = logging.getLogger('TestFramework.bitcoincli')
+        self.log = logging.getLogger('TestFramework.dogecoincli')
 
     def __call__(self, *options, input=None):
         # TestNodeCLI is callable with bitcoin-cli command-line options
@@ -616,7 +616,7 @@ class TestNodeCLI():
         if command is not None:
             p_args += [command]
         p_args += pos_args + named_args
-        self.log.debug("Running bitcoin-cli {}".format(p_args[2:]))
+        self.log.debug("Running dogecoin-cli {}".format(p_args[2:]))
         process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         cli_stdout, cli_stderr = process.communicate(input=self.input)
         returncode = process.poll()

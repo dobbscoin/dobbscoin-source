@@ -13,9 +13,11 @@
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
+#include <dogecoin.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
+#include <primitives/pureheader.h>
 #include <primitives/transaction.h>
 #include <timedata.h>
 #include <util/moneystr.h>
@@ -71,8 +73,13 @@ static BlockAssembler::Options DefaultOptions()
     BlockAssembler::Options options;
     options.nBlockMaxWeight = gArgs.GetArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT);
     CAmount n = 0;
-    if (gArgs.IsArgSet("-blockmintxfee") && ParseMoney(gArgs.GetArg("-blockmintxfee", ""), n)) {
-        options.blockMinFeeRate = CFeeRate(n);
+    if (gArgs.IsArgSet("-blockmintxfee")) {
+        if (ParseMoney(gArgs.GetArg("-blockmintxfee", ""), n) && n <= MAX_FEE_RATE) {
+            options.blockMinFeeRate = CFeeRate(n);
+        } else {
+            LogPrintf("DefaultOptions(): Specified -blockmintxfee is either not a valid amount, or is greater than the maximum fee rate %d.\n", MAX_FEE_RATE);
+            options.blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
+        }
     } else {
         options.blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
     }
@@ -121,11 +128,23 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
 
-    pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
+    const int32_t nChainId = chainparams.GetConsensus().nAuxpowChainId;
+    // Dogecoin: Force version 4 to disable BIP 9 version bits
+    const int32_t nVersion = VERSIONBITS_LAST_OLD_BLOCK_VERSION;
+    pblock->SetBaseVersion(nVersion, nChainId);
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
-    if (chainparams.MineBlocksOnDemand())
-        pblock->nVersion = gArgs.GetArg("-blockversion", pblock->nVersion);
+    if (chainparams.MineBlocksOnDemand()) {
+        // Copy the constant to a local constant as otherwise LogPrintf grumbles
+        const int32_t nMaxVersion = CPureBlockHeader::VERSION_AUXPOW;
+        const int32_t nOverrideVersion = gArgs.GetArg("-blockversion", pblock->GetBaseVersion());
+        if (nOverrideVersion >= 1 && nOverrideVersion < nMaxVersion) {
+            pblock->SetBaseVersion(nOverrideVersion, nChainId);
+        } else {
+            LogPrintf("DefaultOptions(): Specified -blockversion is either below 1, or above AuxPoW version %d.\n", nMaxVersion);
+            pblock->SetBaseVersion(pblock->GetBaseVersion(), nChainId);
+        }
+    }
 
     pblock->nTime = GetAdjustedTime();
     const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
@@ -160,7 +179,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
-    coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+    coinbaseTx.vout[0].nValue = nFees + GetDogecoinBlockSubsidy(nHeight, chainparams.GetConsensus(), pindexPrev->GetBlockHash());
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());

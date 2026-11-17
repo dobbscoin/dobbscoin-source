@@ -7,10 +7,20 @@
 
 #include <hash.h>
 #include <tinyformat.h>
+#include <crypto/common.h>
+#include <crypto/scrypt.h>
 
-uint256 CBlockHeader::GetHash() const
+void CBlockHeader::SetAuxpow (std::unique_ptr<CAuxPow> apow)
 {
-    return SerializeHash(*this);
+    if (apow != nullptr)
+    {
+        auxpow.reset(apow.release());
+        SetAuxpowFlag(true);
+    } else
+    {
+        auxpow.reset();
+        SetAuxpowFlag(false);
+    }
 }
 
 std::string CBlock::ToString() const

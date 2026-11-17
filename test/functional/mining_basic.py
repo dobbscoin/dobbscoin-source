@@ -19,7 +19,9 @@ from test_framework.blocktools import (
 from test_framework.messages import (
     CBlock,
     CBlockHeader,
+    CHAIN_ID,
     BLOCK_HEADER_SIZE,
+    VERSION_CHAIN_START,
 )
 from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
@@ -51,7 +53,7 @@ class MiningTest(BitcoinTestFramework):
 
     def mine_chain(self):
         self.log.info('Create some old blocks')
-        for t in range(TIME_GENESIS_BLOCK, TIME_GENESIS_BLOCK + 200 * 600, 600):
+        for t in range(TIME_GENESIS_BLOCK, TIME_GENESIS_BLOCK + 200 * 60, 60):
             self.nodes[0].setmocktime(t)
             self.nodes[0].generate(1)
         mining_info = self.nodes[0].getmininginfo()
@@ -60,12 +62,12 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(mining_info['currentblockweight'], 4000)
 
         self.log.info('test blockversion')
-        self.restart_node(0, extra_args=['-mocktime={}'.format(t), '-blockversion=1337'])
+        self.restart_node(0, extra_args=['-mocktime={}'.format(t), '-blockversion=133'])
         self.connect_nodes(0, 1)
-        assert_equal(1337, self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
+        assert_equal(133, self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'] % VERSION_CHAIN_START)
         self.restart_node(0, extra_args=['-mocktime={}'.format(t)])
         self.connect_nodes(0, 1)
-        assert_equal(VERSIONBITS_TOP_BITS + (1 << VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT), self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
+        assert_equal(CHAIN_ID, self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'] // VERSION_CHAIN_START)
         self.restart_node(0)
         self.connect_nodes(0, 1)
 
@@ -86,7 +88,8 @@ class MiningTest(BitcoinTestFramework):
         assert 'currentblocktx' not in mining_info
         assert 'currentblockweight' not in mining_info
         assert_equal(mining_info['difficulty'], Decimal('4.656542373906925E-10'))
-        assert_equal(mining_info['networkhashps'], Decimal('0.003333333333333334'))
+        # Dogecoin: As the difficulty doesn't recalculate until block 240, perceived hash per second is 10x Bitcoin's value
+        assert_equal(mining_info['networkhashps'], Decimal('0.03333333333333333'))
         assert_equal(mining_info['pooledtx'], 0)
 
         # Mine a block to leave initial block download

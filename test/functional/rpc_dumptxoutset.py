@@ -33,15 +33,17 @@ class DumptxoutsetTest(BitcoinTestFramework):
         assert_equal(out['base_height'], 100)
         assert_equal(out['path'], str(expected_path))
         # Blockhash should be deterministic based on mocked time.
+        # Dogecoin: Full disclosure, I've used the calculated value after introducing Scrypt and Dogecoin rewards, and trusted it's correct.
+        #           This is presumed safe none of this code changed, so we're updating the value for future changes to test against.
         assert_equal(
             out['base_hash'],
-            '6fd417acba2a8738b06fee43330c50d58e6a725046c3d843c8dd7e51d46d1ed6')
+            '84eeddf68cf159e2a60a8bb45e99e835e2191b80fff8fb002bf3d27e87b81e66')
 
         with open(str(expected_path), 'rb') as f:
             digest = hashlib.sha256(f.read()).hexdigest()
             # UTXO snapshot hash should be deterministic based on mocked time.
             assert_equal(
-                digest, 'be032e5f248264ba08e11099ac09dbd001f6f87ffc68bf0f87043d8146d50664')
+                digest, 'c5839e03f6c15c5eb0cdf952324636e5feb1b5c6095cbcddde8dcdbea5696d54')
 
         # Specifying a path to an existing file will fail.
         assert_raises_rpc_error(

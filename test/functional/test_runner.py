@@ -83,6 +83,26 @@ EXTENDED_SCRIPTS = [
     'feature_dbcrash.py',
 ]
 
+# Scripts which are specific to Bitcoin
+BITCOIN_ONLY_SCRIPTS = [
+    # These tests are not run by default.
+    # Longest test should go first, to favor running tests in parallel
+    # Dogecoin: This uses bitcoin blocks.
+    # TODO: Identify an equivalent scenario in Dogecoin testnet, or generate an equivalent scenario if none occurs naturally
+    'p2p_dos_header_tree.py',
+    # Dogecoin: BIP9 version bits are incompatible with AuxPoW versions.
+    'feature_versionbits_warning.py',
+]
+
+COMPATIBILITY_SCRIPTS = [
+    # These tests are not run by default.
+    # Longest test should go first, to favor running tests in parallel
+    'feature_backwards_compatibility.py',
+    'feature_backwards_compatibility.py --descriptors',
+    'wallet_upgradewallet.py',
+    'mempool_compatibility.py',
+]
+
 BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
@@ -196,8 +216,6 @@ BASE_SCRIPTS = [
     'example_test.py',
     'wallet_txn_doublespend.py',
     'wallet_txn_doublespend.py --descriptors',
-    'feature_backwards_compatibility.py',
-    'feature_backwards_compatibility.py --descriptors',
     'wallet_txn_clone.py --mineblock',
     'feature_notifications.py',
     'rpc_getblockfilter.py',
@@ -207,7 +225,6 @@ BASE_SCRIPTS = [
     'mempool_package_onemore.py',
     'rpc_createmultisig.py',
     'rpc_createmultisig.py --descriptors',
-    'feature_versionbits_warning.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
     'wallet_importprunedfunds.py --descriptors',
@@ -225,7 +242,6 @@ BASE_SCRIPTS = [
     'wallet_import_rescan.py --legacy-wallet',
     'wallet_import_with_label.py --legacy-wallet',
     'wallet_importdescriptors.py --descriptors',
-    'wallet_upgradewallet.py',
     'rpc_bind.py --ipv4',
     'rpc_bind.py --ipv6',
     'rpc_bind.py --nonloopback',
@@ -260,13 +276,11 @@ BASE_SCRIPTS = [
     'wallet_coinbase_category.py --descriptors',
     'feature_filelock.py',
     'feature_loadblock.py',
-    'p2p_dos_header_tree.py',
     'p2p_unrequested_blocks.py',
     'p2p_blockfilters.py',
     'feature_includeconf.py',
     'feature_asmap.py',
     'mempool_unbroadcast.py',
-    'mempool_compatibility.py',
     'rpc_deriveaddresses.py',
     'rpc_deriveaddresses.py --usecli',
     'p2p_ping.py',
@@ -290,7 +304,7 @@ BASE_SCRIPTS = [
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
-ALL_SCRIPTS = EXTENDED_SCRIPTS + BASE_SCRIPTS
+ALL_SCRIPTS = EXTENDED_SCRIPTS + BASE_SCRIPTS + BITCOIN_ONLY_SCRIPTS + COMPATIBILITY_SCRIPTS
 
 NON_SCRIPTS = [
     # These are python files that live in the functional tests directory, but are not test scripts.
@@ -308,9 +322,11 @@ def main():
     Help text and arguments for individual test script:''',
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--ansi', action='store_true', default=sys.stdout.isatty(), help="Use ANSI colors and dots in output (enabled by default when standard output is a TTY)")
+    parser.add_argument('--bitcoin', action='store_true', help='run the Bitcoin testnet based test suite in addition to the basic tests')
     parser.add_argument('--combinedlogslen', '-c', type=int, default=0, metavar='n', help='On failure, print a log (of length n lines) to the console, combined from the test framework and all test nodes.')
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
     parser.add_argument('--ci', action='store_true', help='Run checks and code that are usually only enabled in a continuous integration environment')
+    parser.add_argument('--compatibility', action='store_true', help='run the backward compatibility test suite in addition to the basic tests')
     parser.add_argument('--exclude', '-x', help='specify a comma-separated-list of scripts to exclude.')
     parser.add_argument('--extended', action='store_true', help='run the extended test suite in addition to the basic tests')
     parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
@@ -345,7 +361,7 @@ def main():
     logging.basicConfig(format='%(message)s', level=logging_level)
 
     # Create base test directory
-    tmpdir = "%s/test_runner_₿_🏃_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
+    tmpdir = "%s/test_runner_Đ_🏃_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
 
     os.makedirs(tmpdir)
 
@@ -380,12 +396,17 @@ def main():
                 test_list.append(script)
             else:
                 print("{}WARNING!{} Test '{}' not found in full test list.".format(BOLD[1], BOLD[0], test))
-    elif args.extended:
-        # Include extended tests
-        test_list += ALL_SCRIPTS
     else:
-        # Run base tests only
         test_list += BASE_SCRIPTS
+        if args.bitcoin:
+            # Include Bitcoin compatibility tests
+            test_list += BITCOIN_ONLY_SCRIPTS
+        if args.compatibility:
+            # Include backwards compatibility tests
+            test_list += COMPATIBILITY_SCRIPTS
+        if args.extended:
+            # Include extended tests
+            test_list += EXTENDED_SCRIPTS
 
     # Remove the test cases that the user has explicitly asked to exclude.
     if args.exclude:
@@ -681,7 +702,7 @@ class TestResult():
 def check_script_prefixes():
     """Check that test scripts start with one of the allowed name prefixes."""
 
-    good_prefixes_re = re.compile("^(example|feature|interface|mempool|mining|p2p|rpc|wallet|tool)_")
+    good_prefixes_re = re.compile("^(example|feature|interface|mempool|mining|p2p|rpc|wallet|tool|auxpow)_")
     bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
 
     if bad_script_names:

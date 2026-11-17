@@ -6,6 +6,7 @@
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <pow.h>
+#include <primitives/pureheader.h>
 #include <streams.h>
 
 #include <test/util/setup_common.h>
@@ -17,6 +18,7 @@ std::vector<std::pair<uint256, CTransactionRef>> extra_txn;
 BOOST_FIXTURE_TEST_SUITE(blockencodings_tests, RegTestingSetup)
 
 static CBlock BuildBlockTestCase() {
+    const int32_t nChainId = Params().GetConsensus().nAuxpowChainId;
     CBlock block;
     CMutableTransaction tx;
     tx.vin.resize(1);
@@ -26,7 +28,7 @@ static CBlock BuildBlockTestCase() {
 
     block.vtx.resize(3);
     block.vtx[0] = MakeTransactionRef(tx);
-    block.nVersion = 42;
+    block.SetBaseVersion(42, nChainId);
     block.hashPrevBlock = InsecureRand256();
     block.nBits = 0x207fffff;
 
@@ -44,7 +46,7 @@ static CBlock BuildBlockTestCase() {
     bool mutated;
     block.hashMerkleRoot = BlockMerkleRoot(block, &mutated);
     assert(!mutated);
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus())) ++block.nNonce;
+    while (!CheckProofOfWork(block.GetPoWHash(), block.nBits, Params().GetConsensus())) ++block.nNonce;
     return block;
 }
 
@@ -258,6 +260,7 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
 
 BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
 {
+    const int32_t nChainId = Params().GetConsensus().nAuxpowChainId;
     CTxMemPool pool;
     CMutableTransaction coinbase;
     coinbase.vin.resize(1);
@@ -268,14 +271,14 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
     CBlock block;
     block.vtx.resize(1);
     block.vtx[0] = MakeTransactionRef(std::move(coinbase));
-    block.nVersion = 42;
+    block.SetBaseVersion(42, nChainId);
     block.hashPrevBlock = InsecureRand256();
     block.nBits = 0x207fffff;
 
     bool mutated;
     block.hashMerkleRoot = BlockMerkleRoot(block, &mutated);
     assert(!mutated);
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus())) ++block.nNonce;
+    while (!CheckProofOfWork(block.GetPoWHash(), block.nBits, Params().GetConsensus())) ++block.nNonce;
 
     // Test simple header round-trip with only coinbase
     {

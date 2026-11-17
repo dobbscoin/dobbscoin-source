@@ -32,8 +32,8 @@ class WalletLabelsTest(BitcoinTestFramework):
         # Note each time we call generate, all generated coins go into
         # the same address, so we call twice to get two addresses w/50 each
         node.generatetoaddress(nblocks=1, address=node.getnewaddress(label='coinbase'))
-        node.generatetoaddress(nblocks=101, address=node.getnewaddress(label='coinbase'))
-        assert_equal(node.getbalance(), 100)
+        node.generatetoaddress(nblocks=241, address=node.getnewaddress(label='coinbase'))
+        assert_equal(node.getbalance(), 1000000)
 
         # there should be 2 address groups
         # each with 1 address with a balance of 50 Bitcoins
@@ -45,14 +45,14 @@ class WalletLabelsTest(BitcoinTestFramework):
         for address_group in address_groups:
             assert_equal(len(address_group), 1)
             assert_equal(len(address_group[0]), 3)
-            assert_equal(address_group[0][1], 50)
+            assert_equal(address_group[0][1], 500000)
             assert_equal(address_group[0][2], 'coinbase')
             linked_addresses.add(address_group[0][0])
 
         # send 50 from each address to a third address not in this wallet
-        common_address = "msf4WtN1YQKXvNtvdFYt9JBnUD2FB41kjr"
+        common_address = "ngLGV6xaxmFHZFB6g6DX7YjMjDY8dnvuTw"
         node.sendmany(
-            amounts={common_address: 100},
+            amounts={common_address: 1000000},
             subtractfeefrom=[common_address],
             minconf=1,
         )
@@ -68,7 +68,7 @@ class WalletLabelsTest(BitcoinTestFramework):
 
         # we want to reset so that the "" label has what's expected.
         # otherwise we're off by exactly the fee amount as that's mined
-        # and matures in the next 100 blocks
+        # and matures in the next 240 blocks
         amount_to_send = 1.0
 
         # Create labels and make sure subsequent label API calls
@@ -104,7 +104,7 @@ class WalletLabelsTest(BitcoinTestFramework):
             label.verify(node)
             assert_equal(node.getreceivedbylabel(label.name), 2)
             label.verify(node)
-        node.generate(101)
+        node.generate(241)
 
         # Check that setlabel can assign a label to a new unused address.
         for label in labels:
@@ -124,7 +124,7 @@ class WalletLabelsTest(BitcoinTestFramework):
                 label.add_address(multisig_address)
                 label.purpose[multisig_address] = "send"
                 label.verify(node)
-            node.generate(101)
+            node.generate(241)
 
         # Check that setlabel can change the label of an address from a
         # different label.
@@ -138,13 +138,13 @@ class WalletLabelsTest(BitcoinTestFramework):
         node.createwallet(wallet_name='watch_only', disable_private_keys=True)
         wallet_watch_only = node.get_wallet_rpc('watch_only')
         BECH32_VALID = {
-            '✔️_VER15_PROG40': 'bcrt10qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxkg7fn',
-            '✔️_VER16_PROG03': 'bcrt1sqqqqq8uhdgr',
-            '✔️_VER16_PROB02': 'bcrt1sqqqq4wstyw',
+            '✔️_VER15_PROG40': 'dcrt10qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqgyxznv',
+            '✔️_VER16_PROG03': 'dcrt1sqqqqqzykzx2',
+            '✔️_VER16_PROB02': 'dcrt1sqqqqp3rq46',
         }
         BECH32_INVALID = {
-            '❌_VER15_PROG41': 'bcrt1sqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqajlxj8',
-            '❌_VER16_PROB01': 'bcrt1sqq5r4036',
+            '❌_VER15_PROG41': 'dcrt10qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqzc7xyq',
+            '❌_VER16_PROB01': 'dcrt1sqqpl9r5c',
         }
         for l in BECH32_VALID:
             ad = BECH32_VALID[l]

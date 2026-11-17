@@ -125,10 +125,10 @@ class BlockchainTest(BitcoinTestFramework):
         assert_greater_than(res['size_on_disk'], 0)
 
         assert_equal(res['softforks'], {
-            'bip34': {'type': 'buried', 'active': False, 'height': 500},
+            'bip34': {'type': 'buried', 'active': False, 'height': 1000},
             'bip66': {'type': 'buried', 'active': False, 'height': 1251},
             'bip65': {'type': 'buried', 'active': False, 'height': 1351},
-            'csv': {'type': 'buried', 'active': False, 'height': 432},
+            'csv': {'type': 'buried', 'active': False, 'height': 720},
             'segwit': {'type': 'buried', 'active': True, 'height': 0},
             'testdummy': {
                 'type': 'bip9',
@@ -142,8 +142,9 @@ class BlockchainTest(BitcoinTestFramework):
                         'period': 144,
                         'threshold': 108,
                         'elapsed': 57,
-                        'count': 57,
-                        'possible': True,
+                        # Dogecoin: BIP9 isn't compatible with AuxPoW, so these bits are never "seen"
+                        'count': 0,
+                        'possible': False,
                     },
                     'min_activation_height': 0,
                 },
@@ -221,7 +222,7 @@ class BlockchainTest(BitcoinTestFramework):
         node = self.nodes[0]
         res = node.gettxoutsetinfo()
 
-        assert_equal(res['total_amount'], Decimal('8725.00000000'))
+        assert_equal(res['total_amount'], Decimal('87250000.00000000'))
         assert_equal(res['transactions'], 200)
         assert_equal(res['height'], 200)
         assert_equal(res['txouts'], 200)

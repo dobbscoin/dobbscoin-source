@@ -8,12 +8,19 @@ export LC_ALL=C.UTF-8
 
 # Make sure default datadir does not exist and is never read by creating a dummy file
 if [ "$CI_OS_NAME" == "macos" ]; then
-  echo > $HOME/Library/Application\ Support/Bitcoin
+  echo > $HOME/Library/Application\ Support/Dogecoin
 else
-  DOCKER_EXEC echo \> \$HOME/.bitcoin
+  DOCKER_EXEC echo \> \$HOME/.dogecoin
 fi
 
 DOCKER_EXEC mkdir -p ${DEPENDS_DIR}/SDKs ${DEPENDS_DIR}/sdk-sources
+
+DOCKER_EXEC test/functional/install-deps.sh
+retVal=$?
+if [ $retVal -eq 1 ]; then
+    echo "Error installing dependencies"
+    exit $retVal
+fi
 
 OSX_SDK_BASENAME="Xcode-${XCODE_VERSION}-${XCODE_BUILD_ID}-extracted-SDK-with-libcxx-headers.tar.gz"
 OSX_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${OSX_SDK_BASENAME}"
@@ -23,10 +30,15 @@ if [ -n "$XCODE_VERSION" ] && [ ! -f "$OSX_SDK_PATH" ]; then
 fi
 
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
-  # Use BDB compiled using install_db4.sh script to work around linking issue when using BDB
+  # Use BDB compiled using install_db5.sh script to work around linking issue when using BDB
   # from depends. See https://github.com/bitcoin/bitcoin/pull/18288#discussion_r433189350 for
   # details.
-  DOCKER_EXEC "contrib/install_db4.sh \$(pwd) --enable-umrw CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}'"
+  DOCKER_EXEC "contrib/install_db5.sh \$(pwd) --enable-umrw CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}'"
+fi
+
+if [[ $HOST = *-apple-darwin16 ]]; then
+  # Use BDB compiled using install_db5.sh script as Brew does not supply BDB 5.3
+  DOCKER_EXEC "contrib/install_db5.sh \$BASE_ROOT_DIR --enable-posixmutexes"
 fi
 
 if [ -n "$XCODE_VERSION" ] && [ -f "$OSX_SDK_PATH" ]; then

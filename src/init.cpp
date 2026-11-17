@@ -37,6 +37,7 @@
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
+#include <primitives/pureheader.h>
 #include <protocol.h>
 #include <rpc/blockchain.h>
 #include <rpc/register.h>
@@ -59,6 +60,7 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <versionbits.h>
 
 #include <validationinterface.h>
 #include <walletinitinterface.h>
@@ -85,7 +87,12 @@
 #include <zmq/zmqrpc.h>
 #endif
 
+#ifdef USE_SSE2
+#include <crypto/scrypt.h>
+#endif
+
 static bool fFeeEstimatesInitialized = false;
+
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
 static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
@@ -106,7 +113,7 @@ static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
 /**
  * The PID file facilities.
  */
-static const char* BITCOIN_PID_FILENAME = "bitcoind.pid";
+static const char* BITCOIN_PID_FILENAME = "dogecoind.pid";
 
 static fs::path GetPidFile(const ArgsManager& args)
 {
@@ -968,6 +975,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // on the command line or in this network's section of the config file.
     std::string network = args.GetChainName();
     if (network == CBaseChainParams::SIGNET) {
+        // Dogecoin: Signet requires a challenge, but we can't halt when constructing the chainparams as they're constructed even if not used.
+        if (!args.IsArgSet("-signetchallenge")) {
+            return InitError(_("-signetchallenge must be specified when using -signet on Dogecoin as no default Signet is available."));
+        }
         LogPrintf("Signet derived magic (message start): %s\n", HexStr(chainparams.MessageStart()));
     }
     bilingual_str errors;
@@ -1109,6 +1120,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         CAmount n = 0;
         if (!ParseMoney(args.GetArg("-incrementalrelayfee", ""), n))
             return InitError(AmountErrMsg("incrementalrelayfee", args.GetArg("-incrementalrelayfee", "")));
+        if (n > MAX_FEE_RATE)
+            return InitError(strprintf(Untranslated("-incrementalrelayfee is greater than maximum fee rate of %ld."), MAX_FEE_RATE));
         incrementalRelayFee = CFeeRate(n);
     }
 
@@ -1145,6 +1158,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (!ParseMoney(args.GetArg("-minrelaytxfee", ""), n)) {
             return InitError(AmountErrMsg("minrelaytxfee", args.GetArg("-minrelaytxfee", "")));
         }
+        if (n > MAX_FEE_RATE)
+            return InitError(strprintf(Untranslated("-minrelaytxfee is greater than maximum fee rate of %ld."), MAX_FEE_RATE));
         // High fee check is done afterward in CWallet::Create()
         ::minRelayTxFee = CFeeRate(n);
     } else if (incrementalRelayFee > ::minRelayTxFee) {
@@ -1160,6 +1175,15 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (!ParseMoney(args.GetArg("-blockmintxfee", ""), n))
             return InitError(AmountErrMsg("blockmintxfee", args.GetArg("-blockmintxfee", "")));
     }
+    if (args.IsArgSet("-blockversion")) {
+        const int32_t nOverrideVersion = gArgs.GetArg("-blockversion", VERSIONBITS_LAST_OLD_BLOCK_VERSION);
+        if (nOverrideVersion < 1) {
+            return InitError(strprintf(Untranslated("%s: block version too low: %d"), __func__, nOverrideVersion));
+        }
+        if (nOverrideVersion >= CPureBlockHeader::VERSION_AUXPOW) {
+            return InitError(strprintf(Untranslated("%s: block version too high: %d"), __func__, nOverrideVersion));
+        }
+    }
 
     // Feerate used to define dust.  Shouldn't be changed lightly as old
     // implementations may inadvertently create non-standard transactions
@@ -1167,6 +1191,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         CAmount n = 0;
         if (!ParseMoney(args.GetArg("-dustrelayfee", ""), n))
             return InitError(AmountErrMsg("dustrelayfee", args.GetArg("-dustrelayfee", "")));
+        if (n > MAX_FEE_RATE)
+            return InitError(strprintf(Untranslated("-dustrelayfee is greater than maximum fee rate of %ld."), MAX_FEE_RATE));
         dustRelayFee = CFeeRate(n);
     }
 
@@ -1370,6 +1396,11 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         if (!AppInitServers(context, node))
             return InitError(_("Unable to start HTTP server. See debug log for details."));
     }
+    
+#if defined(USE_SSE2)
+    std::string sse2detect = scrypt_detect_sse2();
+    LogPrintf("%s\n", sse2detect);
+#endif
 
     // ********************************************************* Step 5: verify wallet database integrity
     for (const auto& client : node.chain_clients) {
