@@ -1,8 +1,0 @@
-dobbscoin (0.14.0-1) unstable; urgency=medium
-
-  * (BOB) Dobbscoin 0.14.0.
-  * Packaging now maintained by the Dobbscoin project. The 45 earlier
-    entries were Bitcoin's (0.3.19 to 0.9.3, from Debian and the Bitcoin
-    PPA) and are dropped.
-
- -- BtcBob <dobbscoin@gmail.com>  Sat, 26 Sep 2026 12:00:00 +0000

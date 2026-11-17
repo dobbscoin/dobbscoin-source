@@ -3,7 +3,7 @@
 <plist version="0.9">
 <dict>
   <key>LSMinimumSystemVersion</key>
-  <string>10.6.0</string>
+  <string>10.12.0</string>
 
   <key>LSArchitecturePriority</key>
   <array>
@@ -11,13 +11,13 @@
   </array>
 
   <key>CFBundleIconFile</key>
-  <string>dobbscoin.icns</string>
+  <string>bitcoin.icns</string>
 
   <key>CFBundlePackageType</key>
   <string>APPL</string>
 
-  <key>CFBundleGetInfoString</key>
-  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@, Copyright © 2009-@COPYRIGHT_YEAR@ The Bitcoin Core developers, 2013-@COPYRIGHT_YEAR@ The Dobbscoin developers</string>
+  <key>NSHumanReadableCopyright</key>
+  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@.@CLIENT_VERSION_BUILD@, Copyright © 2009-@COPYRIGHT_YEAR@ @COPYRIGHT_HOLDERS_FINAL@</string>
 
   <key>CFBundleShortVersionString</key>
   <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@</string>
@@ -29,10 +29,16 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-  <string>Dobbscoin-Qt</string>
+  <string>Bitcoin-Qt</string>
+
+  <key>CFBundleName</key>
+  <string>Bitcoin-Qt</string>
+
+  <key>LSHasLocalizedDisplayName</key>
+  <true/>
 
   <key>CFBundleIdentifier</key>
-  <string>info.dobbscoin.Dobbscoin-Qt</string>
+  <string>org.bitcoinfoundation.Bitcoin-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
@@ -40,48 +46,11 @@
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>CFBundleURLName</key>
-      <string>info.dobbscoin.DobbscoinPayment</string>
+      <string>org.bitcoin.BitcoinPayment</string>
       <key>CFBundleURLSchemes</key>
       <array>
-        <string>dobbscoin</string>
+        <string>bitcoin</string>
       </array>
-    </dict>
-  </array>
-
-  <key>UTExportedTypeDeclarations</key>
-  <array>
-    <dict>
-      <key>UTTypeIdentifier</key>
-      <string>info.dobbscoin.paymentrequest</string>
-      <key>UTTypeDescription</key>
-      <string>Dobbscoin payment request</string>
-      <key>UTTypeConformsTo</key>
-      <array>
-        <string>public.data</string>
-      </array>
-      <key>UTTypeTagSpecification</key>
-      <dict>
-        <key>public.mime-type</key>
-        <string>application/x-dobbscoin-payment-request</string>
-        <key>public.filename-extension</key>
-        <array>
-          <string>dobbscoinpaymentrequest</string>
-        </array>
-      </dict>
-    </dict>
-  </array>
-
-  <key>CFBundleDocumentTypes</key>
-  <array>
-    <dict>
-      <key>CFBundleTypeRole</key>
-      <string>Editor</string>
-      <key>LSItemContentTypes</key>
-      <array>
-        <string>info.dobbscoin.paymentrequest</string>
-      </array>
-      <key>LSHandlerRank</key>
-      <string>Owner</string>
     </dict>
   </array>
 
@@ -91,9 +60,9 @@
   <key>NSHighResolutionCapable</key>
     <string>True</string>
 
-  <key>LSAppNapIsDisabled</key>
+  <key>NSRequiresAquaSystemAppearance</key>
     <string>True</string>
-  
+
   <key>LSApplicationCategoryType</key>
     <string>public.app-category.finance</string>
 </dict>

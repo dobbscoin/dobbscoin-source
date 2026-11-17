@@ -1,42 +1,51 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "overviewpage.h"
-#include "main.h"
-#include <QLocale>
-#include "ui_overviewpage.h"
+#include <qt/overviewpage.h>
+#include <qt/forms/ui_overviewpage.h>
 
-#include "dobbscoinunits.h"
-#include "clientmodel.h"
-#include "guiconstants.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "transactionfilterproxy.h"
-#include "transactiontablemodel.h"
-#include "walletmodel.h"
+#include <qt/bitcoinunits.h>
+#include <qt/clientmodel.h>
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
+#include <qt/platformstyle.h>
+#include <qt/transactionfilterproxy.h>
+#include <qt/transactionoverviewwidget.h>
+#include <qt/transactiontablemodel.h>
+#include <qt/walletmodel.h>
 
 #include <QAbstractItemDelegate>
+#include <QApplication>
 #include <QPainter>
+#include <QStatusTipEvent>
 
-#define DECORATION_SIZE 64
-#define NUM_ITEMS 3
+#include <algorithm>
+#include <map>
+
+#define DECORATION_SIZE 54
+#define NUM_ITEMS 5
+
+Q_DECLARE_METATYPE(interfaces::WalletBalances)
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
 public:
-    TxViewDelegate(): QAbstractItemDelegate(), unit(DobbscoinUnits::BOB)
+    explicit TxViewDelegate(const PlatformStyle *_platformStyle, QObject *parent=nullptr):
+        QAbstractItemDelegate(parent), unit(BitcoinUnits::BTC),
+        platformStyle(_platformStyle)
     {
-
+        connect(this, &TxViewDelegate::width_changed, this, &TxViewDelegate::sizeHintChanged);
     }
 
     inline void paint(QPainter *painter, const QStyleOptionViewItem &option,
-                      const QModelIndex &index ) const
+                      const QModelIndex &index ) const override
     {
         painter->save();
 
-        QIcon icon = qvariant_cast<QIcon>(index.data(Qt::DecorationRole));
+        QIcon icon = qvariant_cast<QIcon>(index.data(TransactionTableModel::RawDecorationRole));
         QRect mainRect = option.rect;
         QRect decorationRect(mainRect.topLeft(), QSize(DECORATION_SIZE, DECORATION_SIZE));
         int xspace = DECORATION_SIZE + 8;
@@ -44,6 +53,7 @@ public:
         int halfheight = (mainRect.height() - 2*ypad)/2;
         QRect amountRect(mainRect.left() + xspace, mainRect.top()+ypad, mainRect.width() - xspace, halfheight);
         QRect addressRect(mainRect.left() + xspace, mainRect.top()+ypad+halfheight, mainRect.width() - xspace, halfheight);
+        icon = platformStyle->SingleColorIcon(icon);
         icon.paint(painter, decorationRect);
 
         QDateTime date = index.data(TransactionTableModel::DateRole).toDateTime();
@@ -58,16 +68,16 @@ public:
             foreground = brush.color();
         }
 
+        if (index.data(TransactionTableModel::WatchonlyRole).toBool()) {
+            QIcon iconWatchonly = qvariant_cast<QIcon>(index.data(TransactionTableModel::WatchonlyDecorationRole));
+            QRect watchonlyRect(addressRect.left(), addressRect.top(), 16, addressRect.height());
+            iconWatchonly.paint(painter, watchonlyRect);
+            addressRect.setLeft(addressRect.left() + watchonlyRect.width() + 5);
+        }
+
         painter->setPen(foreground);
         QRect boundingRect;
-        painter->drawText(addressRect, Qt::AlignLeft|Qt::AlignVCenter, address, &boundingRect);
-
-        if (index.data(TransactionTableModel::WatchonlyRole).toBool())
-        {
-            QIcon iconWatchonly = qvariant_cast<QIcon>(index.data(TransactionTableModel::WatchonlyDecorationRole));
-            QRect watchonlyRect(boundingRect.right() + 5, mainRect.top()+ypad+halfheight, 16, halfheight);
-            iconWatchonly.paint(painter, watchonlyRect);
-        }
+        painter->drawText(addressRect, Qt::AlignLeft | Qt::AlignVCenter, address, &boundingRect);
 
         if(amount < 0)
         {
@@ -82,49 +92,66 @@ public:
             foreground = option.palette.color(QPalette::Text);
         }
         painter->setPen(foreground);
-        QString amountText = DobbscoinUnits::formatWithUnit(unit, amount, true, DobbscoinUnits::separatorAlways);
+        QString amountText = BitcoinUnits::formatWithUnit(unit, amount, true, BitcoinUnits::SeparatorStyle::ALWAYS);
         if(!confirmed)
         {
             amountText = QString("[") + amountText + QString("]");
         }
-        painter->drawText(amountRect, Qt::AlignRight|Qt::AlignVCenter, amountText);
+
+        QRect amount_bounding_rect;
+        painter->drawText(amountRect, Qt::AlignRight | Qt::AlignVCenter, amountText, &amount_bounding_rect);
 
         painter->setPen(option.palette.color(QPalette::Text));
-        painter->drawText(amountRect, Qt::AlignLeft|Qt::AlignVCenter, GUIUtil::dateTimeStr(date));
+        QRect date_bounding_rect;
+        painter->drawText(amountRect, Qt::AlignLeft | Qt::AlignVCenter, GUIUtil::dateTimeStr(date), &date_bounding_rect);
+
+        // 0.4*date_bounding_rect.width() is used to visually distinguish a date from an amount.
+        const int minimum_width = 1.4 * date_bounding_rect.width() + amount_bounding_rect.width();
+        const auto search = m_minimum_width.find(index.row());
+        if (search == m_minimum_width.end() || search->second != minimum_width) {
+            m_minimum_width[index.row()] = minimum_width;
+            Q_EMIT width_changed(index);
+        }
 
         painter->restore();
     }
 
-    inline QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
+    inline QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override
     {
-        return QSize(DECORATION_SIZE, DECORATION_SIZE);
+        const auto search = m_minimum_width.find(index.row());
+        const int minimum_text_width = search == m_minimum_width.end() ? 0 : search->second;
+        return {DECORATION_SIZE + 8 + minimum_text_width, DECORATION_SIZE};
     }
 
     int unit;
 
-};
-#include "overviewpage.moc"
+Q_SIGNALS:
+    //! An intermediate signal for emitting from the `paint() const` member function.
+    void width_changed(const QModelIndex& index) const;
 
-OverviewPage::OverviewPage(QWidget *parent) :
+private:
+    const PlatformStyle* platformStyle;
+    mutable std::map<int, int> m_minimum_width;
+};
+
+#include <qt/overviewpage.moc>
+
+OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::OverviewPage),
-    clientModel(0),
-    walletModel(0),
-    currentBalance(-1),
-    currentUnconfirmedBalance(-1),
-    currentImmatureBalance(-1),
-    currentWatchOnlyBalance(-1),
-    currentWatchUnconfBalance(-1),
-    currentWatchImmatureBalance(-1),
-    txdelegate(new TxViewDelegate()),
-    filter(0)
+    clientModel(nullptr),
+    walletModel(nullptr),
+    txdelegate(new TxViewDelegate(platformStyle, this))
 {
     ui->setupUi(this);
 
-    // Artwork set in the .ui file has a dark-theme variant (#49)
-    ui->label_6->setPixmap(QPixmap(GUIUtil::ThemedResource(":/images/overviewLeftTop")));
-    ui->label_7->setPixmap(QPixmap(GUIUtil::ThemedResource(":/images/overviewLeftBottom")));
-    ui->label_8->setPixmap(QPixmap(GUIUtil::ThemedResource(":/images/overviewRight")));
+    m_balances.balance = -1;
+
+    // use a SingleColorIcon for the "out of sync warning" icon
+    QIcon icon = platformStyle->SingleColorIcon(":/icons/warning");
+    icon.addPixmap(icon.pixmap(QSize(64,64), QIcon::Normal), QIcon::Disabled); // also set the disabled icon because we are using a disabled QPushButton to work around missing HiDPI support of QLabel (https://bugreports.qt.io/browse/QTBUG-42503)
+    ui->labelTransactionsStatus->setIcon(icon);
+    ui->labelWalletStatus->setIcon(icon);
 
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);
@@ -132,20 +159,38 @@ OverviewPage::OverviewPage(QWidget *parent) :
     ui->listTransactions->setMinimumHeight(NUM_ITEMS * (DECORATION_SIZE + 2));
     ui->listTransactions->setAttribute(Qt::WA_MacShowFocusRect, false);
 
-    connect(ui->listTransactions, SIGNAL(clicked(QModelIndex)), this, SLOT(handleTransactionClicked(QModelIndex)));
-
-    // init "out of sync" warning labels
-    ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
-    ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
+    connect(ui->listTransactions, &TransactionOverviewWidget::clicked, this, &OverviewPage::handleTransactionClicked);
 
     // start with displaying the "out of sync" warnings
     showOutOfSyncWarning(true);
+    connect(ui->labelWalletStatus, &QPushButton::clicked, this, &OverviewPage::handleOutOfSyncWarningClicks);
+    connect(ui->labelTransactionsStatus, &QPushButton::clicked, this, &OverviewPage::handleOutOfSyncWarningClicks);
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 {
     if(filter)
-        emit transactionClicked(filter->mapToSource(index));
+        Q_EMIT transactionClicked(filter->mapToSource(index));
+}
+
+void OverviewPage::handleOutOfSyncWarningClicks()
+{
+    Q_EMIT outOfSyncWarningClicked();
+}
+
+void OverviewPage::setPrivacy(bool privacy)
+{
+    m_privacy = privacy;
+    if (m_balances.balance != -1) {
+        setBalance(m_balances);
+    }
+
+    ui->listTransactions->setVisible(!m_privacy);
+
+    const QString status_tip = m_privacy ? tr("Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings->Mask values.") : "";
+    setStatusTip(status_tip);
+    QStatusTipEvent event(status_tip);
+    QApplication::sendEvent(this, &event);
 }
 
 OverviewPage::~OverviewPage()
@@ -153,33 +198,41 @@ OverviewPage::~OverviewPage()
     delete ui;
 }
 
-void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
+void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
 {
     int unit = walletModel->getOptionsModel()->getDisplayUnit();
-    currentBalance = balance;
-    currentUnconfirmedBalance = unconfirmedBalance;
-    currentImmatureBalance = immatureBalance;
-    currentWatchOnlyBalance = watchOnlyBalance;
-    currentWatchUnconfBalance = watchUnconfBalance;
-    currentWatchImmatureBalance = watchImmatureBalance;
-    ui->labelBalance->setText(DobbscoinUnits::formatWithUnit(unit, balance, false, DobbscoinUnits::separatorAlways));
-    ui->labelUnconfirmed->setText(DobbscoinUnits::formatWithUnit(unit, unconfirmedBalance, false, DobbscoinUnits::separatorAlways));
-    ui->labelImmature->setText(DobbscoinUnits::formatWithUnit(unit, immatureBalance, false, DobbscoinUnits::separatorAlways));
-    ui->labelTotal->setText(DobbscoinUnits::formatWithUnit(unit, balance + unconfirmedBalance + immatureBalance, false, DobbscoinUnits::separatorAlways));
-    ui->labelWatchAvailable->setText(DobbscoinUnits::formatWithUnit(unit, watchOnlyBalance, false, DobbscoinUnits::separatorAlways));
-    ui->labelWatchPending->setText(DobbscoinUnits::formatWithUnit(unit, watchUnconfBalance, false, DobbscoinUnits::separatorAlways));
-    ui->labelWatchImmature->setText(DobbscoinUnits::formatWithUnit(unit, watchImmatureBalance, false, DobbscoinUnits::separatorAlways));
-    ui->labelWatchTotal->setText(DobbscoinUnits::formatWithUnit(unit, watchOnlyBalance + watchUnconfBalance + watchImmatureBalance, false, DobbscoinUnits::separatorAlways));
-
+    m_balances = balances;
+    if (walletModel->wallet().isLegacy()) {
+        if (walletModel->wallet().privateKeysDisabled()) {
+            ui->labelBalance->setText(BitcoinUnits::formatWithPrivacy(unit, balances.watch_only_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+            ui->labelUnconfirmed->setText(BitcoinUnits::formatWithPrivacy(unit, balances.unconfirmed_watch_only_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+            ui->labelImmature->setText(BitcoinUnits::formatWithPrivacy(unit, balances.immature_watch_only_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+            ui->labelTotal->setText(BitcoinUnits::formatWithPrivacy(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+        } else {
+            ui->labelBalance->setText(BitcoinUnits::formatWithPrivacy(unit, balances.balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+            ui->labelUnconfirmed->setText(BitcoinUnits::formatWithPrivacy(unit, balances.unconfirmed_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+            ui->labelImmature->setText(BitcoinUnits::formatWithPrivacy(unit, balances.immature_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+            ui->labelTotal->setText(BitcoinUnits::formatWithPrivacy(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+            ui->labelWatchAvailable->setText(BitcoinUnits::formatWithPrivacy(unit, balances.watch_only_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+            ui->labelWatchPending->setText(BitcoinUnits::formatWithPrivacy(unit, balances.unconfirmed_watch_only_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+            ui->labelWatchImmature->setText(BitcoinUnits::formatWithPrivacy(unit, balances.immature_watch_only_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+            ui->labelWatchTotal->setText(BitcoinUnits::formatWithPrivacy(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+        }
+    } else {
+        ui->labelBalance->setText(BitcoinUnits::formatWithPrivacy(unit, balances.balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+        ui->labelUnconfirmed->setText(BitcoinUnits::formatWithPrivacy(unit, balances.unconfirmed_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+        ui->labelImmature->setText(BitcoinUnits::formatWithPrivacy(unit, balances.immature_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+        ui->labelTotal->setText(BitcoinUnits::formatWithPrivacy(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+    }
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
-    bool showImmature = immatureBalance != 0;
-    bool showWatchOnlyImmature = watchImmatureBalance != 0;
+    bool showImmature = balances.immature_balance != 0;
+    bool showWatchOnlyImmature = balances.immature_watch_only_balance != 0;
 
     // for symmetry reasons also show immature label when the watch-only one is shown
     ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
     ui->labelImmatureText->setVisible(showImmature || showWatchOnlyImmature);
-    ui->labelWatchImmature->setVisible(showWatchOnlyImmature); // show watch-only immature balance
+    ui->labelWatchImmature->setVisible(!walletModel->wallet().privateKeysDisabled() && showWatchOnlyImmature); // show watch-only immature balance
 }
 
 // show/hide watch-only labels
@@ -198,16 +251,10 @@ void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
 
 void OverviewPage::setClientModel(ClientModel *model)
 {
-    if (model) {
-        // The Pipe: chain vitals refresh on every new block
-        connect(model, SIGNAL(numBlocksChanged(int)), this, SLOT(updateChainVitals(int)));
-        updateChainVitals(model->getNumBlocks());
-    }
     this->clientModel = model;
-    if(model)
-    {
-        // Show warning if this is a prerelease version
-        connect(model, SIGNAL(alertsChanged(QString)), this, SLOT(updateAlerts(QString)));
+    if (model) {
+        // Show warning, for example if this is a prerelease version
+        connect(model, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
         updateAlerts(model->getStatusBarWarnings());
     }
 }
@@ -218,29 +265,32 @@ void OverviewPage::setWalletModel(WalletModel *model)
     if(model && model->getOptionsModel())
     {
         // Set up transaction list
-        filter = new TransactionFilterProxy();
+        filter.reset(new TransactionFilterProxy());
         filter->setSourceModel(model->getTransactionTableModel());
         filter->setLimit(NUM_ITEMS);
         filter->setDynamicSortFilter(true);
         filter->setSortRole(Qt::EditRole);
         filter->setShowInactive(false);
-        filter->sort(TransactionTableModel::Status, Qt::DescendingOrder);
+        filter->sort(TransactionTableModel::Date, Qt::DescendingOrder);
 
-        ui->listTransactions->setModel(filter);
+        ui->listTransactions->setModel(filter.get());
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
 
         // Keep up to date with wallet
-        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(),
-                   model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+        interfaces::Wallet& wallet = model->wallet();
+        interfaces::WalletBalances balances = wallet.getBalances();
+        setBalance(balances);
+        connect(model, &WalletModel::balanceChanged, this, &OverviewPage::setBalance);
 
-        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &OverviewPage::updateDisplayUnit);
 
-        updateWatchOnlyLabels(model->haveWatchOnly());
-        connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
+        updateWatchOnlyLabels(wallet.haveWatchOnly() && !model->wallet().privateKeysDisabled());
+        connect(model, &WalletModel::notifyWatchonlyChanged, [this](bool showWatchOnly) {
+            updateWatchOnlyLabels(showWatchOnly && !walletModel->wallet().privateKeysDisabled());
+        });
     }
 
-    // update the display unit, to not use the default ("BOB")
+    // update the display unit, to not use the default ("BTC")
     updateDisplayUnit();
 }
 
@@ -248,9 +298,9 @@ void OverviewPage::updateDisplayUnit()
 {
     if(walletModel && walletModel->getOptionsModel())
     {
-        if(currentBalance != -1)
-            setBalance(currentBalance, currentUnconfirmedBalance, currentImmatureBalance,
-                       currentWatchOnlyBalance, currentWatchUnconfBalance, currentWatchImmatureBalance);
+        if (m_balances.balance != -1) {
+            setBalance(m_balances);
+        }
 
         // Update txdelegate->unit with the current unit
         txdelegate->unit = walletModel->getOptionsModel()->getDisplayUnit();
@@ -269,34 +319,4 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 {
     ui->labelWalletStatus->setVisible(fShow);
     ui->labelTransactionsStatus->setVisible(fShow);
-}
-
-static QString formatHashRate(double hps)
-{
-    static const char* units[] = {"H/s", "kH/s", "MH/s", "GH/s", "TH/s", "PH/s"};
-    int i = 0;
-    while (hps >= 1000.0 && i < 5) {
-        hps /= 1000.0;
-        i++;
-    }
-    return QString("%1 %2").arg(QString::number(hps, 'f', hps < 10 ? 2 : (hps < 100 ? 1 : 0))).arg(units[i]);
-}
-
-static QString formatDifficulty(double d)
-{
-    return QString::number(d, 'f', d >= 100 ? 0 : (d >= 1 ? 2 : 4));
-}
-
-void OverviewPage::updateChainVitals(int count)
-{
-    if (!clientModel)
-        return;
-    QLocale loc = QLocale::system();
-    ui->labelVitalsHeight->setText(loc.toString(count));
-    // current against a one-week mean, so a retarget spike reads as a spike
-    ui->labelVitalsDiff->setText(QString("%1 / %2 %3")
-        .arg(formatDifficulty(clientModel->getDifficulty()))
-        .arg(formatDifficulty(clientModel->getAvgDifficulty(7 * 1440)))
-        .arg(tr("avg")));
-    ui->labelVitalsHash->setText(formatHashRate(clientModel->getNetworkHashPS(120)));
 }

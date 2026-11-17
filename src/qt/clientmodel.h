@@ -1,29 +1,38 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DOBBSCOIN_QT_CLIENTMODEL_H
-#define DOBBSCOIN_QT_CLIENTMODEL_H
+#ifndef BITCOIN_QT_CLIENTMODEL_H
+#define BITCOIN_QT_CLIENTMODEL_H
 
 #include <QObject>
+#include <QDateTime>
 
-class AddressTableModel;
+#include <atomic>
+#include <memory>
+#include <sync.h>
+#include <uint256.h>
+
+class BanTableModel;
+class CBlockIndex;
 class OptionsModel;
 class PeerTableModel;
-class TransactionTableModel;
+enum class SynchronizationState;
 
-class CWallet;
+namespace interfaces {
+class Handler;
+class Node;
+}
 
 QT_BEGIN_NAMESPACE
-class QDateTime;
 class QTimer;
 QT_END_NAMESPACE
 
-enum BlockSource {
-    BLOCK_SOURCE_NONE,
-    BLOCK_SOURCE_REINDEX,
-    BLOCK_SOURCE_DISK,
-    BLOCK_SOURCE_NETWORK
+enum class BlockSource {
+    NONE,
+    REINDEX,
+    DISK,
+    NETWORK
 };
 
 enum NumConnections {
@@ -33,67 +42,73 @@ enum NumConnections {
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
-/** Model for Dobbscoin network client. */
+/** Model for Bitcoin network client. */
 class ClientModel : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ClientModel(OptionsModel *optionsModel, QObject *parent = 0);
+    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = nullptr);
     ~ClientModel();
 
+    interfaces::Node& node() const { return m_node; }
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
+    BanTableModel *getBanTableModel();
 
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
     int getNumBlocks() const;
+    uint256 getBestBlockHash();
+    int getHeaderTipHeight() const;
+    int64_t getHeaderTipTime() const;
 
-    //! Chain vitals for the Overview panel (all local; no network I/O)
-    double getDifficulty() const;
-    //! Mean difficulty over the last nBlocks headers (in-memory block index walk)
-    double getAvgDifficulty(int nBlocks) const;
-    //! Estimated network hashes/sec over the last nBlocks (getnetworkhashps-style estimator)
-    double getNetworkHashPS(int nBlocks = 120) const;
-    int getNumBlocksAtStartup();
-
-    quint64 getTotalBytesRecv() const;
-    quint64 getTotalBytesSent() const;
-
-    double getVerificationProgress() const;
-    QDateTime getLastBlockDate() const;
-
-    //! Return true if core is doing initial block download
-    bool inInitialBlockDownload() const;
-    //! Return true if core is importing blocks
+    //! Returns enum BlockSource of the current importing/syncing state
     enum BlockSource getBlockSource() const;
     //! Return warnings to be displayed in status bar
     QString getStatusBarWarnings() const;
 
     QString formatFullVersion() const;
-    QString formatBuildDate() const;
+    QString formatSubVersion() const;
     bool isReleaseVersion() const;
-    QString clientName() const;
     QString formatClientStartupTime() const;
+    QString dataDir() const;
+    QString blocksDir() const;
+
+    bool getProxyInfo(std::string& ip_port) const;
+
+    // caches for the best header: hash, number of blocks and block time
+    mutable std::atomic<int> cachedBestHeaderHeight;
+    mutable std::atomic<int64_t> cachedBestHeaderTime;
+    mutable std::atomic<int> m_cached_num_blocks{-1};
+
+    Mutex m_cached_tip_mutex;
+    uint256 m_cached_tip_blocks GUARDED_BY(m_cached_tip_mutex){};
 
 private:
+    interfaces::Node& m_node;
+    std::unique_ptr<interfaces::Handler> m_handler_show_progress;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_num_connections_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_network_active_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_alert_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_banned_list_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
+    BanTableModel *banTableModel;
 
-    int cachedNumBlocks;
-    bool cachedReindexing;
-    bool cachedImporting;
-
-    int numBlocksAtStartup;
-
-    QTimer *pollTimer;
+    //! A thread to interact with m_node asynchronously
+    QThread* const m_thread;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
 
-signals:
+Q_SIGNALS:
     void numConnectionsChanged(int count);
-    void numBlocksChanged(int count);
+    void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header, SynchronizationState sync_state);
+    void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
+    void networkActiveChanged(bool networkActive);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
 
@@ -103,10 +118,11 @@ signals:
     // Show progress dialog e.g. for verifychain
     void showProgress(const QString &title, int nProgress);
 
-public slots:
-    void updateTimer();
+public Q_SLOTS:
     void updateNumConnections(int numConnections);
-    void updateAlert(const QString &hash, int status);
+    void updateNetworkActive(bool networkActive);
+    void updateAlert();
+    void updateBanlist();
 };
 
-#endif // DOBBSCOIN_QT_CLIENTMODEL_H
+#endif // BITCOIN_QT_CLIENTMODEL_H

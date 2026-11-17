@@ -1,157 +1,80 @@
-<!-- home-banner -->
-> ### 🏠 Home is [git.subgenius.finance](https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source).
->
-> The GitHub copy is a **mirror, pushed from here** — issues and pull requests opened there are not watched.
-> Builds and downloads: **[dobbscoin.info](https://dobbscoin.info)** — Dobbscoin (BOB) wallet downloads.
->
-> **Have a fork or a clone?** Point it home with `git remote set-url origin https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source.git`
+Bitcoin Core integration/staging tree
+=====================================
 
----
-# Dobbscoin Core — (BOB)
+https://bitcoincore.org
 
-[![Release](https://img.shields.io/gitea/v/release/SubGeniusFinance/dobbscoin-source?gitea_url=https%3A%2F%2Fgit.subgenius.finance&label=release)](https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source/releases)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](COPYING)
+What is Bitcoin?
+----------------
 
-> # **MONETIZED SLACK.**
-> ### Backed By Nothing. Powered By Everything.
->
-> **(BOB)** is the Official CryptoCurrency of **The Church of the SubGenius** — the ONLY currency accepted on the Pleasure Saucers, and the only ledger "Bob" Himself would dignify by salesmanship.
->
-> *Eternal Salvation or Triple Your Money Back.*
+Bitcoin is an experimental digital currency that enables instant payments to
+anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
+with no central authority: managing transactions and issuing money are carried
+out collectively by the network. Bitcoin Core is the name of open source
+software which enables the use of this currency.
 
-**<https://dobbscoin.info>** · **<https://subgenius.finance>** — *where Sub-Culture becomes Capital.*
+For more information, as well as an immediately usable, binary version of
+the Bitcoin Core software, see https://bitcoincore.org/en/download/, or read the
+[original whitepaper](https://bitcoincore.org/bitcoin.pdf).
 
-Maybe your income just suddenly popped. Maybe you've inherited a fortune, birthed quintuplets, been recently divorced, or you simply woke up in a cold sweat at 3am knowing — *knowing* — that the Elder Bankers of the Universe are slowly draining your essential fluids through the bank app on your phone.
+License
+-------
 
-Whatever your problem is, **(BOB) can help you.**
+Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+information or see https://opensource.org/licenses/MIT.
 
-The Conspiracy wants you mediocre, taxable, and on autopay. (BOB) wants you free. **Choose.**
+Development Process
+-------------------
 
----
+The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
+completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
+regularly from release branches to indicate new official, stable release versions of Bitcoin Core.
 
-## ⚠ Upgrade notice — two hard forks incoming
+The https://github.com/bitcoin-core/gui repository is used exclusively for the
+development of the GUI. Its master branch is identical in all monotree
+repositories. Release branches and tags do not exist, so please do not fork
+that repository unless it is for development reasons.
 
-| Activation | Block | ETA | Old node fate |
-|---|---|---|---|
-| **LWMA-3 + emergency-diff + 100-block finality** | **1,888,808 → 1,888,888** | ~2026-07-16 | Forked off |
-| **AuxPoW merge-mining** (chain ID `0x00B0`) | **2,000,000** | ~2026-12-17 | Forked off |
+The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
+and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
 
-**Run v0.13.0.** Anything older gets left behind on a dead chain. The Pinkboys can keep it.
+Testing
+-------
 
----
+Testing and code review is the bottleneck for development; we get more pull
+requests than we can review and test on short notice. Please be patient and help out by testing
+other people's pull requests, and remember this is a security-critical project where any mistake might cost people
+lots of money.
 
-## Contents
-- [What is (BOB)?](#what-is-bob)
-- [Quick start](#quick-start)
-- [Building it yourself (BUILDING.md)](BUILDING.md)
-- [Wallet storage — SQLite](#wallet-storage--sqlite)
-- [Network parameters](#network-parameters)
-- [Ecosystem](#ecosystem)
-- [Contributing](#contributing)
-- [Testing](#testing)
-- [License](#license)
+### Automated Testing
 
----
+Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
+submit new unit tests for old code. Unit tests can be compiled and run
+(assuming they weren't disabled in configure) with: `make check`. Further details on running
+and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
 
-## What is (BOB)?
+There are also [regression and integration tests](/test), written
+in Python, that are run automatically on the build server.
+These tests can be run (if the [test dependencies](/test) are installed) with: `test/functional/test_runner.py`
 
-(BOB) is an excremental digital currency that sends **instant Slack** to anyone, anywhere. No central authority. No board of directors. No quarterly earnings call. Just a peer-to-peer network of weirdos, mystics, miners, and tipbot enjoyers issuing Slack collectively, on a 2-minute heartbeat, since January 2014.
+The Travis CI system makes sure that every pull request is built for Windows, Linux, and macOS, and that unit/sanity tests are run automatically.
 
-It is **scrypt** under the hood, **flat 1.5 (BOB) per block forever**, and **NOT for Sale**. You earn it, mine it, or get tipped it. You do not buy it. *(NOT FINANCIAL ADVISORS. NOT FINANCIAL ADVICE.)*
+### Manual Quality Assurance (QA) Testing
 
-Pre-built binaries for Linux (daemon, Qt5, AppImage) and Windows 64-bit live on the releases page:
+Changes should be tested by somebody other than the developer who wrote the
+code. This is especially important for large or high-risk changes. It is useful
+to add a test plan to the pull request description if testing the changes is
+not straightforward.
 
-→ **<https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source/releases>**
+Translations
+------------
 
----
+Changes to translations as well as new translations can be submitted to
+[Bitcoin Core's Transifex page](https://www.transifex.com/bitcoin/bitcoin/).
 
-## Quick start
+Translations are periodically pulled from Transifex and merged into the git repository. See the
+[translation process](doc/translation_process.md) for details on how this works.
 
-**Just want the wallet?** Don't build anything. Download it from **<https://dobbscoin.info/downloads>**: `setup.exe` for Windows, the `.AppImage` for Linux.
+**Important**: We do not accept translation changes as GitHub pull requests because the next
+pull from Transifex would automatically overwrite them again.
 
-**Want to build it yourself?** Follow **[BUILDING.md](BUILDING.md)**. It's copy-and-paste steps for:
-
-- the Linux wallet (about 20 minutes), and
-- the Windows installer, built on Linux or on Windows with WSL (about an hour the first time).
-
----
-
-## Wallet storage — SQLite
-
-The wallet keeps its records in **SQLite** (the distro's `libsqlite3-dev`, or `depends/` for release builds). Up to v0.13.x it used Berkeley DB 4.8, which every builder had to fetch from Oracle and compile by hand; that is gone (issue #44). The records themselves did not change: every key, label and transaction is stored exactly as before, only the file around them is different.
-
-**Your existing `wallet.dat` is converted once, the first time this version starts.** The node reads it without Berkeley DB, writes the same records to a new SQLite file, reads them back and compares them byte for byte, keeps the original as `wallet.dat.bdb-<unixtime>`, and only then puts the new file in place. If anything goes wrong it stops with an error and leaves `wallet.dat` exactly as it was. Encrypted wallets convert without the passphrase.
-
-- A wallet the old version did not shut down cleanly is refused, because some of its data may still be in the `database/` log directory: start the old version once, stop it normally, then start this one.
-- **There is no way back in place.** v0.13.x and earlier cannot open the new file (they refuse to start; they do not damage it). To go back, either restore `wallet.dat.bdb-<unixtime>` (it does not know about anything that happened after the conversion), or `dumpwallet` here and `importwallet` into a fresh wallet on the old version.
-- `-salvagewallet` works on both kinds of file.
-
----
-
-## Network parameters
-
-| Parameter | Value |
-|---|---|
-| Proof of work | **scrypt** |
-| Block target | **2 minutes** (since block 68425) |
-| Difficulty algorithm | DigiShield V4 → **LWMA-3** at block 1,888,808 → **emergency-diff** at 1,888,888 |
-| Max reorg depth | none → **100 blocks** at activation |
-| Merge mining | **AuxPoW**, chain ID **`0x00B0`**, at block 2,000,000 |
-| Subsidy | **1.5 (BOB) per block, forever** (since block 951753) |
-| Halvings | Capped at block 951752 — chain is mildly inflationary by design |
-| Tx version | v1 only |
-| Genesis | January 2014 (Bitcoin Core 0.10-era fork) |
-
-> There is **no 21M supply cap.** That was 2014 marketing. The `MAX_MONEY` sanity ceiling sits at 10B (BOB) — at the current emission rate, ~25,000 years away. The chain is intentionally, gently inflationary. **Slack is not scarce.**
-
----
-
-## Ecosystem
-
-| | |
-|---|---|
-| **Block explorer** | <https://explorer.dobbscoin.info> |
-| **Mining pool** | <https://pool.dobbscoin.info> |
-| **Faucet** | <https://faucet.dobbscoin.info> |
-| **Rich list** | <https://explorer.dobbscoin.info/richlist> |
-| **"Bob" Bank** — custodial web wallet | <https://subgenius.finance/bobbank> |
-| **Android APK** | <https://subgenius.vip/dobbscoin.apk> |
-| **Bridge → wBOB on Gnosis** | <https://bridge.subgenius.finance> |
-| **wBOB trading** (primary, Oku) | [oku.trade — wBOB pair](https://oku.trade/swap?inputChain=gnosis&inToken=0x13550ae65f22A36f60A50d625B70b58666488263&outToken=0xe91d153e0b41518a2ce8dd3d7944fa863463a97d) |
-| **Forum** | <https://subgenius.finance/smf/> |
-
-> **(BOB) is NOT for Sale.** Never has been, never will be. You acquire it, you earn it, you mine it, you get tipped it. The Conspiracy can keep its order book.
-
----
-
-## Contributing
-
-This is an open project. Patches welcome.
-
-- **Trivial / uncontroversial** — open a PR, it gets pulled.
-- **Anything that touches consensus, the wallet, or user-facing behavior** — open a thread on the [forum](https://subgenius.finance/smf/) first. Hard forks are not surprise parties.
-- Match the style in [`doc/coding.md`](doc/coding.md). Don't reformat the world.
-
-`master` is built and tested but not guaranteed stable. **Tags are the stable line** — currently `v0.13.0`.
-
----
-
-## Testing
-
-Build and run the unit tests:
-
-```bash
-make check
-```
-
-Large changes need a test plan and need to be tested by **someone other than the author.** "It works on my machine" is how chains die.
-
----
-
-## License
-
-MIT. See [`COPYING`](COPYING) or <https://opensource.org/licenses/MIT>.
-
----
-
-<p align="center"><em><strong>Praise "Bob". GET SLACK. The Devival is forever.</strong></em></p>
+Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/bitcoin-translators).

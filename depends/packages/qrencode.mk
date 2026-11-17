@@ -1,17 +1,15 @@
 package=qrencode
-# Same release and sha256 as Bitcoin Core's depends (v22 onward). Upstream
-# fukuchi.org no longer serves the tarball (404), so fetch Core's pinned copy;
-# the sha256 check makes the mirror's identity irrelevant.
-$(package)_version=4.1.1
-$(package)_download_path=https://bitcoincore.org/depends-sources
-$(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=da448ed4f52aba6bcb0cd48cac0dd51b8692bccc4cd127431402fca6f8171e8e
+$(package)_version=3.4.4
+$(package)_download_path=https://fukuchi.org/works/qrencode/
+$(package)_file_name=$(package)-$($(package)_version).tar.bz2
+$(package)_sha256_hash=efe5188b1ddbcbf98763b819b146be6a90481aac30cfc8d858ab78a19cde1fa5
 
 define $(package)_set_vars
-$(package)_config_opts=--disable-shared --without-tools --without-tests --without-png
-$(package)_config_opts+=--disable-gprof --disable-gcov --disable-mudflap
-$(package)_config_opts+=--disable-dependency-tracking --enable-option-checking
+$(package)_config_opts=--disable-shared --without-tools --without-tests --disable-sdltest
+$(package)_config_opts += --disable-gprof --disable-gcov --disable-mudflap
+$(package)_config_opts += --disable-dependency-tracking --enable-option-checking
 $(package)_config_opts_linux=--with-pic
+$(package)_config_opts_android=--with-pic
 endef
 
 define $(package)_preprocess_cmds
@@ -31,5 +29,5 @@ define $(package)_stage_cmds
 endef
 
 define $(package)_postprocess_cmds
-  rm -f lib/*.la
+  rm lib/*.la
 endef

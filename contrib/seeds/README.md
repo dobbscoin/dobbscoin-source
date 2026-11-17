@@ -1,18 +1,21 @@
-### Seeds ###
+# Seeds
 
 Utility to generate the seeds.txt list that is compiled into the client
-(see [src/chainparamsseeds.h](/src/chainparamsseeds.h) and [share/seeds](/share/seeds)).
+(see [src/chainparamsseeds.h](/src/chainparamsseeds.h) and other utilities in [contrib/seeds](/contrib/seeds)).
 
-`makeseeds.py` filters a DNS seeder's dump (the `dnsseed.dump` format of
-[bitcoin-seeder](https://github.com/sipa/bitcoin-seeder)) down to good
-(BOB) nodes: IPv4 on port 19985, a `/EndTimes:0.13.x/` or `/EndTimes:0.14.x/`
-user agent, a recent height and good uptime:
+Be sure to update `PATTERN_AGENT` in `makeseeds.py` to include the current version,
+and remove old versions as necessary (at a minimum when GetDesirableServiceFlags
+changes its default return value, as those are the services which seeds are added
+to addrman with).
 
-	python3 makeseeds.py < dnsseed.dump > ../../share/seeds/nodes_main.txt
+The seeds compiled into the release are created from sipa's DNS seed data, like this:
 
-Then regenerate the header:
+    curl -s http://bitcoin.sipa.be/seeds.txt.gz | gzip -dc > seeds_main.txt
+    python3 makeseeds.py < seeds_main.txt > nodes_main.txt
+    python3 generate-seeds.py . > ../../src/chainparamsseeds.h
 
-	python3 ../../share/seeds/generate-seeds.py ../../share/seeds > ../../src/chainparamsseeds.h
+## Dependencies
 
-(BOB) has no seeder dump today. The current list was written by hand from
-the nodes behind the DNS seeds; `share/seeds/nodes_main.txt` says how.
+Ubuntu:
+
+    sudo apt-get install python3-dnspython

@@ -1,18 +1,23 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DOBBSCOIN_QT_PEERTABLEMODEL_H
-#define DOBBSCOIN_QT_PEERTABLEMODEL_H
+#ifndef BITCOIN_QT_PEERTABLEMODEL_H
+#define BITCOIN_QT_PEERTABLEMODEL_H
 
-#include "main.h"
-#include "net.h"
+#include <net_processing.h> // For CNodeStateStats
+#include <net.h>
+
+#include <memory>
 
 #include <QAbstractTableModel>
 #include <QStringList>
 
-class ClientModel;
 class PeerTablePriv;
+
+namespace interfaces {
+class Node;
+}
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -45,37 +50,41 @@ class PeerTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit PeerTableModel(ClientModel *parent = 0);
+    explicit PeerTableModel(interfaces::Node& node, QObject* parent);
+    ~PeerTableModel();
     const CNodeCombinedStats *getNodeStats(int idx);
     int getRowByNodeId(NodeId nodeid);
     void startAutoRefresh();
     void stopAutoRefresh();
 
     enum ColumnIndex {
-        Address = 0,
-        Subversion = 1,
-        Ping = 2
+        NetNodeId = 0,
+        Address = 1,
+        Ping = 2,
+        Sent = 3,
+        Received = 4,
+        Subversion = 5
     };
 
     /** @name Methods overridden from QAbstractTableModel
         @{*/
-    int rowCount(const QModelIndex &parent) const;
-    int columnCount(const QModelIndex &parent) const;
-    QVariant data(const QModelIndex &index, int role) const;
-    QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-    QModelIndex index(int row, int column, const QModelIndex &parent) const;
-    Qt::ItemFlags flags(const QModelIndex &index) const;
-    void sort(int column, Qt::SortOrder order);
+    int rowCount(const QModelIndex &parent) const override;
+    int columnCount(const QModelIndex &parent) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    QModelIndex index(int row, int column, const QModelIndex &parent) const override;
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
+    void sort(int column, Qt::SortOrder order) override;
     /*@}*/
 
-public slots:
+public Q_SLOTS:
     void refresh();
 
 private:
-    ClientModel *clientModel;
+    interfaces::Node& m_node;
     QStringList columns;
-    PeerTablePriv *priv;
+    std::unique_ptr<PeerTablePriv> priv;
     QTimer *timer;
 };
 
-#endif // DOBBSCOIN_QT_PEERTABLEMODEL_H
+#endif // BITCOIN_QT_PEERTABLEMODEL_H

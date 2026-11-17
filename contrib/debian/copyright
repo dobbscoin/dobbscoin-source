@@ -1,97 +1,92 @@
-Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Dobbscoin
-Upstream-Contact: https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source/issues
-Source: https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Bitcoin
+Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
+ irc://#bitcoin@freenode.net
+Source: https://github.com/bitcoin/bitcoin
 
 Files: *
-Copyright: 2009-2026, The Bitcoin Core developers
-           2013-2026, The Dobbscoin developers
+Copyright: 2009-2020, Bitcoin Core Developers
 License: Expat
-Comment: Dobbscoin is a fork of Bitcoin Core v0.10.2. COPYING in the source
- lists every third-party notice that ships in the binaries.
-
-Files: src/crypto/scrypt.cpp
-Copyright: 2009, Colin Percival
-           2011, ArtForz
-License: BSD-2-clause
-
-Files: src/crypto/scrypt-x64.S
-Copyright: 2011-2014, pooler@litecoinpool.org
-License: BSD-2-clause
-
-Files: src/leveldb/*
-Copyright: 2011, The LevelDB Authors
-License: BSD-3-clause
-Comment: See src/leveldb/LICENSE.
-
-Files: src/secp256k1/*
-Copyright: 2013, Pieter Wuille
-License: Expat
-
-Files: src/univalue/*
-Copyright: 2014, BitPay Inc.
-License: Expat
-
-Files: src/json/*
-Copyright: 2007-2009, John W. Wilkinson
-License: Expat
+Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
+         as well as the numerous contributors to the project.
 
 Files: debian/*
 Copyright: 2010-2011, Jonas Smedegaard <dr@jones.dk>
            2011, Matt Corallo <matt@bluematt.me>
-           2026, BtcBob <dobbscoin@gmail.com>
 License: GPL-2+
 
-Files: debian/manpages/*
-Copyright: Micah Anderson <micah@debian.org>
-License: GPL-3+
+Files: src/secp256k1/build-aux/m4/ax_jni_include_dir.m4
+Copyright: 2008 Don Anderson <dda@sleepycat.com>
+License: GNU-All-permissive-License
 
-Files: src/qt/res/icons/dobbscoin.png src/qt/res/icons/dobbscoin.ico
-       src/qt/res/icons/dobbscoin.icns src/qt/res/icons/dobbscoin_testnet.*
-       src/qt/res/icons/bob.png src/qt/res/icons/unit_*.png
-       src/qt/res/icons/clock*.png src/qt/res/icons/tx_*.png
-       src/qt/res/icons/transaction0.png src/qt/res/icons/transaction2.png
-       src/qt/res/icons/address-book.png src/qt/res/icons/history.png
-       src/qt/res/icons/overview.png src/qt/res/icons/receive.png
-       src/qt/res/icons/send.png src/qt/res/icons/synced.png
-       src/qt/res/icons/connect4_16.png src/qt/res/icons/debugwindow.png
-       src/qt/res/icons/qrcode.png src/qt/res/images/*
-       src/qt/res/movies/* share/pixmaps/*
-       doc/dobbscoin_logo_doxygen.png
-Copyright: The Dobbscoin project and the Church of the SubGenius
-License: other
- Dobbscoin / SubGenius art. No license for this art is stated in the
- source; it is not covered by the Expat license above unless its authors
- say so. The image of "Bob" Dobbs's face is a registered trademark of the
- SubGenius Foundation, Inc.
+Files: src/secp256k1/build-aux/m4/ax_prog_cc_for_build.m4
+Copyright: 2008 Paolo Bonzini <bonzini@gnu.org>
+License: GNU-All-permissive-License
 
-Files: src/qt/res/icons/export.png src/qt/res/icons/key.png
-       src/qt/res/icons/lock_*.png src/qt/res/icons/filesave.png
-Copyright: David Vignoni (david@icon-king.com)
-           ICON KING - www.icon-king.com
-License: LGPL
-Comment: NUVOLA ICON THEME for KDE 3.x
-         Site: http://www.icon-king.com/projects/nuvola/
-
-Files: src/qt/res/icons/connect0_16.png src/qt/res/icons/connect1_16.png
-       src/qt/res/icons/connect2_16.png src/qt/res/icons/connect3_16.png
-Copyright: schollidesign
-License: GPL-3+
-Comment: Icon Pack: Human-O2
-         Site: http://findicons.com/icon/93743/blocks_gnome_netstatus_0
-
-Files: src/qt/res/icons/transaction_conflicted.png
-Copyright: md2k7
-License: Expat
-Comment: Site: https://bitcointalk.org/index.php?topic=15276.0
-
-Files: src/qt/res/icons/configure.png src/qt/res/icons/quit.png
-       src/qt/res/icons/editcopy.png src/qt/res/icons/editpaste.png
-       src/qt/res/icons/add.png src/qt/res/icons/edit.png
+Files: src/qt/res/icons/add.png
+       src/qt/res/icons/address-book.png
+       src/qt/res/icons/chevron.png
+       src/qt/res/icons/edit.png
+       src/qt/res/icons/editcopy.png
+       src/qt/res/icons/editpaste.png
+       src/qt/res/icons/export.png
+       src/qt/res/icons/eye.png
+       src/qt/res/icons/history.png
+       src/qt/res/icons/lock_*.png
+       src/qt/res/icons/overview.png
+       src/qt/res/icons/receive.png
        src/qt/res/icons/remove.png
-Copyright: http://www.everaldo.com
-License: LGPL
-Comment: Icon Pack: Crystal SVG
+       src/qt/res/icons/send.png
+       src/qt/res/icons/synced.png
+       src/qt/res/icons/transaction*.png
+       src/qt/res/icons/tx_output.png
+       src/qt/res/icons/warning.png
+Copyright: Stephen Hutchings (and more)
+           http://typicons.com
+License: Expat
+Comment: Site: https://github.com/stephenhutchings/typicons.font
+
+Files: src/qt/res/icons/connect*.png
+       src/qt/res/src/connect-*.svg
+       src/qt/res/icons/network_disabled.png
+       src/qt/res/src/network_disabled.svg
+Copyright: Marco Falke
+           Luke Dashjr
+License: Expat
+Comment: Inspired by Stephen Hutchings' Typicons
+
+Files: src/qt/res/icons/tx_mined.png
+       src/qt/res/src/mine.svg
+       src/qt/res/icons/fontbigger.png
+       src/qt/res/icons/fontsmaller.png
+       src/qt/res/icons/hd_disabled.png
+       src/qt/res/src/hd_disabled.svg
+       src/qt/res/icons/hd_enabled.png
+       src/qt/res/src/hd_enabled.svg
+Copyright: Jonas Schnelli
+License: Expat
+
+Files: src/qt/res/icons/clock*.png
+       src/qt/res/icons/eye_*.png
+       src/qt/res/icons/tx_in*.png
+       src/qt/res/src/clock_*.svg
+       src/qt/res/src/tx_*.svg
+Copyright: Stephen Hutchings, Jonas Schnelli
+License: Expat
+Comment: Modifications of Stephen Hutchings' Typicons
+
+Files: src/qt/res/icons/bitcoin.*
+       share/pixmaps/bitcoin*
+       src/qt/res/src/bitcoin.svg
+Copyright: Bitboy, Jonas Schnelli
+License: public-domain
+Comment: Site: https://bitcointalk.org/?topic=1756.0
+
+Files: src/qt/res/icons/proxy.png
+       src/qt/res/src/proxy.svg
+Copyright: Cristian Mircea Messel
+License: public-domain
+
 
 License: Expat
  Permission is hereby granted, free of charge, to any person obtaining a
@@ -112,6 +107,12 @@ License: Expat
  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+License: GNU-All-permissive-License
+ Copying and distribution of this file, with or without modification, are
+ permitted in any medium without royalty provided the copyright notice
+ and this notice are preserved. This file is offered as-is, without any
+ warranty.
 
 License: GPL-2+
  This program is free software; you can redistribute it and/or modify it
@@ -141,44 +142,5 @@ Comment:
  You should have received a copy of the GNU General Public License along
  with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-License: LGPL
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- .
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-Comment:
- On Debian systems the GNU Lesser General Public License (LGPL) is
- located in '/usr/share/common-licenses/LGPL'.
- .
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-License: BSD-2-clause
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions
- are met:
- 1. Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
- 2. Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
- .
- THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- SUCH DAMAGE.
-
-License: BSD-3-clause
- See src/leveldb/LICENSE for the full text.
+License: public-domain
+ This work is in the public domain.

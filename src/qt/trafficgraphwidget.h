@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DOBBSCOIN_QT_TRAFFICGRAPHWIDGET_H
-#define DOBBSCOIN_QT_TRAFFICGRAPHWIDGET_H
+#ifndef BITCOIN_QT_TRAFFICGRAPHWIDGET_H
+#define BITCOIN_QT_TRAFFICGRAPHWIDGET_H
 
 #include <QWidget>
 #include <QQueue>
@@ -20,14 +20,14 @@ class TrafficGraphWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit TrafficGraphWidget(QWidget *parent = 0);
+    explicit TrafficGraphWidget(QWidget *parent = nullptr);
     void setClientModel(ClientModel *model);
     int getGraphRangeMins() const;
 
 protected:
-    void paintEvent(QPaintEvent *);
+    void paintEvent(QPaintEvent *) override;
 
-public slots:
+public Q_SLOTS:
     void updateRates();
     void setGraphRangeMins(int mins);
     void clear();
@@ -45,4 +45,4 @@ private:
     ClientModel *clientModel;
 };
 
-#endif // DOBBSCOIN_QT_TRAFFICGRAPHWIDGET_H
+#endif // BITCOIN_QT_TRAFFICGRAPHWIDGET_H

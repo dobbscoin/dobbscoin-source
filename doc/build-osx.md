@@ -1,125 +1,135 @@
-Mac OS X Build Instructions and Notes
-====================================
-This guide will show you how to build dobbscoind(headless client) for OSX.
+# macOS Build Instructions and Notes
 
-Notes
------
+The commands in this guide should be executed in a Terminal application.
+The built-in one is located in
+```
+/Applications/Utilities/Terminal.app
+```
 
-* Tested on OS X 10.7 through 10.10 on 64-bit Intel processors only.
+## Preparation
+Install the macOS command line tools:
 
-* All of the commands should be executed in a Terminal application. The
-built-in one is located in `/Applications/Utilities`.
+```shell
+xcode-select --install
+```
 
-Preparation
------------
+When the popup appears, click `Install`.
 
-You need to install XCode with all the options checked so that the compiler
-and everything is available in /usr not just /Developer. XCode should be
-available on your OS X installation media, but if not, you can get the
-current version from https://developer.apple.com/xcode/. If you install
-Xcode 4.3 or later, you'll need to install its command line tools. This can
-be done in `Xcode > Preferences > Downloads > Components` and generally must
-be re-done or updated every time Xcode is updated.
+Then install [Homebrew](https://brew.sh).
 
-There's also an assumption that you already have `git` installed. If
-not, it's the path of least resistance to install [Github for Mac](https://mac.github.com/)
-(OS X 10.7+) or
-[Git for OS X](https://code.google.com/p/git-osx-installer/). It is also
-available via Homebrew.
+## Dependencies
+```shell
+brew install automake libtool boost miniupnpc pkg-config python qt libevent qrencode
+```
 
-You will also need to install [Homebrew](http://brew.sh) in order to install library
-dependencies.
+If you run into issues, check [Homebrew's troubleshooting page](https://docs.brew.sh/Troubleshooting).
+See [dependencies.md](dependencies.md) for a complete overview.
 
-The installation of the actual dependencies is covered in the Instructions
-sections below.
+If you want to build the disk image with `make deploy` (.dmg / optional), you need RSVG:
+```shell
+brew install librsvg
+```
 
-Instructions: Homebrew
-----------------------
+The wallet support requires one or both of the dependencies ([*SQLite*](#sqlite) and [*Berkeley DB*](#berkeley-db)) in the sections below.
+To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode).
 
-#### Install dependencies using Homebrew
+#### SQLite
 
-        brew install autoconf automake libtool boost miniupnpc openssl pkg-config protobuf qt sqlite
+Usually, macOS installation already has a suitable SQLite installation.
+Also, the Homebrew package could be installed:
 
-The wallet is stored in SQLite (`sqlite` above; configure finds Homebrew's keg-only copy
-through `brew --prefix sqlite`). Berkeley DB is no longer needed.
+```shell
+brew install sqlite
+```
 
+In that case the Homebrew package will prevail.
 
-### Building `dobbscoind`
+#### Berkeley DB
 
-1. Clone the github tree to get the source code and go into the directory.
+It is recommended to use Berkeley DB 4.8. If you have to build it yourself,
+you can use [this](/contrib/install_db4.sh) script to install it
+like so:
 
-        git clone https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source.git
-        cd dobbscoin
+```shell
+./contrib/install_db4.sh .
+```
 
-2.  Build dobbscoind:
+from the root of the repository.
 
-        ./autogen.sh
-        ./configure
-        make
+Also, the Homebrew package could be installed:
 
-3.  It is also a good idea to build and run the unit tests:
+```shell
+brew install berkeley-db4
+```
 
-        make check
+## Build Bitcoin Core
 
-4.  (Optional) You can also install dobbscoind to your path:
+1. Clone the Bitcoin Core source code:
+    ```shell
+    git clone https://github.com/bitcoin/bitcoin
+    cd bitcoin
+    ```
 
-        make install
+2.  Build Bitcoin Core:
 
-Use Qt Creator as IDE
-------------------------
-You can use Qt Creator as IDE, for debugging and for manipulating forms, etc.
-Download Qt Creator from http://www.qt.io/download/. Download the "community edition" and only install Qt Creator (uncheck the rest during the installation process).
+    Configure and build the headless Bitcoin Core binaries as well as the GUI (if Qt is found).
 
-1. Make sure you installed everything through homebrew mentioned above 
-2. Do a proper ./configure --with-gui=qt5 --enable-debug
-3. In Qt Creator do "New Project" -> Import Project -> Import Existing Project
-4. Enter "dobbscoin-qt" as project name, enter src/qt as location
-5. Leave the file selection as it is
-6. Confirm the "summary page"
-7. In the "Projects" tab select "Manage Kits..."
-8. Select the default "Desktop" kit and select "Clang (x86 64bit in /usr/bin)" as compiler
-9. Select LLDB as debugger (you might need to set the path to your installtion)
-10. Start debugging with Qt Creator
+    You can disable the GUI build by passing `--without-gui` to configure.
+    ```shell
+    ./autogen.sh
+    ./configure
+    make
+    ```
 
-Creating a release build
-------------------------
-You can ignore this section if you are building `dobbscoind` for your own use.
+3.  It is recommended to build and run the unit tests:
+    ```shell
+    make check
+    ```
 
-dobbscoind/dobbscoin-cli binaries are not included in the Dobbscoin-Qt.app bundle.
+4.  You can also create a  `.dmg` that contains the `.app` bundle (optional):
+    ```shell
+    make deploy
+    ```
 
-If you are building `dobbscoind` or `Dobbscoin-Qt` for others, your build machine should be set up
-as follows for maximum compatibility:
+## Disable-wallet mode
+When the intention is to run only a P2P node without a wallet, Bitcoin Core may be
+compiled in disable-wallet mode with:
+```shell
+./configure --disable-wallet
+```
 
-All dependencies should be compiled with these flags:
+In this case there is no dependency on [*Berkeley DB*](#berkeley-db) and [*SQLite*](#sqlite).
 
- -mmacosx-version-min=10.7
- -arch x86_64
- -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
+Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC call.
 
-No macOS build of (BOB) has been released; `contrib/macdeploy` holds Bitcoin's
-.dmg packaging scripts, not yet adapted.
+## Running
+Bitcoin Core is now available at `./src/bitcoind`
 
-Running
--------
+Before running, you may create an empty configuration file:
+```shell
+mkdir -p "/Users/${USER}/Library/Application Support/Bitcoin"
 
-It's now available at `./dobbscoind`, provided that you are still in the `src`
-directory. We have to first create the RPC configuration file, though.
+touch "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
 
-Run `./dobbscoind` to get the filename where it should be put, or just try these
-commands:
+chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
+```
 
-    echo -e "rpcuser=dobbscoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Dobbscoin/dobbscoin.conf"
-    chmod 600 "/Users/${USER}/Library/Application Support/Dobbscoin/dobbscoin.conf"
+The first time you run bitcoind, it will start downloading the blockchain. This process could
+take many hours, or even days on slower than average systems.
 
-The next time you run it, it will start downloading the blockchain, but it won't
-output anything while it's doing this. This process may take several hours;
-you can monitor its process by looking at the debug.log file, like this:
+You can monitor the download process by looking at the debug.log file:
+```shell
+tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
+```
 
-    tail -f $HOME/Library/Application\ Support/Dobbscoin/debug.log
+## Other commands:
+```shell
+./src/bitcoind -daemon      # Starts the bitcoin daemon.
+./src/bitcoin-cli --help    # Outputs a list of command-line options.
+./src/bitcoin-cli help      # Outputs a list of RPC commands when the daemon is running.
+```
 
-Other commands:
--------
-
-    ./dobbscoind -daemon # to start the dobbscoin daemon.
-    ./dobbscoin-cli --help  # for a list of command-line options.
-    ./dobbscoin-cli help    # When the daemon is running, to get a list of RPC commands
+## Notes
+* Tested on OS X 10.12 Sierra through macOS 10.15 Catalina on 64-bit Intel
+processors only.
+* Building with downloaded Qt binaries is not officially supported. See the notes in [#7714](https://github.com/bitcoin/bitcoin/issues/7714).

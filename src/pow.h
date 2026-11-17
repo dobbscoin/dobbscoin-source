@@ -1,10 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DOBBSCOIN_POW_H
-#define DOBBSCOIN_POW_H
+#ifndef BITCOIN_POW_H
+#define BITCOIN_POW_H
+
+#include <consensus/params.h>
 
 #include <stdint.h>
 
@@ -12,114 +14,10 @@ class CBlockHeader;
 class CBlockIndex;
 class uint256;
 
-// LWMA-3 hard-fork activation heights (DiffMode V5).
-// Mainnet: block 1,888,808 — ~54-day upgrade window from 2026-05-22 at
-// 2-min target spacing (~2026-07-16). The 808 suffix is intentional
-// SubGenius-friendly vanity; the height is a future block, not a date.
-// Testnet/regtest: trip immediately so test infra exercises the new path.
-static const int64_t HARDFORK_LWMA3_MAIN    = 1888808;
-static const int64_t HARDFORK_LWMA3_TESTNET = 100;
-
-// Consensus-level finality: a chain that would reorganize past this many
-// already-buried blocks of the active tip is rejected outright. 100 blocks
-// * 2 min = ~3.3h. The wBOB bridge requires 288 conf (~9.6h), so the bridge
-// remains strictly more conservative than consensus — correct ordering.
-static const int MAX_REORG_DEPTH = 100;
-
-// AuxPoW (merge-mining) hard-fork activation heights.
-// Mainnet: block 2,000,000 (~2026-12-17 at 2-min spacing), ~5 months after
-// LWMA-3 settles. From this height: header chain ID must equal
-// AUXPOW_CHAIN_ID; pre-fork the chain ID must be zero and the
-// VERSION_AUXPOW bit must be unset.
-// Testnet/regtest: trip at block 10 — before LWMA-3's testnet activation
-// at 100, so regtest CPU mining stays at V1 difficulty and finishes quickly
-// when test harnesses generate blocks past the fork.
-static const int HARDFORK_AUXPOW_MAIN    = 2000000;
-static const int HARDFORK_AUXPOW_TESTNET = 10;
-
-// (BOB)'s AuxPoW chain ID, encoded in the upper 16 bits of nVersion on
-// post-fork blocks. 0x00B0 — "B0b" mnemonic, picked for non-collision
-// with active scrypt merge-mined chains (Doge=0x0062, Syscoin=0x0010,
-// LottoCoin=0x004C, etc).
-static const int AUXPOW_CHAIN_ID = 0x00B0;
-
-// CHECKLOCKTIMEVERIFY (BIP65) activation heights.
-// Mainnet: block 2,000,000 -- deliberately the same height as the AuxPoW
-// fork, so the network upgrades once rather than twice, and while the
-// audience for an upgrade request is still people who care about (BOB)
-// rather than foreign pools merge-mining us incidentally.
-// Activated by HEIGHT, not by version supermajority: from the AuxPoW fork
-// the chain ID occupies the upper half of nVersion, so every post-fork
-// block reads 11,534,339 and IsSuperMajority(4, ...) would be true
-// unconditionally. A version-gated BIP65 would therefore activate on no
-// real support at all.
-// Testnet/regtest: block 150 -- past the AuxPoW fork at 10 so a regtest chain
-// crosses each boundary separately, and deliberately past COINBASE_MATURITY
-// (100) so there is a reachable window in which coins are spendable but CLTV
-// is NOT yet active. Without that window the soft-fork property -- that a
-// pre-activation spend which violates a lock is still accepted -- cannot be
-// tested on chain at all, because nothing is spendable before height 101.
-static const int HARDFORK_CLTV_MAIN    = 2000000;
-static const int HARDFORK_CLTV_TESTNET = 150;
-
-// Emergency-difficulty hard-fork activation heights.
-// Mainnet: block 1,888,888 — 80 blocks past LWMA-3, so the new LWMA window
-// has had a chance to stabilize before the emergency predicate becomes
-// consultable. The "888" mirrors LWMA-3's "808" vanity.
-// Testnet/regtest: trip early (block 20) so synthetic chains in the Boost
-// test harness can exercise both pre- and post-fork branches without
-// having to mine to 1.8M.
-//
-// The emergency rule itself: if a block's nTime - prevBlock->nTime exceeds
-// EMERGENCY_DIFFICULTY_GAP AND its nBits equals ProofOfWorkLimit(), the
-// strict nBits == GetNextWorkRequired() check in ContextualCheckBlockHeader
-// is relaxed for that one block. LWMA-3 then sees the long solvetime in
-// its rolling window and resumes normal retargeting. Only fires when the
-// chain is genuinely stuck (e.g. merge-mining hashrate departed).
-static const int HARDFORK_EMERGENCY_DIFF_MAIN    = 1888888;
-static const int HARDFORK_EMERGENCY_DIFF_TESTNET = 20;
-static const int64_t EMERGENCY_DIFFICULTY_GAP    = 6 * 60 * 60;  // 21600 s
-
-int64_t LWMA3ForkHeight();
-int AuxPowForkHeight();
-int CLTVForkHeight();
-int EmergencyDiffForkHeight();
-
-/**
- * Two-part predicate: a header is an "emergency difficulty" block iff
- *   (a) its activation height has been reached (nHeight >= EmergencyDiffForkHeight)
- *   (b) block.nTime - pindexPrev->nTime > EMERGENCY_DIFFICULTY_GAP, AND
- *   (c) block.nBits == Params().ProofOfWorkLimit().GetCompact().
- * Both (b) and (c) must hold; the gap-only case still requires the miner
- * to publish at the normally-computed difficulty if they can.
- */
-bool IsEmergencyDifficultyBlock(const CBlockHeader& block, const CBlockIndex* pindexPrev);
-
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
-
-/**
- * nBits a MINER should put in a new template (v0.13.3). Identical to
- * GetNextWorkRequired except that, once the emergency-difficulty fork is
- * active and the template's nTime is already more than
- * EMERGENCY_DIFFICULTY_GAP past the tip, it returns ProofOfWorkLimit() so the
- * template qualifies for the v0.13.0 emergency exemption and the valve can
- * actually fire. Mining policy only — never used in validation.
- */
-unsigned int GetNextWorkRequiredForMining(const CBlockIndex* pindexLast, const CBlockHeader* pblock);
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
+unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hash, unsigned int nBits);
+bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
 
-/**
- * AuxPoW-aware proof-of-work check.  If the header carries an AuxPoW
- * commitment (VERSION_AUXPOW bit set in nVersion), validates the commitment
- * chain via CAuxPow::check() and tests the *parent* block's scrypt hash
- * against nBits.  Otherwise reduces to a normal CheckProofOfWork on the
- * header's own scrypt hash.  Caller is responsible for enforcing the
- * height-dependent rules around chain ID and the VERSION_AUXPOW bit.
- */
-bool CheckAuxPowProofOfWork(const CBlockHeader& block);
-
-uint256 GetBlockProof(const CBlockIndex& block);
-
-#endif // DOBBSCOIN_POW_H
+#endif // BITCOIN_POW_H

@@ -1,21 +1,14 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DOBBSCOIN_PRIMITIVES_BLOCK_H
-#define DOBBSCOIN_PRIMITIVES_BLOCK_H
+#ifndef BITCOIN_PRIMITIVES_BLOCK_H
+#define BITCOIN_PRIMITIVES_BLOCK_H
 
-#include "auxpow.h"
-#include "primitives/pureheader.h"
-#include "primitives/transaction.h"
-#include "serialize.h"
-#include "uint256.h"
-
-#include <memory>
-
-/** The maximum allowed size for a serialized block, in bytes (network rule) */
-static const unsigned int MAX_BLOCK_SIZE = 1000000;
+#include <primitives/transaction.h>
+#include <serialize.h>
+#include <uint256.h>
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -24,49 +17,45 @@ static const unsigned int MAX_BLOCK_SIZE = 1000000;
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
  */
-class CBlockHeader : public CPureBlockHeader
+class CBlockHeader
 {
 public:
-    static const int32_t CURRENT_VERSION=3;
-
-    // Optional AuxPoW trailer.  Present iff IsAuxpow() — gated by the
-    // VERSION_AUXPOW bit in nVersion.  Activation of the bit is controlled
-    // by HARDFORK_AUXPOW_MAIN; pre-fork blocks must leave this null.
-    std::shared_ptr<CAuxPow> auxpow;
+    // header
+    int32_t nVersion;
+    uint256 hashPrevBlock;
+    uint256 hashMerkleRoot;
+    uint32_t nTime;
+    uint32_t nBits;
+    uint32_t nNonce;
 
     CBlockHeader()
     {
         SetNull();
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(*(CPureBlockHeader*)this);
-
-        if (this->IsAuxpow()) {
-            if (ser_action.ForRead())
-                auxpow.reset(new CAuxPow());
-            assert(auxpow);
-            READWRITE(*auxpow);
-        } else if (ser_action.ForRead()) {
-            auxpow.reset();
-        }
-    }
+    SERIALIZE_METHODS(CBlockHeader, obj) { READWRITE(obj.nVersion, obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.nNonce); }
 
     void SetNull()
     {
-        CPureBlockHeader::SetNull();
-        nVersion = CBlockHeader::CURRENT_VERSION;
-        auxpow.reset();
+        nVersion = 0;
+        hashPrevBlock.SetNull();
+        hashMerkleRoot.SetNull();
+        nTime = 0;
+        nBits = 0;
+        nNonce = 0;
     }
 
-    /**
-     * Attach (or clear) an auxpow.  Sets the VERSION_AUXPOW bit accordingly.
-     * Takes ownership of apow.  Pass NULL to clear.
-     */
-    void SetAuxpow(CAuxPow* apow);
+    bool IsNull() const
+    {
+        return (nBits == 0);
+    }
+
+    uint256 GetHash() const;
+
+    int64_t GetBlockTime() const
+    {
+        return (int64_t)nTime;
+    }
 };
 
 
@@ -74,10 +63,10 @@ class CBlock : public CBlockHeader
 {
 public:
     // network and disk
-    std::vector<CTransaction> vtx;
+    std::vector<CTransactionRef> vtx;
 
     // memory only
-    mutable std::vector<uint256> vMerkleTree;
+    mutable bool fChecked;
 
     CBlock()
     {
@@ -87,22 +76,20 @@ public:
     CBlock(const CBlockHeader &header)
     {
         SetNull();
-        *((CBlockHeader*)this) = header;
+        *(static_cast<CBlockHeader*>(this)) = header;
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(*(CBlockHeader*)this);
-        READWRITE(vtx);
+    SERIALIZE_METHODS(CBlock, obj)
+    {
+        READWRITEAS(CBlockHeader, obj);
+        READWRITE(obj.vtx);
     }
 
     void SetNull()
     {
         CBlockHeader::SetNull();
         vtx.clear();
-        vMerkleTree.clear();
+        fChecked = false;
     }
 
     CBlockHeader GetBlockHeader() const
@@ -114,21 +101,11 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
-        block.auxpow         = auxpow;
         return block;
     }
 
-    // Build the in-memory merkle tree for this block and return the merkle root.
-    // If non-NULL, *mutated is set to whether mutation was detected in the merkle
-    // tree (a duplication of transactions in the block leading to an identical
-    // merkle root).
-    uint256 BuildMerkleTree(bool* mutated = NULL) const;
-
-    std::vector<uint256> GetMerkleBranch(int nIndex) const;
-    static uint256 CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex);
     std::string ToString() const;
 };
-
 
 /** Describes a place in the block chain to another node such that if the
  * other node doesn't have the same branch, it can find a recent common trunk.
@@ -140,18 +117,14 @@ struct CBlockLocator
 
     CBlockLocator() {}
 
-    CBlockLocator(const std::vector<uint256>& vHaveIn)
+    explicit CBlockLocator(const std::vector<uint256>& vHaveIn) : vHave(vHaveIn) {}
+
+    SERIALIZE_METHODS(CBlockLocator, obj)
     {
-        vHave = vHaveIn;
-    }
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        if (!(nType & SER_GETHASH))
+        int nVersion = s.GetVersion();
+        if (!(s.GetType() & SER_GETHASH))
             READWRITE(nVersion);
-        READWRITE(vHave);
+        READWRITE(obj.vHave);
     }
 
     void SetNull()
@@ -159,10 +132,10 @@ struct CBlockLocator
         vHave.clear();
     }
 
-    bool IsNull()
+    bool IsNull() const
     {
         return vHave.empty();
     }
 };
 
-#endif // DOBBSCOIN_PRIMITIVES_BLOCK_H
+#endif // BITCOIN_PRIMITIVES_BLOCK_H

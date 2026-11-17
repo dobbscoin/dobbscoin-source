@@ -1,12 +1,18 @@
 *.tar.gz
 
 *.exe
-src/dobbscoin
-src/dobbscoind
-src/dobbscoin-cli
-src/dobbscoin-tx
-src/test/test_dobbscoin
-src/qt/test/test_dobbscoin-qt
+*.pdb
+src/bitcoin
+src/bitcoind
+src/bitcoin-cli
+src/bitcoin-gui
+src/bitcoin-node
+src/bitcoin-tx
+src/bitcoin-wallet
+src/test/fuzz/*
+!src/test/fuzz/*.*
+src/test/test_bitcoin
+src/qt/test/test_bitcoin-qt
 
 # autoreconf
 Makefile.in
@@ -25,13 +31,15 @@ build-aux/m4/ltversion.m4
 build-aux/missing
 build-aux/compile
 build-aux/test-driver
+config.cache
 config.log
 config.status
 configure
 libtool
-src/config/dobbscoin-config.h
-src/config/dobbscoin-config.h.in
+src/config/bitcoin-config.h
+src/config/bitcoin-config.h.in
 src/config/stamp-h1
+src/obj
 share/setup.nsi
 share/qt/Info.plist
 
@@ -42,6 +50,12 @@ src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
+
+src/qt/bitcoin-qt.config
+src/qt/bitcoin-qt.creator
+src/qt/bitcoin-qt.creator.user
+src/qt/bitcoin-qt.files
+src/qt/bitcoin-qt.includes
 
 .deps
 .dirstamp
@@ -54,12 +68,10 @@ src/qt/test/moc*.cpp
 *.pyc
 *.o
 *.o-*
-*.patch
-!depends/patches/**/*.patch
-.dobbscoin
 *.a
 *.pb.cc
 *.pb.h
+*.dat
 
 *.log
 *.trs
@@ -68,6 +80,10 @@ src/qt/test/moc*.cpp
 *.json.h
 *.raw.h
 
+# Only ignore unexpected patches
+*.patch
+!depends/patches/**/*.patch
+
 #libtool object files
 *.lo
 *.la
@@ -75,79 +91,60 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-dobbscoin-qt
-Dobbscoin-Qt.app
+!depends/Makefile
+src/qt/bitcoin-qt
+Bitcoin-Qt.app
+background.tiff*
+
+# Qt Creator
+Makefile.am.user
 
 # Unit-tests
 Makefile.test
-dobbscoin-qt_test
-src/test/buildenv.py
+bitcoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
-
-# Qt creator
-*.pro.user
 
 # Mac specific
 .DS_Store
 build
 
-# CMake build directories (cmake -B build, build-static, ...)
-/build*/
+# Previous releases
+releases
 
 #lcov
 *.gcno
+*.gcda
 /*.info
-test_dobbscoin.coverage/
+test_bitcoin.coverage/
 total.coverage/
+fuzz.coverage/
 coverage_percent.txt
+/cov_tool_wrapper.sh
+qa-assets/
 
 #build tests
 linux-coverage-build
 linux-build
 win32-build
-qa/pull-tester/run-dobbscoind-for-test.sh
-qa/pull-tester/tests-config.sh
-qa/pull-tester/cache/*
-qa/pull-tester/test.*/*
+test/config.ini
+test/cache/*
+test/.mypy_cache/
 
 !src/leveldb*/Makefile
 
 /doc/doxygen/
 
-# --- Runtime / node data (DO NOT COMMIT) ---
+libbitcoinconsensus.pc
+contrib/devtools/split-debug.sh
 
-# Blockchain data
-blocks/
-chainstate/
-database/
+# Output from running db4 installation
+db4/
 
-# Wallets
-wallet.dat
-*.wallet
+# clang-check
+*.plist
 
-# Node runtime
-*.pid
-*.lock
-
-# Configuration / secrets
-*.conf
-.env
-.wallet_config.php
-
-# Runtime logs directory
-logs/
-
-# Local data directory
-.dobbscoin/
-
-# Build artifacts (added 2026-04-26)
-ccache
-configure~
-depends/x86_64-w64-mingw32/
-build-windows-autonomous.log
-
-# Release artifacts (live on GitHub Releases, not in git)
-/release/
-depends/patches/qt.bak-*/
+osx_volname
+dist/
+*.background.tiff

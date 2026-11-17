@@ -1,15 +1,16 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DOBBSCOIN_QT_WALLETFRAME_H
-#define DOBBSCOIN_QT_WALLETFRAME_H
+#ifndef BITCOIN_QT_WALLETFRAME_H
+#define BITCOIN_QT_WALLETFRAME_H
 
 #include <QFrame>
 #include <QMap>
 
-class DobbscoinGUI;
+class BitcoinGUI;
 class ClientModel;
+class PlatformStyle;
 class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
@@ -18,44 +19,61 @@ QT_BEGIN_NAMESPACE
 class QStackedWidget;
 QT_END_NAMESPACE
 
+/**
+ * A container for embedding all wallet-related
+ * controls into BitcoinGUI. The purpose of this class is to allow future
+ * refinements of the wallet controls with minimal need for further
+ * modifications to BitcoinGUI, thus greatly simplifying merges while
+ * reducing the risk of breaking top-level stuff.
+ */
 class WalletFrame : public QFrame
 {
     Q_OBJECT
 
 public:
-    explicit WalletFrame(DobbscoinGUI *_gui = 0);
+    explicit WalletFrame(const PlatformStyle *platformStyle, BitcoinGUI *_gui = nullptr);
     ~WalletFrame();
 
     void setClientModel(ClientModel *clientModel);
 
-    bool addWallet(const QString& name, WalletModel *walletModel);
-    bool setCurrentWallet(const QString& name);
-    bool removeWallet(const QString &name);
+    bool addWallet(WalletModel *walletModel);
+    void setCurrentWallet(WalletModel* wallet_model);
+    void removeWallet(WalletModel* wallet_model);
     void removeAllWallets();
 
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 
     void showOutOfSyncWarning(bool fShow);
 
+    QSize sizeHint() const override { return m_size_hint; }
+
+Q_SIGNALS:
+    /** Notify that the user has requested more information about the out-of-sync warning */
+    void requestedSyncWarningInfo();
+
 private:
     QStackedWidget *walletStack;
-    DobbscoinGUI *gui;
+    BitcoinGUI *gui;
     ClientModel *clientModel;
-    QMap<QString, WalletView*> mapWalletViews;
+    QMap<WalletModel*, WalletView*> mapWalletViews;
 
     bool bOutOfSync;
 
-    WalletView *currentWalletView();
+    const PlatformStyle *platformStyle;
 
-public slots:
+    const QSize m_size_hint;
+
+public:
+    WalletView* currentWalletView() const;
+    WalletModel* currentWalletModel() const;
+
+public Q_SLOTS:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
-    /** Switch to mining page */
-    void gotoMiningPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
 
@@ -63,6 +81,9 @@ public slots:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
+
+    /** Load Partially Signed Bitcoin Transaction */
+    void gotoLoadPSBT(bool from_clipboard = false);
 
     /** Encrypt the wallet */
     void encryptWallet(bool status);
@@ -77,6 +98,8 @@ public slots:
     void usedSendingAddresses();
     /** Show used receiving addresses */
     void usedReceivingAddresses();
+    /** Pass on signal over requested out-of-sync-warning information */
+    void outOfSyncWarningClicked();
 };
 
-#endif // DOBBSCOIN_QT_WALLETFRAME_H
+#endif // BITCOIN_QT_WALLETFRAME_H

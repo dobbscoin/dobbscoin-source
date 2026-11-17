@@ -1,12 +1,12 @@
 WINDOWS BUILD NOTES
 ====================
 
-Below are some notes on how to build Dobbscoin Core for Windows.
+Below are some notes on how to build Bitcoin Core for Windows.
 
-The options known to work for building Dobbscoin Core on Windows are:
+The options known to work for building Bitcoin Core on Windows are:
 
 * On Linux, using the [Mingw-w64](https://mingw-w64.org/doku.php) cross compiler tool chain. Ubuntu Bionic 18.04 is required
-and is the platform used to build the Dobbscoin Core Windows release binaries.
+and is the platform used to build the Bitcoin Core Windows release binaries.
 * On Windows, using [Windows
 Subsystem for Linux (WSL)](https://docs.microsoft.com/windows/wsl/about) and the Mingw-w64 cross compiler tool chain.
 * On Windows, using a native compiler tool chain such as [Visual Studio](https://www.visualstudio.com). See [README.md](/build_msvc/README.md).
@@ -72,8 +72,8 @@ If you want to build the windows installer with `make deploy` you need [NSIS](ht
 
 Acquire the source in the usual way:
 
-    git clone https://git.subgenius.finance/SubGeniusFinance/dobbscoin-source.git
-    cd dobbscoin-source
+    git clone https://github.com/bitcoin/bitcoin.git
+    cd bitcoin
 
 ## Building for 64-bit Windows
 
@@ -81,31 +81,14 @@ The first step is to install the mingw-w64 cross-compilation tool chain:
 
     sudo apt install g++-mingw-w64-x86-64
 
-Next, set the default `mingw32 g++` compiler option to POSIX<sup>[1](#footnote1)</sup>:
+Ubuntu Bionic 18.04 <sup>[1](#footnote1)</sup>:
 
-```
-sudo update-alternatives --config x86_64-w64-mingw32-g++
-```
-
-After running the above command, you should see output similar to that below.
-Choose the option that ends with `posix`.
-
-```
-There are 2 choices for the alternative x86_64-w64-mingw32-g++ (providing /usr/bin/x86_64-w64-mingw32-g++).
-
-  Selection    Path                                   Priority   Status
-------------------------------------------------------------
-  0            /usr/bin/x86_64-w64-mingw32-g++-win32   60        auto mode
-* 1            /usr/bin/x86_64-w64-mingw32-g++-posix   30        manual mode
-  2            /usr/bin/x86_64-w64-mingw32-g++-win32   60        manual mode
-
-Press <enter> to keep the current choice[*], or type selection number:
-```
+    sudo update-alternatives --config x86_64-w64-mingw32-g++ # Set the default mingw32 g++ compiler option to posix.
 
 Once the toolchain is installed the build steps are common:
 
-Note that for WSL the Dobbscoin Core source path MUST be somewhere in the default mount file system, for
-example /usr/src/dobbscoin, AND not under /mnt/d/. If this is not the case the dependency autoconf scripts will fail.
+Note that for WSL the Bitcoin Core source path MUST be somewhere in the default mount file system, for
+example /usr/src/bitcoin, AND not under /mnt/d/. If this is not the case the dependency autoconf scripts will fail.
 This means you cannot use a directory that is located directly on the host Windows file system to perform the build.
 
 Additional WSL Note: WSL support for [launching Win32 applications](https://docs.microsoft.com/en-us/archive/blogs/wsl/windows-and-ubuntu-interoperability#launching-win32-applications-from-within-wsl)
@@ -121,20 +104,9 @@ Build using:
     make HOST=x86_64-w64-mingw32
     cd ..
     ./autogen.sh
-    CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=$(pwd)/depends/x86_64-w64-mingw32/
-    make # use "-j N" for N parallel jobs
+    CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
+    make
     sudo bash -c "echo 1 > /proc/sys/fs/binfmt_misc/status" # Enable WSL support for Win32 applications.
-
-Or, with CMake (3.22 or later; see [build-cmake.md](build-cmake.md)) in place of
-`autogen.sh`, `configure` and `make`, after the same `make -C depends` step:
-
-    cmake -B build-win --toolchain depends/x86_64-w64-mingw32/toolchain.cmake
-    cmake --build build-win -j"$(nproc)"
-
-The toolchain file that depends writes turns the GUI, wallet and UPnP/NAT-PMP on
-or off to match the packages it built (`NO_QT=1` and so on). The executables
-land in `build-win/src/` (`dobbscoin-qt.exe` in `build-win/src/qt/`), the same
-places as the Autotools build puts them under `src/`.
 
 ## Depends system
 
@@ -146,15 +118,13 @@ Installation
 After building using the Windows subsystem it can be useful to copy the compiled
 executables to a directory on the Windows drive in the same directory structure
 as they appear in the release `.zip` archive. This can be done in the following
-way. This will install to `c:\workspace\dobbscoin`, for example:
+way. This will install to `c:\workspace\bitcoin`, for example:
 
-    make install DESTDIR=/mnt/c/workspace/dobbscoin    # Autotools
-    cmake --install build-win --prefix /mnt/c/workspace/dobbscoin    # CMake
+    make install DESTDIR=/mnt/c/workspace/bitcoin
 
-You can also create an installer (needs `nsis`) using:
+You can also create an installer using:
 
-    make deploy                                # Autotools: ./dobbscoin-<version>-win64-setup.exe
-    cmake --build build-win --target deploy    # CMake: build-win/dobbscoin-<version>-win64-setup.exe
+    make deploy
 
 Footnotes
 ---------
@@ -163,5 +133,5 @@ Footnotes
 compiler options to allow a choice between either posix or win32 threads. The default option is win32 threads which is the more
 efficient since it will result in binary code that links directly with the Windows kernel32.lib. Unfortunately, the headers
 required to support win32 threads conflict with some of the classes in the C++11 standard library, in particular std::mutex.
-It's not possible to build the Dobbscoin Core code using the win32 version of the Mingw-w64 cross compilers (at least not without
-modifying headers in the Dobbscoin Core source code).
+It's not possible to build the Bitcoin Core code using the win32 version of the Mingw-w64 cross compilers (at least not without
+modifying headers in the Bitcoin Core source code).

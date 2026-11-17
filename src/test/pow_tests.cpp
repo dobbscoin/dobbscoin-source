@@ -1,335 +1,185 @@
-// Copyright (c) 2026 The Dobbscoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2015-2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chain.h"
-#include "chainparams.h"
-#include "chainparamsbase.h"
-#include "pow.h"
+#include <chain.h>
+#include <chainparams.h>
+#include <pow.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
-#include <vector>
+BOOST_FIXTURE_TEST_SUITE(pow_tests, BasicTestingSetup)
 
-BOOST_AUTO_TEST_SUITE(pow_tests)
-
-namespace {
-struct HistoricalBlockData {
-    unsigned int nTime;
-    unsigned int nBits;
-};
+/* Test calculation of next difficulty target with no constraints applying */
+BOOST_AUTO_TEST_CASE(get_next_work)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
+    int64_t nLastRetargetTime = 1261130161; // Block #30240
+    CBlockIndex pindexLast;
+    pindexLast.nHeight = 32255;
+    pindexLast.nTime = 1262152739;  // Block #32255
+    pindexLast.nBits = 0x1d00ffff;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00d86aU);
 }
 
-BOOST_AUTO_TEST_CASE(kgw_historical_regression_6da0ef49)
+/* Test the constraint on the upper bound for next work */
+BOOST_AUTO_TEST_CASE(get_next_work_pow_limit)
 {
-    static const HistoricalBlockData kHistoricalWindow[] = {
-    {1397128379, 0x1d011b72},
-    {1397132330, 0x1d011b72},
-    {1397133941, 0x1d011b72},
-    {1397136626, 0x1d011b72},
-    {1397137769, 0x1d011b72},
-    {1397138943, 0x1d011b72},
-    {1397141627, 0x1d011b72},
-    {1397143119, 0x1d011b72},
-    {1397144127, 0x1d011b72},
-    {1397144707, 0x1d011b72},
-    {1397144949, 0x1d011b72},
-    {1397145786, 0x1d011b72},
-    {1397148843, 0x1d011b72},
-    {1397153121, 0x1d011b72},
-    {1397155049, 0x1d011b72},
-    {1397155362, 0x1d011b72},
-    {1397157319, 0x1d011b72},
-    {1397159017, 0x1d011b72},
-    {1397161582, 0x1d011b72},
-    {1397162188, 0x1d011b72},
-    {1397162328, 0x1d011b72},
-    {1397162898, 0x1d011b72},
-    {1397163519, 0x1d011b72},
-    {1397165006, 0x1d011b72},
-    {1397167426, 0x1d011b72},
-    {1397168404, 0x1d011b72},
-    {1397169792, 0x1d011b72},
-    {1397171779, 0x1d011b72},
-    {1397171833, 0x1d011b72},
-    {1397172749, 0x1d011b72},
-    {1397252848, 0x1d011b72},
-    {1397273285, 0x1d011b72},
-    {1397273634, 0x1d011b72},
-    {1397281106, 0x1d011b72},
-    {1397281377, 0x1d011b72},
-    {1397281656, 0x1d011b72},
-    {1397281969, 0x1d011b72},
-    {1397284644, 0x1d011b72},
-    {1397289909, 0x1d011b72},
-    {1397295668, 0x1d011b72},
-    {1397296595, 0x1d011b72},
-    {1397304462, 0x1d011b72},
-    {1397304960, 0x1d011b72},
-    {1397305768, 0x1d011b72},
-    {1397308856, 0x1d011b72},
-    {1397309716, 0x1d011b72},
-    {1397310315, 0x1d011b72},
-    {1397312595, 0x1d011b72},
-    {1397320524, 0x1d011b72},
-    {1397321536, 0x1d011b72},
-    {1397324187, 0x1d011b72},
-    {1397325515, 0x1d011b72},
-    {1397326732, 0x1d011b72},
-    {1397327856, 0x1d011b72},
-    {1397334197, 0x1d011b72},
-    {1397334851, 0x1d011b72},
-    {1397336602, 0x1d011b72},
-    {1397337632, 0x1d011b72},
-    {1397338359, 0x1d011b72},
-    {1397338916, 0x1d011b72},
-    {1397341510, 0x1d011b72},
-    {1397345433, 0x1d011b72},
-    {1397346490, 0x1d011b72},
-    {1397349231, 0x1d011b72},
-    {1397352159, 0x1d011b72},
-    {1397352611, 0x1d011b72},
-    {1397352909, 0x1d011b72},
-    {1397357312, 0x1d011b72},
-    {1397358044, 0x1d011b72},
-    {1397358081, 0x1d011b72},
-    {1397379465, 0x1d011b72},
-    {1397417706, 0x1d011b72},
-    {1397468631, 0x1d011b72},
-    {1397518979, 0x1d011b72},
-    {1397543240, 0x1d011b72},
-    {1397600008, 0x1d011b72},
-    {1397605139, 0x1d011b72},
-    {1397688054, 0x1d011b72},
-    {1397693537, 0x1d011b72},
-    {1397701841, 0x1d011b72},
-    {1397726944, 0x1d011b72},
-    {1397781797, 0x1d011b72},
-    {1397786489, 0x1d011b72},
-    {1397792950, 0x1d011b72},
-    {1397800174, 0x1d011b72},
-    {1397810667, 0x1d011b72},
-    {1397831984, 0x1d011b72},
-    {1397851612, 0x1d011b72},
-    {1397862620, 0x1d011b72},
-    {1397875233, 0x1d011b72},
-    {1397893796, 0x1d011b72},
-    {1397902188, 0x1d011b72},
-    {1397912879, 0x1d011b72},
-    {1397916817, 0x1d011b72},
-    {1397917580, 0x1d011b72},
-    {1397917977, 0x1d011b72},
-    {1397925968, 0x1d011b72},
-    {1397969591, 0x1d011b72},
-    {1397974618, 0x1d011b72},
-    {1397974818, 0x1d011b72},
-    {1397977367, 0x1d011b72},
-    {1397980385, 0x1d011b72},
-    {1398009878, 0x1d011b72},
-    {1398029561, 0x1d011b72},
-    {1398038007, 0x1d011b72},
-    {1398041096, 0x1d011b72},
-    {1398045640, 0x1d011b72},
-    {1398046926, 0x1d011b72},
-    {1398062357, 0x1d011b72},
-    {1398066678, 0x1d011b72},
-    {1398112894, 0x1d011b72},
-    {1398125944, 0x1d011b72},
-    {1398126002, 0x1d011b72},
-    {1398129760, 0x1d011b72},
-    {1398135271, 0x1d011b72},
-    {1398142946, 0x1d011b72},
-    {1398153871, 0x1d011b72},
-    {1398155248, 0x1d011b72},
-    {1398160516, 0x1d011b72},
-    {1398163400, 0x1d011b72},
-    {1398185661, 0x1d011b72},
-    {1398189160, 0x1d011b72},
-    {1398198862, 0x1d011b72},
-    {1398199193, 0x1d011b72},
-    {1398217265, 0x1d011b72},
-    {1398219472, 0x1d011b72},
-    {1398226300, 0x1d011b72},
-    {1398227634, 0x1d011b72},
-    {1398228678, 0x1d011b72},
-    {1398229162, 0x1d011b72},
-    {1398229654, 0x1d011b72},
-    {1398234660, 0x1d011b72},
-    {1398236506, 0x1d011b72},
-    {1398237275, 0x1d011b72},
-    {1398247976, 0x1d011b72},
-    {1398248201, 0x1d011b72},
-    {1398250529, 0x1d011b72},
-    {1398254561, 0x1d011b72},
-    {1398257370, 0x1d011b72},
-    {1398263088, 0x1d011b72},
-    {1398265307, 0x1d011b72},
-    {1398265513, 0x1d011b72},
-    {1398268440, 0x1d011b72},
-    {1398268674, 0x1d011b72},
-    {1398270543, 0x1d011b72},
-    {1398271117, 0x1d011b72},
-    {1398273198, 0x1d011b72},
-    {1398273747, 0x1d011b72},
-    {1398275927, 0x1d011b72},
-    {1398276595, 0x1d011b72},
-    {1398279760, 0x1d011b72},
-    {1398280045, 0x1d011b72},
-    {1398280684, 0x1d011b72},
-    {1398281139, 0x1d011b72},
-    {1398281141, 0x1d011b72},
-    {1398283520, 0x1d011b72},
-    {1398283750, 0x1d011b72},
-    {1398283772, 0x1d011b72},
-    {1398284022, 0x1d011b72},
-    {1398284305, 0x1d011b72},
-    {1398284558, 0x1d011b72},
-    {1398284608, 0x1d011b72},
-    {1398284729, 0x1d011b72},
-    {1398284742, 0x1d011b72},
-    {1398285033, 0x1d011b72},
-    {1398285289, 0x1d011b72},
-    {1398285346, 0x1d011b72},
-    {1398285420, 0x1d011b72},
-    {1398285567, 0x1d011b72},
-    {1398285813, 0x1d011b72},
-    {1398286459, 0x1d011b72},
-    {1398286593, 0x1d011b72},
-    {1398286819, 0x1d011b72},
-    {1398286949, 0x1d011b72},
-    {1398287033, 0x1d011b72},
-    {1398287240, 0x1d011b72},
-    {1398287338, 0x1d011b72},
-    {1398287487, 0x1d011b72},
-    {1398287577, 0x1d011b72},
-    {1398288870, 0x1d011b72},
-    {1398288881, 0x1d011b72},
-    {1398289083, 0x1d011b72},
-    {1398289304, 0x1d011b72},
-    {1398289967, 0x1d011b72},
-    {1398290069, 0x1d011b72},
-    {1398290124, 0x1d011b72},
-    {1398290285, 0x1d011b72},
-    {1398290598, 0x1d011b72},
-    {1398290642, 0x1d011b72},
-    {1398291126, 0x1d011b72},
-    {1398291333, 0x1d011b72},
-    {1398291335, 0x1d011b72},
-    {1398291604, 0x1d011b72},
-    {1398291895, 0x1d011b72},
-    {1398292135, 0x1d011b72},
-    {1398292159, 0x1d011b72},
-    {1398292336, 0x1d011b72},
-    {1398292418, 0x1d011b72},
-    {1398293058, 0x1d011b72},
-    {1398293169, 0x1d011b72},
-    {1398294485, 0x1d011b72},
-    {1398294492, 0x1d011b72},
-    {1398294701, 0x1d011b72},
-    {1398295048, 0x1d011b72},
-    {1398295133, 0x1d011b72},
-    {1398295313, 0x1d011b72},
-    {1398295526, 0x1d011b72},
-    {1398295694, 0x1d011b72},
-    {1398295834, 0x1d011b72},
-    {1398295913, 0x1d011b72},
-    {1398296055, 0x1d011b72},
-    {1398296146, 0x1d011b72},
-    {1398296211, 0x1d011b72},
-    {1398296249, 0x1d011b72},
-    {1398296281, 0x1d011b72},
-    {1398296514, 0x1d011b72},
-    {1398296619, 0x1d011b72},
-    {1398296646, 0x1d011b72},
-    {1398296818, 0x1d011b72},
-    {1398296887, 0x1d011b72},
-    {1398297188, 0x1d011b72},
-    {1398297817, 0x1d011b72},
-    {1398297840, 0x1d011b72},
-    {1398297886, 0x1d011b72},
-    {1398298196, 0x1d011b72},
-    {1398298369, 0x1d011b72},
-    {1398298427, 0x1d011b72},
-    {1398298629, 0x1d011b72},
-    {1398298935, 0x1d011b72},
-    {1398299098, 0x1d011b72},
-    {1398299142, 0x1d011b72},
-    {1398299146, 0x1d011b72},
-    {1398299360, 0x1d011b72},
-    {1398299563, 0x1d011b72},
-    {1398299582, 0x1d011b72},
-    {1398299850, 0x1d011b72},
-    {1398299852, 0x1d011b72},
-    {1398300030, 0x1d011b72},
-    {1398300174, 0x1d011b72},
-    {1398300224, 0x1d011b72},
-    {1398300304, 0x1d011b72},
-    {1398300386, 0x1d011b72},
-    {1398300553, 0x1d011b72},
-    {1398300636, 0x1d011b72},
-    {1398300772, 0x1d011b72},
-    {1398300871, 0x1d011b72},
-    {1398300876, 0x1d011b72},
-    {1398301009, 0x1d011b72},
-    {1398301334, 0x1d011b72},
-    {1398301428, 0x1d011b72},
-    {1398301460, 0x1d011b72},
-    {1398301753, 0x1d011b72},
-    {1398301775, 0x1d011b72},
-    {1398301810, 0x1d011b72},
-    {1398301896, 0x1d011b72},
-    {1398301919, 0x1d011b72},
-    {1398301997, 0x1d011b72},
-    {1398302411, 0x1d011b72},
-    {1398302449, 0x1d011b72},
-    {1398302575, 0x1d011b72},
-    {1398302630, 0x1d011b72},
-    {1398302847, 0x1d011b72},
-    {1398303010, 0x1d011b72},
-    {1398303135, 0x1d011b72},
-    {1398303357, 0x1d011b72},
-    {1398303501, 0x1d011b72},
-    {1398303599, 0x1d011b72},
-    {1398304241, 0x1d011b72},
-    {1398304272, 0x1d011b72},
-    {1398304288, 0x1d011b72},
-    {1398304319, 0x1d011b72},
-    {1398304332, 0x1d011b72},
-    {1398304402, 0x1d011b72},
-    {1398305135, 0x1d011b72},
-    {1398305316, 0x1d011b72},
-    {1398305392, 0x1d011b72},
-    {1398305434, 0x1d011b72},
-    {1398305896, 0x1d011b72},
-    {1398305993, 0x1d011b72},
-    {1398306238, 0x1c57de38},
-    {1398307235, 0x1c5c6022},
-    };
+    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
+    int64_t nLastRetargetTime = 1231006505; // Block #0
+    CBlockIndex pindexLast;
+    pindexLast.nHeight = 2015;
+    pindexLast.nTime = 1233061996;  // Block #2015
+    pindexLast.nBits = 0x1d00ffff;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00ffffU);
+}
 
-    SelectParams(CBaseChainParams::MAIN);
+/* Test the constraint on the lower bound for actual time taken */
+BOOST_AUTO_TEST_CASE(get_next_work_lower_limit_actual)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
+    int64_t nLastRetargetTime = 1279008237; // Block #66528
+    CBlockIndex pindexLast;
+    pindexLast.nHeight = 68543;
+    pindexLast.nTime = 1279297671;  // Block #68543
+    pindexLast.nBits = 0x1c05a3f4;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1c0168fdU);
+}
 
-    std::vector<CBlockIndex> chain(sizeof(kHistoricalWindow) / sizeof(kHistoricalWindow[0]));
-    for (size_t i = 0; i < chain.size(); ++i) {
-        chain[i].SetNull();
-        chain[i].nHeight = 13300 + i;
-        chain[i].nTime = kHistoricalWindow[i].nTime;
-        chain[i].nBits = kHistoricalWindow[i].nBits;
-        chain[i].pprev = (i == 0) ? NULL : &chain[i - 1];
+/* Test the constraint on the upper bound for actual time taken */
+BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
+    int64_t nLastRetargetTime = 1263163443; // NOTE: Not an actual block time
+    CBlockIndex pindexLast;
+    pindexLast.nHeight = 46367;
+    pindexLast.nTime = 1269211443;  // Block #46367
+    pindexLast.nBits = 0x1c387f6f;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00e1fdU);
+}
+
+BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)
+{
+    const auto consensus = CreateChainParams(*m_node.args, CBaseChainParams::MAIN)->GetConsensus();
+    uint256 hash;
+    unsigned int nBits;
+    nBits = UintToArith256(consensus.powLimit).GetCompact(true);
+    hash.SetHex("0x1");
+    BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
+}
+
+BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_overflow_target)
+{
+    const auto consensus = CreateChainParams(*m_node.args, CBaseChainParams::MAIN)->GetConsensus();
+    uint256 hash;
+    unsigned int nBits = ~0x00800000;
+    hash.SetHex("0x1");
+    BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
+}
+
+BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_too_easy_target)
+{
+    const auto consensus = CreateChainParams(*m_node.args, CBaseChainParams::MAIN)->GetConsensus();
+    uint256 hash;
+    unsigned int nBits;
+    arith_uint256 nBits_arith = UintToArith256(consensus.powLimit);
+    nBits_arith *= 2;
+    nBits = nBits_arith.GetCompact();
+    hash.SetHex("0x1");
+    BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
+}
+
+BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_biger_hash_than_target)
+{
+    const auto consensus = CreateChainParams(*m_node.args, CBaseChainParams::MAIN)->GetConsensus();
+    uint256 hash;
+    unsigned int nBits;
+    arith_uint256 hash_arith = UintToArith256(consensus.powLimit);
+    nBits = hash_arith.GetCompact();
+    hash_arith *= 2; // hash > nBits
+    hash = ArithToUint256(hash_arith);
+    BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
+}
+
+BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_zero_target)
+{
+    const auto consensus = CreateChainParams(*m_node.args, CBaseChainParams::MAIN)->GetConsensus();
+    uint256 hash;
+    unsigned int nBits;
+    arith_uint256 hash_arith{0};
+    nBits = hash_arith.GetCompact();
+    hash = ArithToUint256(hash_arith);
+    BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
+}
+
+BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
+    std::vector<CBlockIndex> blocks(10000);
+    for (int i = 0; i < 10000; i++) {
+        blocks[i].pprev = i ? &blocks[i - 1] : nullptr;
+        blocks[i].nHeight = i;
+        blocks[i].nTime = 1269211443 + i * chainParams->GetConsensus().nPowTargetSpacing;
+        blocks[i].nBits = 0x207fffff; /* target 0x7fffff000... */
+        blocks[i].nChainWork = i ? blocks[i - 1].nChainWork + GetBlockProof(blocks[i - 1]) : arith_uint256(0);
     }
 
-    CBlockHeader failingHeader;
-    failingHeader.nVersion = 2;
-    failingHeader.nTime = 1398307482U;
-    failingHeader.nBits = 0x1c7e2a51U;
-    failingHeader.nNonce = 2755194624U;
-    failingHeader.hashPrevBlock.SetHex("641ebc7772b160498a50e65880d9aaffc671988b408244dbd428e2b0b5c77620");
-    failingHeader.hashMerkleRoot.SetHex("985647b4158ece3a392d477caea2689850cd0a14ac24f16fb8daa4787560d108");
+    for (int j = 0; j < 1000; j++) {
+        CBlockIndex *p1 = &blocks[InsecureRandRange(10000)];
+        CBlockIndex *p2 = &blocks[InsecureRandRange(10000)];
+        CBlockIndex *p3 = &blocks[InsecureRandRange(10000)];
 
-    BOOST_CHECK_EQUAL(chain.back().nHeight, 13580);
-    BOOST_CHECK_EQUAL(chain.back().nBits, 0x1c5c6022U);
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&chain.back(), &failingHeader), failingHeader.nBits);
+        int64_t tdiff = GetBlockProofEquivalentTime(*p1, *p2, *p3, chainParams->GetConsensus());
+        BOOST_CHECK_EQUAL(tdiff, p1->GetBlockTime() - p2->GetBlockTime());
+    }
+}
 
-    SelectParams(CBaseChainParams::UNITTEST);
+void sanity_check_chainparams(const ArgsManager& args, std::string chainName)
+{
+    const auto chainParams = CreateChainParams(args, chainName);
+    const auto consensus = chainParams->GetConsensus();
+
+    // hash genesis is correct
+    BOOST_CHECK_EQUAL(consensus.hashGenesisBlock, chainParams->GenesisBlock().GetHash());
+
+    // target timespan is an even multiple of spacing
+    BOOST_CHECK_EQUAL(consensus.nPowTargetTimespan % consensus.nPowTargetSpacing, 0);
+
+    // genesis nBits is positive, doesn't overflow and is lower than powLimit
+    arith_uint256 pow_compact;
+    bool neg, over;
+    pow_compact.SetCompact(chainParams->GenesisBlock().nBits, &neg, &over);
+    BOOST_CHECK(!neg && pow_compact != 0);
+    BOOST_CHECK(!over);
+    BOOST_CHECK(UintToArith256(consensus.powLimit) >= pow_compact);
+
+    // check max target * 4*nPowTargetTimespan doesn't overflow -- see pow.cpp:CalculateNextWorkRequired()
+    if (!consensus.fPowNoRetargeting) {
+        arith_uint256 targ_max("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+        targ_max /= consensus.nPowTargetTimespan*4;
+        BOOST_CHECK(UintToArith256(consensus.powLimit) < targ_max);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ChainParams_MAIN_sanity)
+{
+    sanity_check_chainparams(*m_node.args, CBaseChainParams::MAIN);
+}
+
+BOOST_AUTO_TEST_CASE(ChainParams_REGTEST_sanity)
+{
+    sanity_check_chainparams(*m_node.args, CBaseChainParams::REGTEST);
+}
+
+BOOST_AUTO_TEST_CASE(ChainParams_TESTNET_sanity)
+{
+    sanity_check_chainparams(*m_node.args, CBaseChainParams::TESTNET);
+}
+
+BOOST_AUTO_TEST_CASE(ChainParams_SIGNET_sanity)
+{
+    sanity_check_chainparams(*m_node.args, CBaseChainParams::SIGNET);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

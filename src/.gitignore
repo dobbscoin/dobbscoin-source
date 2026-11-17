@@ -1,4 +1,0 @@
-
-# Stray binaries kept beside the build (never commit these)
-*.bak-*
-dobbscoind.bak*
