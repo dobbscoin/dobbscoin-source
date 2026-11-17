@@ -118,8 +118,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000"); // (BOB) acid test: no min-work gate
-        consensus.defaultAssumeValid = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000"); // (BOB) acid test: assume nothing, full validation
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000007b86587882c49d"); // (BOB) chainwork at block 1945000
+        consensus.defaultAssumeValid = uint256S("0xdf6e82216a8c63534d16f0a28c849f7e95907661a84a316d174a0d6b8f0fe884"); // (BOB) block 1945000 (-assumevalid=0 restores full verification)
         consensus.nAssumeValidMinTime = 60 * 60 * 24 * 7 * 2;
 
         consensus.fSimplifiedRewards = false;
@@ -153,8 +153,25 @@ public:
         // This is fine at runtime as we'll fall back to using them as an addrfetch if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        vSeeds.emplace_back("seed.multidoge.org");
-        vSeeds.emplace_back("seed2.multidoge.org");
+        // (BOB) 0.14.1's DNS seeds, unchanged.
+        vSeeds.emplace_back("seed.dobbscoin.info");
+        vSeeds.emplace_back("seed1.dobbscoin.info");
+        vSeeds.emplace_back("seed2.dobbscoin.info");
+        vSeeds.emplace_back("seed3.dobbscoin.info");
+        vSeeds.emplace_back("seed4.dobbscoin.info");
+        vSeeds.emplace_back("seed5.dobbscoin.info");
+        vSeeds.emplace_back("seed6.dobbscoin.info");
+        vSeeds.emplace_back("seed7.dobbscoin.info");
+        vSeeds.emplace_back("seed8.dobbscoin.info");
+        vSeeds.emplace_back("seed9.dobbscoin.info");
+        vSeeds.emplace_back("seed10.dobbscoin.info");
+        // A second domain, as in 0.14: dobbscoin.info renews 2027-01-18, six days before
+        // the block 2,000,000 fork; these keep a new node able to find the network by name.
+        vSeeds.emplace_back("jhvh1.23skidoo.info"); // JHVH-1
+        vSeeds.emplace_back("dobbs.23skidoo.info"); // "Bob" Dobbs
+        vSeeds.emplace_back("eris.23skidoo.info"); // Eris
+        vSeeds.emplace_back("connie.23skidoo.info"); // Connie Dobbs
+        vSeeds.emplace_back("nheeghee.23skidoo.info"); // the Nhee Ghee
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
@@ -173,7 +190,21 @@ public:
 
         checkpointData = {
             {
-                {      0, uint256S("0x6d2d7d525900712451b9697d0b5b2304ebae6efb349540da445bf575c0159969")}, // (BOB) genesis only -- all later blocks validated by consensus/PoW
+                // (BOB) 0.14.1's checkpoints, unchanged (each checked against the live chain 2026-11-17).
+                {      0, uint256S("0x6d2d7d525900712451b9697d0b5b2304ebae6efb349540da445bf575c0159969")},
+                {   2016, uint256S("0x94a9ab39b9e1e7dafdda1a5823c11556750157aa16e93ae2a59de426e185de58")},
+                {   4032, uint256S("0xa29010ca0ec82b0d2d937f5d82d2e30918467b1f4b3bb51026d13782b7aac73a")},
+                {   8064, uint256S("0x76ef2061b587842f424aae28fcab25fb8434612b58125258292799aaaed0f833")},
+                {  12096, uint256S("0x5abe39584788a018296d97a6f00ca80c81603ebbe8ad84af5778e7d6fcdbed70")},
+                {  13422, uint256S("0xc70a40fe1c53e5525636644e625d4c38c8493b180a0ca81c9d7c9801748e6b52")},
+                {  14496, uint256S("0xd50a2656a6ac593ebb034c1d5ca5eac93220455727f677e7506629f61d566239")},
+                {  15809, uint256S("0x31cdc96eb5510e69bf2635b76b0266c0065839685bb30d9b94224d9a5c972b78")},
+                {  15882, uint256S("0xbfbbf161974b59797b5698b086fd8a5efab4786a3cee389d130da20e03d65eaf")},
+                {  30800, uint256S("0x3a767fc61883f7d5adfd2b07c810ec4b065812dd40aafbda1944f8f792e2c00a")},
+                {  66138, uint256S("0x8f4074d04838fb1d0914d46ee35de8b1e069f70df97e207617210469d1ebcf7e")},
+                {  68900, uint256S("0xe0bef613116487194c2c823110d9b4d630ccd33d186b9dc12db03c03ae21c958")},
+                { 318371, uint256S("0xabfd65da327b3b1eef32bceed1219b415e1f6d075c242dbc05d8b9d34196afb9")},
+                {1848000, uint256S("0xf4e2e967ae88e49a915ed9c3c21faa2bca15c0bb6258ac16c769ccb3962f3615")},
             }
         };
 

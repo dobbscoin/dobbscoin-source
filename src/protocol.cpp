@@ -136,10 +136,15 @@ bool CMessageHeader::IsCommandValid() const
 
 
 ServiceFlags GetDesirableServiceFlags(ServiceFlags services) {
+    // (BOB): no NODE_WITNESS requirement. SegWit is not active on (BOB) (it arrives with
+    // its own enable fork), and every (BOB) 0.14 node offers NODE_NETWORK only; requiring
+    // NODE_WITNESS made this node disconnect every real (BOB) peer ("00000001 offered,
+    // 00000009 expected"). Block download still asks for witness peers only once SegWit is
+    // active (see IsWitnessEnabled in net_processing), so restoring it is part of that fork.
     if ((services & NODE_NETWORK_LIMITED) && g_initial_block_download_completed) {
-        return ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS);
+        return ServiceFlags(NODE_NETWORK_LIMITED);
     }
-    return ServiceFlags(NODE_NETWORK | NODE_WITNESS);
+    return ServiceFlags(NODE_NETWORK);
 }
 
 void SetServiceFlagsIBDCache(bool state) {
