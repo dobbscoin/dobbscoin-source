@@ -1257,15 +1257,9 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return 0;
-
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nSubsidy >>= halvings;
-    return nSubsidy;
+    // (BOB): the consensus subsidy is GetDogecoinBlockSubsidy (the (BOB) GetBlockValue
+    // curve). Keep this name as a thin alias so nothing can report Bitcoin's halving.
+    return GetDogecoinBlockSubsidy(nHeight, consensusParams, uint256());
 }
 
 CoinsViews::CoinsViews(

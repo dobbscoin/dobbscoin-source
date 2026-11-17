@@ -19,7 +19,9 @@
  * Text used to signify that a signed message follows and to prevent
  * inadvertently signing a transaction.
  */
-const std::string MESSAGE_MAGIC = "Bitcoin Signed Message:\n";
+// (BOB): must equal 0.14 strMessageMagic, or messages signed by one cannot be
+// verified by the other (Dogecoin 0.21 had left Bitcoin's string in place).
+const std::string MESSAGE_MAGIC = "Dobbscoin Signed Message:\n";
 
 MessageVerificationResult MessageVerify(
     const std::string& address,

@@ -18,15 +18,15 @@ import random
 from segwit_addr import bech32_encode, decode_segwit_address, convertbits, CHARSET, Encoding
 
 # key types
-PUBKEY_ADDRESS = 30
-SCRIPT_ADDRESS = 22
+PUBKEY_ADDRESS = 0     # (BOB) mainnet
+SCRIPT_ADDRESS = 5
 PUBKEY_ADDRESS_TEST = 113
 SCRIPT_ADDRESS_TEST = 196
-PUBKEY_ADDRESS_REGTEST = 113
+PUBKEY_ADDRESS_REGTEST = 111   # (BOB) 0.14 regtest
 SCRIPT_ADDRESS_REGTEST = 196
-PRIVKEY = 158
+PRIVKEY = 128
 PRIVKEY_TEST = 241
-PRIVKEY_REGTEST = 241
+PRIVKEY_REGTEST = 239
 
 # script
 OP_0 = 0x00
@@ -72,10 +72,10 @@ templates = [
 # templates for valid bech32 sequences
 bech32_templates = [
   # hrp, version, witprog_size, metadata, encoding, output_prefix
-  ('doge',    0, 20, (False, 'main',    None, True), Encoding.BECH32,  p2wpkh_prefix),
-  ('doge',    0, 32, (False, 'main',    None, True), Encoding.BECH32,  p2wsh_prefix),
-  ('doge',    1, 32, (False, 'main',    None, True), Encoding.BECH32M, p2tr_prefix),
-  ('doge',    2,  2, (False, 'main',    None, True), Encoding.BECH32M, (OP_2, 2)),
+  ('bob',    0, 20, (False, 'main',    None, True), Encoding.BECH32,  p2wpkh_prefix),
+  ('bob',    0, 32, (False, 'main',    None, True), Encoding.BECH32,  p2wsh_prefix),
+  ('bob',    1, 32, (False, 'main',    None, True), Encoding.BECH32M, p2tr_prefix),
+  ('bob',    2,  2, (False, 'main',    None, True), Encoding.BECH32M, (OP_2, 2)),
   ('tdge',    0, 20, (False, 'test',    None, True), Encoding.BECH32,  p2wpkh_prefix),
   ('tdge',    0, 32, (False, 'test',    None, True), Encoding.BECH32,  p2wsh_prefix),
   ('tdge',    1, 32, (False, 'test',    None, True), Encoding.BECH32M, p2tr_prefix),
@@ -96,16 +96,16 @@ bech32_ng_templates = [
   ('dt',    1, 32, Encoding.BECH32M, False, False, False),
   ('tdge',   17, 32, Encoding.BECH32M, False, False, False),
   ('dcrt',  3,  1, Encoding.BECH32M, False, False, False),
-  ('doge',   15, 41, Encoding.BECH32M, False, False, False),
+  ('bob',   15, 41, Encoding.BECH32M, False, False, False),
   ('tdge',    0, 16, Encoding.BECH32,  False, False, False),
   ('dcrt',  0, 32, Encoding.BECH32,  True,  False, False),
-  ('doge',    0, 16, Encoding.BECH32,  True,  False, False),
+  ('bob',    0, 16, Encoding.BECH32,  True,  False, False),
   ('tdge',    0, 32, Encoding.BECH32,  False, True,  False),
   ('dcrt',  0, 20, Encoding.BECH32,  False, False, True),
-  ('doge',    0, 20, Encoding.BECH32M, False, False, False),
+  ('bob',    0, 20, Encoding.BECH32M, False, False, False),
   ('tdge',    0, 32, Encoding.BECH32M, False, False, False),
   ('dcrt',  0, 20, Encoding.BECH32M, False, False, False),
-  ('doge',    1, 32, Encoding.BECH32,  False, False, False),
+  ('bob',    1, 32, Encoding.BECH32,  False, False, False),
   ('tdge',    2, 16, Encoding.BECH32,  False, False, False),
   ('dcrt', 16, 20, Encoding.BECH32,  False, False, False),
 ]
@@ -127,7 +127,7 @@ def is_valid(v):
 
 def is_valid_bech32(v):
     '''Check vector v for bech32 validity'''
-    for hrp in ['doge', 'tdge', 'dcrt']:
+    for hrp in ['bob', 'tdge', 'dcrt']:
         if decode_segwit_address(hrp, v) != (None, None):
             return True
     return False

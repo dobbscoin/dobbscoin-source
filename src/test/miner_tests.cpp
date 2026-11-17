@@ -51,34 +51,36 @@ constexpr static struct {
     unsigned char extranonce;
     unsigned int nonce;
 } blockinfo[] = {
-    {4, 0x127fad2d}, {2, 0x335d1b8f}, {1, 0x33d47094}, {2, 0x0b09ec28},
-    {1, 0x06cf723b}, {2, 0x039202bc}, {1, 0x0a2c9d46}, {2, 0x6225cb92},
-    {2, 0x6ea1513e}, {1, 0x4401bef3}, {1, 0x04d3a1d2}, {2, 0x1c512825},
-    {2, 0x54a03b14}, {1, 0x6048e27d}, {1, 0x1b926afc}, {2, 0x68c4afbd},
-    {2, 0x4439c313}, {1, 0x1263fceb}, {2, 0x834dee3e}, {2, 0xf21ed9dc},
-    {1, 0xdcdac434}, {2, 0x4c1945be}, {1, 0x6d42a594}, {3, 0x20927a30},
-    {3, 0xfd60f461}, {2, 0xd9ad2207}, {2, 0xe7f69d1a}, {1, 0x7fa9b932},
-    {2, 0xb0511080}, {1, 0xe7d24cd5}, {2, 0x3c57e668}, {2, 0x83bfdc2e},
-    {2, 0x6eeb4e10}, {2, 0x9cacbcfd}, {2, 0xb27ea98e}, {2, 0x6d57c5a7},
-    {1, 0x6deb4fa8}, {2, 0xabf625c6}, {2, 0x27e7c569}, {1, 0x89c6e991},
-    {2, 0xc359bc28}, {1, 0x6f25768d}, {2, 0x654a4c31}, {1, 0x5cd03bab},
-    {1, 0xda405f69}, {3, 0xfea453e5}, {2, 0x137d2c3a}, {5, 0xdee2f36e},
-    {1, 0xeccbcf26}, {5, 0x9237dbaa}, {1, 0xb7b9350b}, {1, 0xcd0c7eb2},
-    {1, 0xf5ea5a32}, {2, 0x3486a7f3}, {1, 0xd0a0f2be}, {1, 0xe1238144},
-    {1, 0x28b98a9b}, {1, 0xe79d02aa}, {5, 0xf4555d56}, {5, 0x74da0bb7},
-    {1, 0x18728b91}, {1, 0x07ed3a93}, {6, 0xd7a5e106}, {2, 0xba50b06c},
-    {2, 0x952c830d}, {1, 0xfbd1bb18}, {1, 0x36126967}, {1, 0xcce357d0},
-    {2, 0xff1ec2d6}, {2, 0xbed5dfc9}, {1, 0x0d21fdd7}, {1, 0xd744edea},
-    {1, 0xe09fc8f2}, {5, 0x2ad325c5}, {5, 0x466b6549}, {1, 0x10705d49},
-    {1, 0xf88478ce}, {2, 0xbfda6c4a}, {2, 0x731fe414}, {1, 0x6f1b362e},
-    {2, 0x6be709cf}, {1, 0x60553200}, {2, 0xf6a992f0}, {2, 0x1521f7f5},
-    {1, 0x8b440273}, {1, 0xe9ade0c8}, {1, 0x4d414618}, {5, 0x7b48070d},
-    {1, 0x1202ebae}, {1, 0xd23fe97e}, {1, 0x8d1d6505}, {1, 0xfafbaae3},
-    {1, 0xf200353e}, {1, 0xe77bd65e}, {1, 0x9fa32102}, {2, 0x68dfa747},
-    {0, 0x7c74d78e}, {1, 0x9b79cc6b}, {2, 0xad957cc2}, {2, 0x91acb818},
-    {1, 0x00024b92}, {1, 0x0002a868}, {1, 0x0000767a}, {1, 0x0003f818},
-    {1, 0x001e2f24}, {1, 0x001d43f5}, {1, 0x00074756}, {2, 0x0001cc72},
-    {0, 0x0002bb2c}, {1, 0x001a9616},
+    // (BOB): lowest valid nonces for (BOB) mainnet (genesis 6d2d7d52..., nBits 0x1e0ffff0),
+    // with the BIP34 height-first coinbase below. Ground 2026-11-15.
+    {4, 0x000320e6}, {2, 0x0001509c}, {1, 0x000162af}, {2, 0x000875bb},
+    {1, 0x003fbc65}, {2, 0x004539e8}, {1, 0x000dc047}, {2, 0x0008126b},
+    {2, 0x0015b936}, {1, 0x0011b3f3}, {1, 0x000d2b71}, {2, 0x0011d25a},
+    {2, 0x00055d69}, {1, 0x001ae65d}, {1, 0x00015cdd}, {2, 0x0033c25b},
+    {2, 0x00079dde}, {1, 0x0014988e}, {2, 0x000337a8}, {2, 0x0036ecd9},
+    {1, 0x0004e146}, {2, 0x00260ad2}, {1, 0x00162805}, {3, 0x00082337},
+    {3, 0x000c956b}, {2, 0x000bcaa3}, {2, 0x002256b7}, {1, 0x00018ae8},
+    {2, 0x0021b296}, {1, 0x00006bb4}, {2, 0x00060d14}, {2, 0x0000bb0c},
+    {2, 0x000a36ba}, {2, 0x00179185}, {2, 0x0020c20c}, {2, 0x000967d2},
+    {1, 0x001e9b49}, {2, 0x001b3a62}, {2, 0x000df54c}, {1, 0x001149d5},
+    {2, 0x00007468}, {1, 0x000cf429}, {2, 0x0013219c}, {1, 0x0006b33b},
+    {1, 0x000fe2dd}, {3, 0x001aa061}, {2, 0x000912fd}, {5, 0x000354f4},
+    {1, 0x00008ad5}, {5, 0x000b2084}, {1, 0x0001dcc7}, {1, 0x001392af},
+    {1, 0x00062b69}, {2, 0x00279f95}, {1, 0x0004caf1}, {1, 0x00031557},
+    {1, 0x00329928}, {1, 0x000b62d1}, {5, 0x0009e144}, {5, 0x000562d2},
+    {1, 0x0022420e}, {1, 0x0008e146}, {6, 0x000cd933}, {2, 0x001a3dba},
+    {2, 0x0009dc9e}, {1, 0x00038be3}, {1, 0x0003cd79}, {1, 0x00073089},
+    {2, 0x00073e3e}, {2, 0x000ec8f3}, {1, 0x0007ddf2}, {1, 0x002d5a7d},
+    {1, 0x00096685}, {5, 0x0002e73f}, {5, 0x000c7c00}, {1, 0x0029ac08},
+    {1, 0x003f9776}, {2, 0x000dc4d6}, {2, 0x00030f4c}, {1, 0x00026e94},
+    {2, 0x0017fd42}, {1, 0x000aba45}, {2, 0x0004165f}, {2, 0x0006c4dd},
+    {1, 0x0021b3e9}, {1, 0x0000b982}, {1, 0x0010d592}, {5, 0x00022d45},
+    {1, 0x0002f1d4}, {1, 0x0027ae69}, {1, 0x0018de0c}, {1, 0x0000d428},
+    {1, 0x000a4e4e}, {1, 0x000c4375}, {1, 0x0005d3ab}, {2, 0x00126742},
+    {0, 0x000b7f55}, {1, 0x000a5afe}, {2, 0x0025999b}, {2, 0x00026e77},
+    {1, 0x002e7878}, {1, 0x00069b41}, {1, 0x0008d0e8}, {1, 0x00051fe5},
+    {1, 0x00001c1e}, {1, 0x001bdabd}, {1, 0x00085fb5}, {2, 0x00048c27},
+    {0, 0x001279d5}, {1, 0x00021023},
 };
 
 static CBlockIndex CreateBlockIndex(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -232,9 +234,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             pblock->nTime = ::ChainActive().Tip()->GetBlockTime() + 60;
             CMutableTransaction txCoinbase(*pblock->vtx[0]);
             txCoinbase.nVersion = 1;
-            txCoinbase.vin[0].scriptSig = CScript();
-            txCoinbase.vin[0].scriptSig.push_back(blockinfo[i].extranonce);
-            txCoinbase.vin[0].scriptSig.push_back(::ChainActive().Height());
+            // (BOB): BIP34 is active from height 1, so the coinbase must lead with the height.
+            txCoinbase.vin[0].scriptSig = CScript() << (::ChainActive().Height() + 1) << CScriptNum(blockinfo[i].extranonce);
             txCoinbase.vout.resize(1); // Ignore the (optional) segwit commitment added by CreateNewBlock (as the hardcoded nonces don't account for this)
             txCoinbase.vout[0].scriptPubKey = CScript();
             pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));

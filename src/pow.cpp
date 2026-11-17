@@ -223,9 +223,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
     // --- (BOB) retarget dispatcher (by height) ---
-    // Ported + validated vs real history: V1 (<13579), DigiShield V3 [31597,68425), V4 [68425,1888808).
-    // NOT yet ported: KGW [13579,31597) (portable/no-OpenSSL port pending) and LWMA-3 (>=1888808).
-    // The stock Dogecoin retarget below is a PLACEHOLDER for those two ranges only. See doc/retarget-port-spec.md.
+    // All five (BOB) regimes, each ported and validated against real history: V1 (<13579),
+    // KGW [13579,31597), DigiShield V3 [31597,68425) and V4 [68425,1888808), LWMA-3 (>=1888808).
+    // Unit vectors from real mainnet headers: src/test/dogecoin_tests.cpp (bob_retarget_*).
     if (!params.fPowNoRetargeting) {
         const int h = pindexLast->nHeight + 1;
         if (h < 13579)                    return BobGetNextWorkRequired_V1(pindexLast, pblock, params);

@@ -13,51 +13,66 @@
 
 BOOST_FIXTURE_TEST_SUITE(validation_tests, TestingSetup)
 
-static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
-{
-    int maxHalvings = 64;
-    CAmount nInitialSubsidy = 50 * COIN;
-
-    CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
-    BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
-    for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
-        int nHeight = nHalvings * consensusParams.nSubsidyHalvingInterval;
-        CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
-        BOOST_CHECK(nSubsidy <= nInitialSubsidy);
-        BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
-        nPreviousSubsidy = nSubsidy;
-    }
-    BOOST_CHECK_EQUAL(GetBlockSubsidy(maxHalvings * consensusParams.nSubsidyHalvingInterval, consensusParams), 0);
-}
-
-static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval)
-{
-    Consensus::Params consensusParams;
-    consensusParams.nSubsidyHalvingInterval = nSubsidyHalvingInterval;
-    TestBlockSubsidyHalvings(consensusParams);
-}
-
+// (BOB): the subsidy is the fixed (BOB) GetBlockValue curve, not Bitcoin's
+// "halve every nSubsidyHalvingInterval" rule. Mainnet halves 10 every 210000
+// blocks until the 1.5 hard-set at 951753; testnet/regtest pay 50, 9 at 205,
+// then 10 from 350 with no halvings.
 BOOST_AUTO_TEST_CASE(block_subsidy_test)
 {
-    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
-    TestBlockSubsidyHalvings(chainParams->GetConsensus()); // As in main
-    TestBlockSubsidyHalvings(150); // As in regtest
-    TestBlockSubsidyHalvings(1000); // Just another interval
+    const auto mainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
+    const Consensus::Params& m = mainParams->GetConsensus();
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(0, m), 50 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(69791, m), 10 * COIN);
+    CAmount expected = 10 * COIN;
+    for (int k = 1; k <= 4; ++k) {
+        expected /= 2;
+        BOOST_CHECK_EQUAL(GetBlockSubsidy(k * 210000, m), expected);
+        BOOST_CHECK_EQUAL(GetBlockSubsidy(k * 210000 - 1, m), expected * 2);
+    }
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(951753, m), 150000000);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(100000000, m), 150000000);   // flat forever
+
+    const auto regParams = CreateChainParams(*m_node.args, CBaseChainParams::REGTEST);
+    const Consensus::Params& r = regParams->GetConsensus();
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(1, r), 50 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(204, r), 50 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(205, r), 9 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(349, r), 50 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(350, r), 10 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(1000000, r), 10 * COIN);    // no halvings off mainnet
+
+    // Guard: nSubsidyHalvingInterval must not steer the curve.
+    Consensus::Params tweaked = m;
+    tweaked.nSubsidyHalvingInterval = 150;
+    for (int h : {150, 300, 210000, 840000})
+        BOOST_CHECK_EQUAL(GetBlockSubsidy(h, tweaked), GetBlockSubsidy(h, m));
 }
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
     const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
+    // (BOB): every block from genesis to the 2M fork. Expected total computed
+    // independently from the (BOB) 0.14 GetBlockValue (main.cpp), mainnet path.
+    const Consensus::Params& p = chainParams->GetConsensus();
     CAmount nSum = 0;
-    for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
-        CAmount nSubsidy = GetBlockSubsidy(nHeight, chainParams->GetConsensus());
+    for (int nHeight = 0; nHeight <= 2000000; ++nHeight) {
+        CAmount nSubsidy = GetBlockSubsidy(nHeight, p);
         BOOST_CHECK(nSubsidy <= 50 * COIN);
-        nSum += nSubsidy * 1000;
+        nSum += nSubsidy;
         BOOST_CHECK(MoneyRange(nSum));
     }
-    // Dogecoin: Supply is uncapped, so the test doesn't apply in the same way.
-    // Instead we update this to the potential maximum at block 14000000 as nearest equivalent.
-    BOOST_CHECK_EQUAL(nSum, CAmount{999999998900000});
+    BOOST_CHECK_EQUAL(nSum, CAmount{837131762500000});
+    // Curve landmarks: the lone 10 at 68425, back to 50 until 69791, halvings
+    // of 10 every 210000, the 1.5 hard-set from 951753 on.
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(68424, p), 50 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(68425, p), 10 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(68426, p), 50 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(69791, p), 10 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(210000, p), 5 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(840000, p), 62500000);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(951752, p), 62500000);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(951753, p), 150000000);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(2000000, p), 150000000);
 }
 
 BOOST_AUTO_TEST_CASE(signet_parse_tests)

@@ -94,9 +94,16 @@ struct TestingSetup : public BasicTestingSetup {
 };
 
 /** Identical to TestingSetup, but chain set to regtest */
+/**
+ * (BOB): the node regtest mirrors (BOB) 0.14 (SegWit off, AuxPoW at 10). The
+ * generic upstream unit tests built on this fixture (indexes, mempool,
+ * interfaces) assume a SegWit-on, pre-AuxPoW regtest and build blocks off-tip,
+ * so they run with both moved out of the way. (BOB) consensus has its own
+ * tests: validation_tests subsidy, feature_*_bob.py, contrib/bob-differential.
+ */
 struct RegTestingSetup : public TestingSetup {
     RegTestingSetup()
-        : TestingSetup{CBaseChainParams::REGTEST} {}
+        : TestingSetup{CBaseChainParams::REGTEST, {"-segwitheight=0", "-auxpowheight=1000000"}} {}
 };
 
 class CBlock;
