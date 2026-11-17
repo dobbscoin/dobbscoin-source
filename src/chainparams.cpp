@@ -209,10 +209,12 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 954c7c66dee51f0a3fb1edb26200b735f5275fe54d9505c76ebd2bcabac36f1e
-            /* nTime    */ 1613217680,
-            /* nTxCount */ 71035468,
-            /* dTxRate  */ 0.46,
+            // (BOB) data from RPC: getchaintxstats 4096 6d2de99b5142eec1146d0bbe1c90a45c6d0f4762f4b1254dd99cfb59519d812a
+            // (block 1950461, on the rebased shadow node; it was Dogecoin data, which made the
+            // GUI show about 1% progress at a 7-week-old tip)
+            /* nTime    */ 1794949414,
+            /* nTxCount */ 2183167,
+            /* dTxRate  */ 0.009953928225024248,
         };
     }
 };
