@@ -604,20 +604,20 @@ void SetupServerArgs(NodeContext& node)
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/bitcoin/bitcoin>";
-
-    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i").translated, 2009, COPYRIGHT_YEAR) + " ") + "\n" +
+    // (BOB) 0.14's About text, verbatim.
+    return "\n" +
+           FormatParagraph(_("Dobbscoin: Where Sub-Culture becomes Capital").translated) + "\n" +
+           FormatParagraph(_("(BOB) Dobbscoin is the official Crypto-Currency of the Church of the SubGenius").translated) + "\n" +
+           FormatParagraph(_("Backed By Nothing, Powered By Everything.").translated) + "\n" +
            "\n" +
-           strprintf(_("Please contribute if you find %s useful. "
-                       "Visit %s for further information about the software.").translated,
-               PACKAGE_NAME, "<" PACKAGE_URL ">") +
+           FormatParagraph(strprintf(_("Copyright (C) 2013-%i The Dobbscoin Developers").translated, COPYRIGHT_YEAR)) + "\n" +
+           "at https://subgenius.finance -Praise \"BOB\"\n" +
+           FormatParagraph(strprintf(_("Copyright (C) 1953-%i The SubGenius Foundation").translated, COPYRIGHT_YEAR)) + "\n" +
+           FormatParagraph(strprintf(_("Copyright (C) 2009-%i The Bitcoin Core Developers").translated, COPYRIGHT_YEAR)) + "\n" +
            "\n" +
-           strprintf(_("The source code is available from %s.").translated,
-               URL_SOURCE_CODE) +
+           FormatParagraph(_("The Graven Image of 'Bob' Dobbs' Face is a registered trademark of The SubGenius Foundation, Inc. https://subgenius.com -Praise 'Bob'").translated) + "\n\n" +
            "\n" +
-           "\n" +
-           _("This is experimental software.").translated + "\n" +
-           strprintf(_("Distributed under the MIT software license, see the accompanying file %s or %s").translated, "COPYING", "<https://opensource.org/licenses/MIT>") +
+           FormatParagraph(strprintf(_("Distributed under the MIT software license, see the accompanying file %s or %s").translated, "COPYING", "<https://opensource.org/licenses/MIT>")) + "\n" +
            "\n";
 }
 
