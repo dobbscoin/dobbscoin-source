@@ -1,0 +1,33 @@
+diff -ru a/qtbase/src/corelib/thread/qmutex.h b/qtbase/src/corelib/thread/qmutex.h
+--- a/qtbase/src/corelib/thread/qmutex.h	2026-11-17 16:35:58.077898390 +0000
++++ b/qtbase/src/corelib/thread/qmutex.h	2026-11-17 16:35:58.081898342 +0000
+@@ -41,6 +41,7 @@
+ #define QMUTEX_H
+ 
+ #include <QtCore/qglobal.h>
++#include <limits>
+ #include <QtCore/qatomic.h>
+ #include <new>
+ 
+diff -ru a/qtbase/src/corelib/tools/qbytearraymatcher.h b/qtbase/src/corelib/tools/qbytearraymatcher.h
+--- a/qtbase/src/corelib/tools/qbytearraymatcher.h	2026-11-17 16:35:58.085898295 +0000
++++ b/qtbase/src/corelib/tools/qbytearraymatcher.h	2026-11-17 16:35:58.089898249 +0000
+@@ -41,6 +41,7 @@
+ #define QBYTEARRAYMATCHER_H
+ 
+ #include <QtCore/qbytearray.h>
++#include <limits>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+diff -ru a/qtbase/src/corelib/tools/qtimezoneprivate_p.h b/qtbase/src/corelib/tools/qtimezoneprivate_p.h
+--- a/qtbase/src/corelib/tools/qtimezoneprivate_p.h	2026-11-17 16:35:58.093898201 +0000
++++ b/qtbase/src/corelib/tools/qtimezoneprivate_p.h	2026-11-17 16:35:58.093898201 +0000
+@@ -53,6 +53,7 @@
+ //
+ 
+ #include "qtimezone.h"
++#include <limits>
+ #include "qlocale_p.h"
+ #include "qvector.h"
+ 
