@@ -148,3 +148,12 @@ db4/
 osx_volname
 dist/
 *.background.tiff
+
+# (BOB) build outputs
+src/dobbscoind
+src/dobbscoin-cli
+src/dobbscoin-tx
+src/dobbscoin-wallet
+src/qt/dobbscoin-qt
+src/qt/test/test_dobbscoin-qt
+src/test/test_dobbscoin
