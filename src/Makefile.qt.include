@@ -2,10 +2,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-bin_PROGRAMS += qt/dogecoin-qt
+bin_PROGRAMS += qt/dobbscoin-qt
 
 if BUILD_BITCOIN_GUI
-  bin_PROGRAMS += dogecoin-gui
+  bin_PROGRAMS += dobbscoin-gui
 endif
 
 EXTRA_LIBRARIES += qt/libbitcoinqt.a
@@ -303,7 +303,7 @@ QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:
 # Most files will depend on the forms and moc files as includes. Generate them
 # before anything else.
 $(QT_MOC): $(QT_FORMS_H)
-$(qt_libbitcoinqt_a_OBJECTS) $(qt_dogecoin_qt_OBJECTS) $(dogecoin_gui_OBJECTS) : | $(QT_MOC)
+$(qt_libbitcoinqt_a_OBJECTS) $(qt_dobbscoin_qt_OBJECTS) $(dobbscoin_gui_OBJECTS) : | $(QT_MOC)
 
 # bitcoin-qt and bitcoin-gui binaries #
 bitcoin_qt_cppflags = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
@@ -327,19 +327,19 @@ bitcoin_qt_ldadd += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(
 bitcoin_qt_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 bitcoin_qt_libtoolflags = $(AM_LIBTOOLFLAGS) --tag CXX
 
-qt_dogecoin_qt_CPPFLAGS = $(bitcoin_qt_cppflags)
-qt_dogecoin_qt_CXXFLAGS = $(bitcoin_qt_cxxflags)
-qt_dogecoin_qt_SOURCES = $(bitcoin_qt_sources)
-qt_dogecoin_qt_LDADD = $(bitcoin_qt_ldadd)
-qt_dogecoin_qt_LDFLAGS = $(bitcoin_qt_ldflags)
-qt_dogecoin_qt_LIBTOOLFLAGS = $(bitcoin_qt_libtoolflags)
+qt_dobbscoin_qt_CPPFLAGS = $(bitcoin_qt_cppflags)
+qt_dobbscoin_qt_CXXFLAGS = $(bitcoin_qt_cxxflags)
+qt_dobbscoin_qt_SOURCES = $(bitcoin_qt_sources)
+qt_dobbscoin_qt_LDADD = $(bitcoin_qt_ldadd)
+qt_dobbscoin_qt_LDFLAGS = $(bitcoin_qt_ldflags)
+qt_dobbscoin_qt_LIBTOOLFLAGS = $(bitcoin_qt_libtoolflags)
 
-dogecoin_gui_CPPFLAGS = $(bitcoin_qt_cppflags)
-dogecoin_gui_CXXFLAGS = $(bitcoin_qt_cxxflags)
-dogecoin_gui_SOURCES = $(bitcoin_qt_sources)
-dogecoin_gui_LDADD = $(bitcoin_qt_ldadd)
-dogecoin_gui_LDFLAGS = $(bitcoin_qt_ldflags)
-dogecoin_gui_LIBTOOLFLAGS = $(bitcoin_qt_libtoolflags)
+dobbscoin_gui_CPPFLAGS = $(bitcoin_qt_cppflags)
+dobbscoin_gui_CXXFLAGS = $(bitcoin_qt_cxxflags)
+dobbscoin_gui_SOURCES = $(bitcoin_qt_sources)
+dobbscoin_gui_LDADD = $(bitcoin_qt_ldadd)
+dobbscoin_gui_LDFLAGS = $(bitcoin_qt_ldflags)
+dobbscoin_gui_LIBTOOLFLAGS = $(bitcoin_qt_libtoolflags)
 
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)
@@ -371,9 +371,9 @@ CLEAN_QT = $(nodist_qt_libbitcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda 
 CLEANFILES += $(CLEAN_QT)
 
 bitcoin_qt_clean: FORCE
-	rm -f $(CLEAN_QT) $(qt_libbitcoinqt_a_OBJECTS) $(qt_dogecoin_qt_OBJECTS) qt/dogecoin-qt$(EXEEXT) $(LIBBITCOINQT)
+	rm -f $(CLEAN_QT) $(qt_libbitcoinqt_a_OBJECTS) $(qt_dobbscoin_qt_OBJECTS) qt/dobbscoin-qt$(EXEEXT) $(LIBBITCOINQT)
 
-bitcoin_qt : qt/dogecoin-qt$(EXEEXT)
+bitcoin_qt : qt/dobbscoin-qt$(EXEEXT)
 
 ui_%.h: %.ui
 	@test -f $(UIC)

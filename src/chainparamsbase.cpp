@@ -40,19 +40,20 @@ const CBaseChainParams& BaseParams()
 }
 
 /**
- * Port numbers for incoming Tor connections (22557, 44557, 55557, 18445) have
- * been chosen arbitrarily to keep ranges of used ports tight.
+ * (BOB): mainnet RPC 19984 and regtest RPC 39984 are (BOB) 0.14's. The Tor onion
+ * target is 19987, not P2P+1 (19986): on vps1 19986 is a 0.14 daemon's RPC port,
+ * and -listenonion would race it. Testnet/signet ports are still Dogecoin's.
  */
 std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN) {
-        return MakeUnique<CBaseChainParams>("", 22555, 22557);
+        return MakeUnique<CBaseChainParams>("", 19984, 19987);
     } else if (chain == CBaseChainParams::TESTNET) {
         return MakeUnique<CBaseChainParams>("testnet3", 44555, 44557);
     } else if (chain == CBaseChainParams::SIGNET) {
         return MakeUnique<CBaseChainParams>("signet", 55555, 55557);
     } else if (chain == CBaseChainParams::REGTEST) {
-        return MakeUnique<CBaseChainParams>("regtest", 18443, 18445);
+        return MakeUnique<CBaseChainParams>("regtest", 39984, 18445);
     }
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }

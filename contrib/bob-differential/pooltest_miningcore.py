@@ -133,7 +133,7 @@ def main():
     refenv = dict(os.environ, LD_LIBRARY_PATH=os.path.join(BASE, "ref-0.14.1", "lib"))
     old = Node("old-0.14.1", [os.path.join(BASE, "ref-0.14.1", "dobbscoind"), "-port=19556", "-listen=1",
                               "-bind=127.0.0.1"], 19555, refenv)
-    new = Node("rebase", [os.path.join(BASE, "dogecoin-121dev", "src", "dogecoind"), "-port=19566", "-listen=0",
+    new = Node("rebase", [os.path.join(BASE, "dogecoin-121dev", "src", "dobbscoind"), "-port=19566", "-listen=0",
                           "-connect=127.0.0.1:19556", "-disablewallet"], 19565)
     nodes = {"old": old, "rebase": new}
     pool_node, follower = nodes[A.pool_on], nodes["old" if A.pool_on == "rebase" else "rebase"]

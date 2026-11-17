@@ -60,7 +60,7 @@ static bool AppInit(int argc, char* argv[])
         if (args.IsArgSet("-version")) {
             strUsage += FormatParagraph(LicenseInfo()) + "\n";
         } else {
-            strUsage += "\nUsage:  dogecoind [options]                     Start " PACKAGE_NAME "\n";
+            strUsage += "\nUsage:  dobbscoind [options]                     Start " PACKAGE_NAME "\n";
             strUsage += "\n" + args.GetHelpMessage();
         }
 
@@ -87,7 +87,7 @@ static bool AppInit(int argc, char* argv[])
         // Error out when loose non-argument tokens are encountered on command line
         for (int i = 1; i < argc; i++) {
             if (!IsSwitchChar(argv[i][0])) {
-                return InitError(Untranslated(strprintf("Command line contains unexpected token '%s', see dogecoind -h for a list of options.\n", argv[i])));
+                return InitError(Untranslated(strprintf("Command line contains unexpected token '%s', see dobbscoind -h for a list of options.\n", argv[i])));
             }
         }
 
@@ -96,7 +96,7 @@ static bool AppInit(int argc, char* argv[])
             return false;
         }
 
-        // -server defaults to true for dogecoind but not for the GUI so do this here
+        // -server defaults to true for dobbscoind but not for the GUI so do this here
         args.SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console
         InitLogging(args);
@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
 #endif
     SetupEnvironment();
 
-    // Connect dogecoind signal handlers
+    // Connect dobbscoind signal handlers
     noui_connect();
 
     return (AppInit(argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);

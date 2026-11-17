@@ -82,22 +82,22 @@ TESTS =
 BENCHMARKS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += dogecoind
+  bin_PROGRAMS += dobbscoind
 endif
 
 if BUILD_BITCOIN_NODE
-  bin_PROGRAMS += dogecoin-node
+  bin_PROGRAMS += dobbscoin-node
 endif
 
 if BUILD_BITCOIN_CLI
-  bin_PROGRAMS += dogecoin-cli
+  bin_PROGRAMS += dobbscoin-cli
 endif
 if BUILD_BITCOIN_TX
-  bin_PROGRAMS += dogecoin-tx
+  bin_PROGRAMS += dobbscoin-tx
 endif
 if ENABLE_WALLET
 if BUILD_BITCOIN_WALLET
-  bin_PROGRAMS += dogecoin-wallet
+  bin_PROGRAMS += dobbscoin-wallet
 endif
 endif
 
@@ -582,16 +582,16 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # bitcoind & bitcoin-node binaries #
-dogecoin_daemon_sources = bitcoind.cpp
-dogecoin_bin_cppflags = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-dogecoin_bin_cxxflags = $(AM_CXXFLAGS) $(PIE_FLAGS)
-dogecoin_bin_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+dobbscoin_daemon_sources = bitcoind.cpp
+dobbscoin_bin_cppflags = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+dobbscoin_bin_cxxflags = $(AM_CXXFLAGS) $(PIE_FLAGS)
+dobbscoin_bin_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
-dogecoin_daemon_sources += bitcoind-res.rc
+dobbscoin_daemon_sources += bitcoind-res.rc
 endif
 
-dogecoin_bin_ldadd = \
+dobbscoin_bin_ldadd = \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -604,50 +604,50 @@ dogecoin_bin_ldadd = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-dogecoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
+dobbscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
-dogecoind_SOURCES = $(dogecoin_daemon_sources)
-dogecoind_CPPFLAGS = $(dogecoin_bin_cppflags)
-dogecoind_CXXFLAGS = $(dogecoin_bin_cxxflags)
-dogecoind_LDFLAGS = $(dogecoin_bin_ldflags)
-dogecoind_LDADD = $(LIBBITCOIN_SERVER) $(dogecoin_bin_ldadd)
+dobbscoind_SOURCES = $(dobbscoin_daemon_sources)
+dobbscoind_CPPFLAGS = $(dobbscoin_bin_cppflags)
+dobbscoind_CXXFLAGS = $(dobbscoin_bin_cxxflags)
+dobbscoind_LDFLAGS = $(dobbscoin_bin_ldflags)
+dobbscoind_LDADD = $(LIBBITCOIN_SERVER) $(dobbscoin_bin_ldadd)
 
-dogecoin_node_SOURCES = $(dogecoin_daemon_sources)
-dogecoin_node_CPPFLAGS = $(dogecoin_bin_cppflags)
-dogecoin_node_CXXFLAGS = $(dogecoin_bin_cxxflags)
-dogecoin_node_LDFLAGS = $(dogecoin_bin_ldflags)
-dogecoin_node_LDADD = $(LIBBITCOIN_SERVER) $(dogecoin_bin_ldadd)
+dobbscoin_node_SOURCES = $(dobbscoin_daemon_sources)
+dobbscoin_node_CPPFLAGS = $(dobbscoin_bin_cppflags)
+dobbscoin_node_CXXFLAGS = $(dobbscoin_bin_cxxflags)
+dobbscoin_node_LDFLAGS = $(dobbscoin_bin_ldflags)
+dobbscoin_node_LDADD = $(LIBBITCOIN_SERVER) $(dobbscoin_bin_ldadd)
 
 # bitcoin-cli binary #
-dogecoin_cli_SOURCES = bitcoin-cli.cpp
-dogecoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-dogecoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-dogecoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+dobbscoin_cli_SOURCES = bitcoin-cli.cpp
+dobbscoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+dobbscoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+dobbscoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
-dogecoin_cli_SOURCES += bitcoin-cli-res.rc
+dobbscoin_cli_SOURCES += bitcoin-cli-res.rc
 endif
 
-dogecoin_cli_LDADD = \
+dobbscoin_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-dogecoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
+dobbscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
 #
 
 # bitcoin-tx binary #
-dogecoin_tx_SOURCES = bitcoin-tx.cpp
-dogecoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-dogecoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-dogecoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+dobbscoin_tx_SOURCES = bitcoin-tx.cpp
+dobbscoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+dobbscoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+dobbscoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
-dogecoin_tx_SOURCES += bitcoin-tx-res.rc
+dobbscoin_tx_SOURCES += bitcoin-tx-res.rc
 endif
 
-dogecoin_tx_LDADD = \
+dobbscoin_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -655,18 +655,18 @@ dogecoin_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-dogecoin_tx_LDADD += $(BOOST_LIBS)
+dobbscoin_tx_LDADD += $(BOOST_LIBS)
 #
 
 # bitcoin-wallet binary #
-dogecoin_wallet_SOURCES = bitcoin-wallet.cpp
-dogecoin_wallet_CPPFLAGS = $(dogecoin_bin_cppflags)
-dogecoin_wallet_CXXFLAGS = $(dogecoin_bin_cxxflags)
-dogecoin_wallet_LDFLAGS = $(dogecoin_bin_ldflags)
-dogecoin_wallet_LDADD = $(LIBBITCOIN_WALLET_TOOL) $(dogecoin_bin_ldadd)
+dobbscoin_wallet_SOURCES = bitcoin-wallet.cpp
+dobbscoin_wallet_CPPFLAGS = $(dobbscoin_bin_cppflags)
+dobbscoin_wallet_CXXFLAGS = $(dobbscoin_bin_cxxflags)
+dobbscoin_wallet_LDFLAGS = $(dobbscoin_bin_ldflags)
+dobbscoin_wallet_LDADD = $(LIBBITCOIN_WALLET_TOOL) $(dobbscoin_bin_ldadd)
 
 if TARGET_WINDOWS
-dogecoin_wallet_SOURCES += bitcoin-wallet-res.rc
+dobbscoin_wallet_SOURCES += bitcoin-wallet-res.rc
 endif
 #
 

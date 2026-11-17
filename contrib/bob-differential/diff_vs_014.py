@@ -81,7 +81,7 @@ class Diff:
     def __init__(self):
         env = dict(os.environ, LD_LIBRARY_PATH=os.path.join(REF, "lib"))
         self.old = Node("old-0.14.1", [os.path.join(REF, "dobbscoind")], 19555, env)
-        self.new = Node("rebase", [os.path.join(REBASE, "dogecoind"), "-disablewallet"], 19565)
+        self.new = Node("rebase", [os.path.join(REBASE, "dobbscoind"), "-disablewallet"], 19565)
         self.rows, self.divergences, self.coinbases = [], [], []
         g = (self.old.call("getblockhash", 0), self.new.call("getblockhash", 0))
         assert g == (GENESIS, GENESIS), "genesis differs: %s" % (g,)

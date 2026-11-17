@@ -9,10 +9,10 @@
 
 /**
  * Name of client reported in the 'version' message. Report the same name
- * for both dogecoind and dogecoin-qt, to make it harder for attackers to
+ * for both dobbscoind and dobbscoin-qt, to make it harder for attackers to
  * target servers or GUI users specifically.
  */
-const std::string CLIENT_NAME("Shibetoshi");
+const std::string CLIENT_NAME("EndTimes");
 
 
 #ifdef HAVE_BUILD_INFO

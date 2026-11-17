@@ -113,7 +113,7 @@ static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
 /**
  * The PID file facilities.
  */
-static const char* BITCOIN_PID_FILENAME = "dogecoind.pid";
+static const char* BITCOIN_PID_FILENAME = "dobbscoind.pid";
 
 static fs::path GetPidFile(const ArgsManager& args)
 {
@@ -977,7 +977,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     if (network == CBaseChainParams::SIGNET) {
         // Dogecoin: Signet requires a challenge, but we can't halt when constructing the chainparams as they're constructed even if not used.
         if (!args.IsArgSet("-signetchallenge")) {
-            return InitError(_("-signetchallenge must be specified when using -signet on Dogecoin as no default Signet is available."));
+            return InitError(_("-signetchallenge must be specified when using -signet on Dobbscoin as no default Signet is available."));
         }
         LogPrintf("Signet derived magic (message start): %s\n", HexStr(chainparams.MessageStart()));
     }

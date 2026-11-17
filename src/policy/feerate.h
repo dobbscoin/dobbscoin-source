@@ -11,8 +11,8 @@
 
 #include <string>
 
-const std::string CURRENCY_UNIT = "DOGE"; // One formatted unit
-const std::string CURRENCY_ATOM = "koinu"; // One indivisible minimum value unit
+const std::string CURRENCY_UNIT = "BOB"; // One formatted unit
+const std::string CURRENCY_ATOM = "dobbalina"; // One indivisible minimum value unit (1e-8 BOB)
 
 // Dogecoin: Bitcoin uses MAX_MONEY as the maximum fee rate, but that leads to
 // overflows with Doge MAX_MONEY, so instead we have it as a distinct value.
@@ -50,7 +50,7 @@ public:
      *
      *  Passing an nBytes value of COIN (1e8) returns a fee rate in Koinu per vB (Koinu/vB),
      *  e.g. (nFeePaid * 1e8 / 1e3) == (nFeePaid / 1e5),
-     *  where 1e5 is the ratio to convert from DOGE/kvB to Koinu/vB.
+     *  where 1e5 is the ratio to convert from BOB/kvB to dobbalina/vB.
      *
      *  @param[in] nFeePaid  CAmount fee rate to construct with. If this exceeds MAX_FEE_RATE it will be capped at MAX_FEE_RATE.
      *  @param[in] nBytes    size_t bytes (units) to construct with

@@ -71,7 +71,7 @@
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
 
-const char * const BITCOIN_CONF_FILENAME = "dogecoin.conf";
+const char * const BITCOIN_CONF_FILENAME = "dobbscoin.conf";
 const char * const BITCOIN_SETTINGS_FILENAME = "settings.json";
 
 ArgsManager gArgs;
@@ -632,7 +632,7 @@ static std::string FormatException(const std::exception* pex, const char* pszThr
     char pszModule[MAX_PATH] = "";
     GetModuleFileNameA(nullptr, pszModule, sizeof(pszModule));
 #else
-    const char* pszModule = "dogecoin";
+    const char* pszModule = "dobbscoin";
 #endif
     if (pex)
         return strprintf(
@@ -651,12 +651,12 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 
 fs::path GetDefaultDataDir()
 {
-    // Windows: C:\Users\Username\AppData\Roaming\Dogecoin
-    // macOS: ~/Library/Application Support/Dogecoin
-    // Unix-like: ~/.dogecoin
+    // Windows: C:\Users\Username\AppData\Roaming\Dobbscoin
+    // macOS: ~/Library/Application Support/Dobbscoin
+    // Unix-like: ~/.dobbscoin
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Dogecoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Dobbscoin";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -666,10 +666,10 @@ fs::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // macOS
-    return pathRet / "Library/Application Support/Dogecoin";
+    return pathRet / "Library/Application Support/Dobbscoin";
 #else
     // Unix-like
-    return pathRet / ".dogecoin";
+    return pathRet / ".dobbscoin";
 #endif
 #endif
 }
