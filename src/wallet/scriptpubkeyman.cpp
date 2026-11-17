@@ -1255,6 +1255,10 @@ bool LegacyScriptPubKeyMan::TopUp(unsigned int kpSize)
         }
         bool internal = false;
         WalletBatch batch(m_storage.GetDatabase());
+        // (BOB): one database transaction for the whole top-up. Without it SQLite commits
+        // and flushes every key separately; a 0.14 wallet growing its keypool from ~100 to
+        // 1000 on first load sat about 5 minutes at the splash screen on Windows.
+        const bool txn = batch.TxnBegin();
         for (int64_t i = missingInternal + missingExternal; i--;)
         {
             if (i < missingInternal) {
@@ -1264,6 +1268,7 @@ bool LegacyScriptPubKeyMan::TopUp(unsigned int kpSize)
             CPubKey pubkey(GenerateNewKey(batch, m_hd_chain, internal));
             AddKeypoolPubkeyWithDB(pubkey, internal, batch);
         }
+        if (txn) batch.TxnCommit();
         if (missingInternal + missingExternal > 0) {
             WalletLogPrintf("keypool added %d keys (%d internal), size=%u (%u internal)\n", missingInternal + missingExternal, missingInternal, setInternalKeyPool.size() + setExternalKeyPool.size() + set_pre_split_keypool.size(), setInternalKeyPool.size());
         }

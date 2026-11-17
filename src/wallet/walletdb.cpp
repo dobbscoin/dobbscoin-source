@@ -252,6 +252,7 @@ public:
     unsigned int nWatchKeys{0};
     unsigned int nKeyMeta{0};
     unsigned int m_unknown_records{0};
+    std::set<std::string> m_unknown_types; //!< (BOB): named in the load log line
     bool fIsEncrypted{false};
     bool fAnyUnordered{false};
     std::vector<uint256> vWalletUpgrade;
@@ -662,6 +663,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                    strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
                    strType != DBKeys::VERSION && strType != DBKeys::SETTINGS) {
             wss.m_unknown_records++;
+            wss.m_unknown_types.insert(strType);
         }
     } catch (const std::exception& e) {
         if (strErr.empty()) {
@@ -798,6 +800,11 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
     pwallet->WalletLogPrintf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total. Unknown wallet records: %u\n",
            wss.nKeys, wss.nCKeys, wss.nKeyMeta, wss.nKeys + wss.nCKeys, wss.m_unknown_records);
+    if (!wss.m_unknown_types.empty()) {
+        std::string types;
+        for (const std::string& t : wss.m_unknown_types) types += (types.empty() ? "" : ", ") + t;
+        pwallet->WalletLogPrintf("Unknown wallet record types (left untouched): %s\n", types);
+    }
 
     // nTimeFirstKey is only reliable if all keys have metadata
     if (pwallet->IsLegacy() && (wss.nKeys + wss.nCKeys + wss.nWatchKeys) != wss.nKeyMeta) {
