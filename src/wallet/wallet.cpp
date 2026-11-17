@@ -2702,6 +2702,11 @@ static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain, const uin
 
 OutputType CWallet::TransactionChangeType(const Optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend)
 {
+    // (BOB): legacy change while SegWit is inactive, whatever -changetype or the recipients say.
+    if (!BobSegwitActive()) {
+        return OutputType::LEGACY;
+    }
+
     // If -changetype is specified, always use that change type.
     if (change_type) {
         return *change_type;
@@ -3106,6 +3111,18 @@ bool CWallet::CreateTransaction(
         FeeCalculation& fee_calc_out,
         bool sign)
 {
+    // (BOB): refuse to pay to a witness program while SegWit is inactive (anyone could spend it).
+    if (!BobSegwitActive()) {
+        for (const auto& recipient : vecSend) {
+            int witness_version = 0;
+            std::vector<unsigned char> witness_program;
+            if (recipient.scriptPubKey.IsWitnessProgram(witness_version, witness_program)) {
+                error = Untranslated("Sending to a SegWit (bech32 or witness program) address is not possible on Dobbscoin until SegWit is activated: the coins would be spendable by anyone.");
+                return false;
+            }
+        }
+    }
+
     int nChangePosIn = nChangePosInOut;
     CTransactionRef tx2 = tx;
     bool res = CreateTransactionInternal(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);
@@ -3318,10 +3335,20 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     return res;
 }
 
+bool CWallet::BobSegwitActive() const
+{
+    const Optional<int> height = chain().getHeight();
+    return height && *height + 1 >= Params().GetConsensus().SegwitHeight;
+}
+
 bool CWallet::GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, std::string& error)
 {
     LOCK(cs_wallet);
     error.clear();
+    if (type != OutputType::LEGACY && !BobSegwitActive()) {
+        error = "Only legacy addresses can be used on Dobbscoin until SegWit is activated (a SegWit output would be spendable by anyone)";
+        return false;
+    }
     bool result = false;
     auto spk_man = GetScriptPubKeyMan(type, false /* internal */);
     if (spk_man) {
@@ -3341,6 +3368,10 @@ bool CWallet::GetNewChangeDestination(const OutputType type, CTxDestination& des
 {
     LOCK(cs_wallet);
     error.clear();
+    if (type != OutputType::LEGACY && !BobSegwitActive()) {
+        error = "Only legacy addresses can be used on Dobbscoin until SegWit is activated (a SegWit output would be spendable by anyone)";
+        return false;
+    }
 
     ReserveDestination reservedest(this, type);
     if (!reservedest.GetReservedDestination(dest, true)) {

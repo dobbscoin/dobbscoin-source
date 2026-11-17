@@ -1016,6 +1016,9 @@ static RPCHelpMan addmultisigaddress()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[3].get_str()));
         }
     }
+    if (output_type != OutputType::LEGACY && !pwallet->BobSegwitActive()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Only legacy addresses can be used on Dobbscoin until SegWit is activated (a SegWit output would be spendable by anyone)");
+    }
 
     // Construct using pay-to-script-hash:
     CScript inner;
