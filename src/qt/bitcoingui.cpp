@@ -244,7 +244,7 @@ void BitcoinGUI::createActions()
     QActionGroup *tabGroup = new QActionGroup(this);
     connect(modalOverlay, &ModalOverlay::triggered, tabGroup, &QActionGroup::setEnabled);
 
-    overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/overview"), tr("&Overview"), this);
+    overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/bob"), tr("&Overview"), this); // (BOB) 0.14: Bob's face; :/icons/overview is the Mining tab's
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
     overviewAction->setToolTip(overviewAction->statusTip());
     overviewAction->setCheckable(true);
@@ -298,10 +298,12 @@ void BitcoinGUI::createActions()
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(tr("E&xit"), this);
+    quitAction->setIcon(platformStyle->SingleColorIcon(":/icons/quit")); // (BOB) 0.14 menu icon
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
     aboutAction = new QAction(tr("&About %1").arg(PACKAGE_NAME), this);
+    aboutAction->setIcon(m_network_style->getAppIcon()); // (BOB) 0.14 menu icon
     aboutAction->setStatusTip(tr("Show information about %1").arg(PACKAGE_NAME));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutAction->setEnabled(false);
@@ -309,22 +311,29 @@ void BitcoinGUI::createActions()
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(tr("&Options..."), this);
+    optionsAction->setIcon(platformStyle->SingleColorIcon(":/icons/options")); // (BOB) 0.14 menu icon
     optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(PACKAGE_NAME));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     optionsAction->setEnabled(false);
     toggleHideAction = new QAction(tr("&Show / Hide"), this);
+    toggleHideAction->setIcon(m_network_style->getAppIcon()); // (BOB) 0.14 menu icon
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
     encryptWalletAction = new QAction(tr("&Encrypt Wallet..."), this);
+    encryptWalletAction->setIcon(platformStyle->SingleColorIcon(":/icons/lock_closed")); // (BOB) 0.14 menu icon
     encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your wallet"));
     encryptWalletAction->setCheckable(true);
     backupWalletAction = new QAction(tr("&Backup Wallet..."), this);
+    backupWalletAction->setIcon(platformStyle->SingleColorIcon(":/icons/filesave")); // (BOB) 0.14 menu icon
     backupWalletAction->setStatusTip(tr("Backup wallet to another location"));
     changePassphraseAction = new QAction(tr("&Change Passphrase..."), this);
+    changePassphraseAction->setIcon(platformStyle->SingleColorIcon(":/icons/key")); // (BOB) 0.14 menu icon
     changePassphraseAction->setStatusTip(tr("Change the passphrase used for wallet encryption"));
     signMessageAction = new QAction(tr("Sign &message..."), this);
+    signMessageAction->setIcon(platformStyle->SingleColorIcon(":/icons/edit")); // (BOB) 0.14 menu icon
     signMessageAction->setStatusTip(tr("Sign messages with your Dobbscoin addresses to prove you own them"));
     verifyMessageAction = new QAction(tr("&Verify message..."), this);
+    verifyMessageAction->setIcon(platformStyle->SingleColorIcon(":/icons/transaction_0")); // (BOB) 0.14 menu icon
     verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Dobbscoin addresses"));
     m_load_psbt_action = new QAction(tr("&Load PSBT from file..."), this);
     m_load_psbt_action->setStatusTip(tr("Load Partially Signed Dobbscoin Transaction"));
@@ -332,14 +341,17 @@ void BitcoinGUI::createActions()
     m_load_psbt_clipboard_action->setStatusTip(tr("Load Partially Signed Dobbscoin Transaction from clipboard"));
 
     openRPCConsoleAction = new QAction(tr("Node window"), this);
+    openRPCConsoleAction->setIcon(platformStyle->SingleColorIcon(":/icons/debugwindow")); // (BOB) 0.14 menu icon
     openRPCConsoleAction->setStatusTip(tr("Open node debugging and diagnostic console"));
     // initially disable the debug window menu item
     openRPCConsoleAction->setEnabled(false);
     openRPCConsoleAction->setObjectName("openRPCConsoleAction");
 
     usedSendingAddressesAction = new QAction(tr("&Sending addresses"), this);
+    usedSendingAddressesAction->setIcon(platformStyle->SingleColorIcon(":/icons/address-book")); // (BOB) 0.14 menu icon
     usedSendingAddressesAction->setStatusTip(tr("Show the list of used sending addresses and labels"));
     usedReceivingAddressesAction = new QAction(tr("&Receiving addresses"), this);
+    usedReceivingAddressesAction->setIcon(platformStyle->SingleColorIcon(":/icons/address-book")); // (BOB) 0.14 menu icon
     usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
 
     openAction = new QAction(tr("Open &URI..."), this);

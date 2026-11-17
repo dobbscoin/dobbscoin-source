@@ -40,10 +40,16 @@
      <item>
       <widget class="QLabel" name="aboutLogo">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>96</width>
+         <height>380</height>
+        </size>
        </property>
        <property name="maximumSize">
         <size>
