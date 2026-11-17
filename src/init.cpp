@@ -1609,9 +1609,13 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     // taken: the GUI question must not be asked while cs_main is held.
     if (!fReindex && !fReindexChainState && !args.GetBoolArg("-upgradechainstate", false)) {
         bool legacy = false;
-        {
+        try {
             CCoinsViewDB probe(GetDataDir() / "chainstate", 1 << 20, false, false);
             legacy = probe.HasLegacyCoins();
+        } catch (const std::exception& e) {
+            // An unreadable chainstate is not ours to judge here: leave it to the normal load
+            // path below, which reports it and offers to rebuild the block database.
+            LogPrintf("0.14-format check skipped, the chainstate could not be opened: %s\n", e.what());
         }
         if (legacy) {
             const bool convert = uiInterface.ThreadSafeQuestion(
