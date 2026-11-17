@@ -19,6 +19,13 @@
 
 static const char* const DATABASE_FILENAME = "wallet.dat";
 static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
+// (BOB): Dobbscoin 0.14 wallets are SQLite too, with the same main(key, value) table and
+// legacy wallet records, but their header says application_id "BOBW", user_version 1.
+// Recognize them, and never rewrite that header, so 0.14 can still open the file.
+// New wallets keep Bitcoin Core's header (network magic, version 0), which 0.14 refuses
+// cleanly instead of misreading records it does not know.
+static constexpr uint32_t BOB014_APP_ID = 0x424f4257; // "BOBW"
+static constexpr int32_t BOB014_SCHEMA_VERSION = 1;
 
 static Mutex g_sqlite_mutex;
 static int g_sqlite_count GUARDED_BY(g_sqlite_mutex) = 0;
@@ -138,7 +145,8 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
     uint32_t app_id = static_cast<uint32_t>(sqlite3_column_int(app_id_stmt, 0));
     sqlite3_finalize(app_id_stmt);
     uint32_t net_magic = ReadBE32(Params().MessageStart());
-    if (app_id != net_magic) {
+    const bool bob014 = app_id == BOB014_APP_ID;
+    if (app_id != net_magic && !bob014) {
         error = strprintf(_("SQLiteDatabase: Unexpected application id. Expected %u, got %u"), net_magic, app_id);
         return false;
     }
@@ -159,10 +167,12 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
     }
     int32_t user_ver = sqlite3_column_int(user_ver_stmt, 0);
     sqlite3_finalize(user_ver_stmt);
-    if (user_ver != WALLET_SCHEMA_VERSION) {
-        error = strprintf(_("SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported"), user_ver, WALLET_SCHEMA_VERSION);
+    const int32_t want_ver = bob014 ? BOB014_SCHEMA_VERSION : WALLET_SCHEMA_VERSION;
+    if (user_ver != want_ver) {
+        error = strprintf(_("SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported"), user_ver, want_ver);
         return false;
     }
+    if (bob014) LogPrintf("SQLiteDatabase: %s is a Dobbscoin 0.14 wallet (BOBW, schema %d); its header is kept as is\n", m_file_path, user_ver);
 
     sqlite3_stmt* stmt{nullptr};
     ret = sqlite3_prepare_v2(m_db, "PRAGMA integrity_check", -1, &stmt, nullptr);
@@ -625,6 +635,6 @@ bool IsSQLiteFile(const fs::path& path)
         return false;
     }
 
-    // Check the application id matches our network magic
-    return memcmp(Params().MessageStart(), app_id, 4) == 0;
+    // Check the application id matches our network magic, or is a (BOB) 0.14 wallet ("BOBW")
+    return memcmp(Params().MessageStart(), app_id, 4) == 0 || memcmp("BOBW", app_id, 4) == 0;
 }

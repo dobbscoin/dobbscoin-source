@@ -62,7 +62,10 @@ std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, cons
 //! -paytxfee default
 constexpr CAmount DEFAULT_PAY_TX_FEE = 0;
 //! -fallbackfee default
-static const CAmount DEFAULT_FALLBACK_FEE = 0;
+//! (BOB): 1000 dobbalinas/kvB, what 0.14 pays when it has no fee estimate (its minTxFee
+//! fallback, also the relay minimum on both versions). Bitcoin Core's default of 0 makes
+//! sending fail ("Fee estimation failed") on a chain as quiet as (BOB)'s.
+static const CAmount DEFAULT_FALLBACK_FEE = 1000;
 //! -discardfee default
 static const CAmount DEFAULT_DISCARD_FEE = 10000;
 //! -mintxfee default

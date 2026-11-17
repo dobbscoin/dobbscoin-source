@@ -260,7 +260,11 @@ class CTransaction
 {
 public:
     // Default transaction version.
-    static const int32_t CURRENT_VERSION=2;
+    // (BOB): new transactions default to version 1. (BOB) 0.14 nodes treat nVersion > 1 as
+    // non-standard ("version"), so version-2 transactions from this wallet would never be
+    // relayed or mined by the 0.14 network. This node still accepts up to
+    // MAX_STANDARD_VERSION (2). Raise this when the network has upgraded (CSV / BIP68).
+    static const int32_t CURRENT_VERSION=1;
 
     // Changing the default transaction version requires a two step process: first
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
