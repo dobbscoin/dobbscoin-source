@@ -45,6 +45,19 @@
         <file alias="network_disabled">res/icons/network_disabled.png</file>
         <file alias="proxy">res/icons/proxy.png</file>
     </qresource>
+    <qresource prefix="/images">
+        <file alias="about">res/images/about.png</file>
+        <file alias="bgtile">res/images/bgtile.png</file>
+        <file alias="overviewLeftBottom">res/images/overviewLeftBottom.png</file>
+        <file alias="overviewLeftTop">res/images/overviewLeftTop.png</file>
+        <file alias="overviewRight">res/images/overviewRight.png</file>
+        <file alias="splash">res/images/splash.png</file>
+        <file alias="splash_testnet">res/images/splash_testnet.png</file>
+        <file alias="dark/bgtile">res/images-dark/bgtile.png</file>
+        <file alias="dark/overviewLeftBottom">res/images-dark/overviewLeftBottom.png</file>
+        <file alias="dark/overviewLeftTop">res/images-dark/overviewLeftTop.png</file>
+        <file alias="dark/overviewRight">res/images-dark/overviewRight.png</file>
+    </qresource>
     <qresource prefix="/animation">
         <file alias="spinner-000">res/animation/spinner-000.png</file>
         <file alias="spinner-001">res/animation/spinner-001.png</file>

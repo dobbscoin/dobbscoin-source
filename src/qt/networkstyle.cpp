@@ -16,18 +16,20 @@ static const struct {
     const char *appName;
     const int iconColorHueShift;
     const int iconColorSaturationReduction;
+    const char *splashImage; // (BOB) 0.14 splash artwork
 } network_styles[] = {
-    {"main", QAPP_APP_NAME_DEFAULT, 0, 0},
-    {"test", QAPP_APP_NAME_TESTNET, 70, 30},
-    {"signet", QAPP_APP_NAME_SIGNET, 35, 15},
-    {"regtest", QAPP_APP_NAME_REGTEST, 160, 30},
+    {"main", QAPP_APP_NAME_DEFAULT, 0, 0, ":/images/splash"},
+    {"test", QAPP_APP_NAME_TESTNET, 70, 30, ":/images/splash_testnet"},
+    {"signet", QAPP_APP_NAME_SIGNET, 35, 15, ":/images/splash_testnet"},
+    {"regtest", QAPP_APP_NAME_REGTEST, 160, 30, ":/images/splash_testnet"},
 };
 static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
 
 // titleAddText needs to be const char* for tr()
-NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *_titleAddText):
+NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *_titleAddText, const QString &_splashImage):
     appName(_appName),
-    titleAddText(qApp->translate("SplashScreen", _titleAddText))
+    titleAddText(qApp->translate("SplashScreen", _titleAddText)),
+    splashImage(_splashImage)
 {
     // load pixmap
     QPixmap pixmap(":/icons/bitcoin");
@@ -89,7 +91,8 @@ const NetworkStyle* NetworkStyle::instantiate(const std::string& networkId)
                     network_styles[x].appName,
                     network_styles[x].iconColorHueShift,
                     network_styles[x].iconColorSaturationReduction,
-                    titleAddText.c_str());
+                    titleAddText.c_str(),
+                    network_styles[x].splashImage);
         }
     }
     return nullptr;
