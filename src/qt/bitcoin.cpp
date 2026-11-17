@@ -430,6 +430,7 @@ WId BitcoinApplication::getMainWinId() const
 
 static void SetupUIArgs(ArgsManager& argsman)
 {
+    argsman.AddArg("-theme=<theme>", "Colour theme: system, light or dark (default: the GUI setting, initially system)", ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
     argsman.AddArg("-choosedatadir", strprintf("Choose data directory on startup (default: %u)", DEFAULT_CHOOSE_DATADIR), ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
     argsman.AddArg("-lang=<lang>", "Set language, for example \"de_DE\" (default: system locale)", ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
     argsman.AddArg("-min", "Start minimized", ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
@@ -504,6 +505,7 @@ int GuiMain(int argc, char* argv[])
     // Now that QSettings are accessible, initialize translations
     QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
+    GUIUtil::ApplyTheme(GUIUtil::GetThemeSetting()); // (BOB) 0.14 theme
 
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
     // but before showing splash screen.
@@ -568,6 +570,7 @@ int GuiMain(int argc, char* argv[])
     QApplication::setApplicationName(networkStyle->getAppName());
     // Re-initialize translations after changing application name (language in network-specific settings can be different)
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
+    GUIUtil::ApplyTheme(GUIUtil::GetThemeSetting()); // (BOB) 0.14 theme
 
 #ifdef ENABLE_WALLET
     /// 8. URI IPC sending

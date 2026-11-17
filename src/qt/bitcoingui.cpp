@@ -81,6 +81,9 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
     platformStyle(_platformStyle),
     m_network_style(networkStyle)
 {
+    // (BOB) 0.14: the background tile behind the wallet pages
+    this->setStyleSheet(".WalletFrame {background-image: url(\"" + GUIUtil::ThemedResource(":/images/bgtile") + "\"); }");
+
     QSettings settings;
     if (!restoreGeometry(settings.value("MainWindowGeometry").toByteArray())) {
         // Restore failed (perhaps missing setting), center the window

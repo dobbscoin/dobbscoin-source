@@ -14,6 +14,7 @@
 #include <QMessageBox>
 #include <QObject>
 #include <QProgressBar>
+#include <QIcon>
 #include <QString>
 #include <QTableView>
 #include <QLabel>
@@ -303,6 +304,16 @@ namespace GUIUtil
      * Call QMenu::popup() only on supported QT_QPA_PLATFORM.
      */
     void PopupMenu(QMenu* menu, const QPoint& point, QAction* at_action = nullptr);
+    /** (BOB) 0.14 colour theme (#49). The setting is "system", "light" or "dark";
+     *  "system" follows the OS. Applied at startup; changing it needs a restart. */
+    QString GetThemeSetting();          // QSettings "theme", overridden by -theme
+    void ApplyTheme(const QString& theme);
+    bool IsDarkTheme();
+    /** Dark variant of a :/icons/ or :/images/ resource when the dark theme is on
+     *  (:/icons-dark/, :/images-dark/), else the resource itself. */
+    QString ThemedResource(const QString& path);
+    QIcon ThemedIcon(const QString& path);
+
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H

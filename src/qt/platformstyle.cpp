@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/platformstyle.h>
+#include <qt/guiutil.h>
 
 #include <QApplication>
 #include <QColor>
@@ -21,7 +22,7 @@ static const struct {
     {"macosx", false, false, true},
     {"windows", true, false, false},
     /* Other: linux, unix, ... */
-    {"other", true, true, false}
+    {"other", true, false, false} // (BOB): 0.14 artwork is full colour, never recolour it
 };
 static const unsigned platform_styles_count = sizeof(platform_styles)/sizeof(*platform_styles);
 
@@ -93,15 +94,17 @@ PlatformStyle::PlatformStyle(const QString &_name, bool _imagesOnButtons, bool _
     textColor = QColor(QApplication::palette().color(QPalette::WindowText));
 }
 
-QImage PlatformStyle::SingleColorImage(const QString& filename) const
+QImage PlatformStyle::SingleColorImage(const QString& filename_in) const
 {
+    const QString filename = GUIUtil::ThemedResource(filename_in); // (BOB) dark art
     if (!colorizeIcons)
         return QImage(filename);
     return ColorizeImage(filename, SingleColor());
 }
 
-QIcon PlatformStyle::SingleColorIcon(const QString& filename) const
+QIcon PlatformStyle::SingleColorIcon(const QString& filename_in) const
 {
+    const QString filename = GUIUtil::ThemedResource(filename_in); // (BOB) dark art
     if (!colorizeIcons)
         return QIcon(filename);
     return ColorizeIcon(filename, SingleColor());

@@ -311,6 +311,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return strThirdPartyTxUrls;
         case Language:
             return settings.value("language");
+        case Theme:
+            return settings.value("theme", "system");
         case CoinControlFeatures:
             return fCoinControlFeatures;
         case Prune:
@@ -433,6 +435,12 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case Language:
             if (settings.value("language") != value) {
                 settings.setValue("language", value);
+                setRestartRequired(true);
+            }
+            break;
+        case Theme:
+            if (settings.value("theme", "system") != value) {
+                settings.setValue("theme", value);
                 setRestartRequired(true);
             }
             break;

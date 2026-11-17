@@ -279,7 +279,7 @@ BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_CPP)
 endif # ENABLE_WALLET
 
 RES_ANIMATION = $(wildcard $(srcdir)/qt/res/animation/spinner-*.png)
-RES_IMAGES = $(wildcard $(srcdir)/qt/res/images/*.png) $(wildcard $(srcdir)/qt/res/images-dark/*.png)
+RES_IMAGES = $(wildcard $(srcdir)/qt/res/images/*.png) $(wildcard $(srcdir)/qt/res/images-dark/*.png) $(wildcard $(srcdir)/qt/res/icons-dark/*.png)
 
 BITCOIN_RC = qt/res/bitcoin-qt-res.rc
 
