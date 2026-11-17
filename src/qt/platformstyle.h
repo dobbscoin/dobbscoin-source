@@ -21,8 +21,8 @@ public:
     bool getImagesOnButtons() const { return imagesOnButtons; }
     bool getUseExtraSpacing() const { return useExtraSpacing; }
 
-    QColor TextColor() const { return textColor; }
-    QColor SingleColor() const { return singleColor; }
+    QColor TextColor() const;   //!< (BOB) live palette colour, so the theme applied after startup counts
+    QColor SingleColor() const;
 
     /** Colorize an image (given filename) with the icon color */
     QImage SingleColorImage(const QString& filename) const;

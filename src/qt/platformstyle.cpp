@@ -9,6 +9,7 @@
 #include <QColor>
 #include <QImage>
 #include <QPalette>
+#include <QStringList>
 
 static const struct {
     const char *platformId;
@@ -94,9 +95,31 @@ PlatformStyle::PlatformStyle(const QString &_name, bool _imagesOnButtons, bool _
     textColor = QColor(QApplication::palette().color(QPalette::WindowText));
 }
 
+// (BOB) The 0.14 artwork is full colour and is shown as drawn. The few icons only
+// 0.21 has are black line drawings; on the dark theme they take the text colour.
+static bool IsUpstreamLineIcon(const QString& filename)
+{
+    static const QStringList names{":/icons/hd_enabled", ":/icons/hd_disabled", ":/icons/network_disabled",
+        ":/icons/proxy", ":/icons/fontbigger", ":/icons/fontsmaller", ":/icons/prompticon",
+        ":/icons/warning", ":/icons/transaction_abandoned"};
+    return names.contains(filename);
+}
+
+QColor PlatformStyle::TextColor() const
+{
+    return QApplication::palette().color(QPalette::WindowText);
+}
+
+QColor PlatformStyle::SingleColor() const
+{
+    return colorizeIcons ? singleColor : TextColor();
+}
+
 QImage PlatformStyle::SingleColorImage(const QString& filename_in) const
 {
     const QString filename = GUIUtil::ThemedResource(filename_in); // (BOB) dark art
+    if (GUIUtil::IsDarkTheme() && IsUpstreamLineIcon(filename_in))
+        return ColorizeImage(filename, TextColor());
     if (!colorizeIcons)
         return QImage(filename);
     return ColorizeImage(filename, SingleColor());
@@ -105,6 +128,8 @@ QImage PlatformStyle::SingleColorImage(const QString& filename_in) const
 QIcon PlatformStyle::SingleColorIcon(const QString& filename_in) const
 {
     const QString filename = GUIUtil::ThemedResource(filename_in); // (BOB) dark art
+    if (GUIUtil::IsDarkTheme() && IsUpstreamLineIcon(filename_in))
+        return ColorizeIcon(filename, TextColor());
     if (!colorizeIcons)
         return QIcon(filename);
     return ColorizeIcon(filename, SingleColor());
