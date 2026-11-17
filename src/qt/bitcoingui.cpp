@@ -1126,6 +1126,12 @@ void BitcoinGUI::message(const QString& title, QString message, unsigned int sty
         QMessageBox mBox(static_cast<QMessageBox::Icon>(nMBoxIcon), strTitle, message, buttons, this);
         mBox.setTextFormat(Qt::PlainText);
         mBox.setDetailedText(detailed_message);
+        // (BOB): during startup the main window is still hidden and the splash screen is up;
+        // a box owned by the hidden window opened BEHIND the splash on Windows and sat there
+        // unanswered (btcbob v3 test). Keep startup questions on top until the GUI is shown.
+        if (!isVisible()) {
+            mBox.setWindowFlags(mBox.windowFlags() | Qt::WindowStaysOnTopHint);
+        }
         int r = mBox.exec();
         if (ret != nullptr)
             *ret = r == QMessageBox::Ok;
