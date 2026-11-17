@@ -22,6 +22,7 @@
 #include <policy/fees.h>
 #include <policy/settings.h>
 #include <primitives/block.h>
+#include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <shutdown.h>
 #include <support/allocators/secure.h>
@@ -172,6 +173,40 @@ public:
     {
         LOCK(::cs_main);
         return ::ChainActive().Height();
+    }
+    double bobGetDifficulty() override
+    {
+        LOCK(::cs_main);
+        const CBlockIndex* tip = ::ChainActive().Tip();
+        return tip ? GetDifficulty(tip) : 0.0;
+    }
+    double bobGetAvgDifficulty(int nBlocks) override
+    {
+        LOCK(::cs_main);
+        const CBlockIndex* pindex = ::ChainActive().Tip();
+        double sum = 0.0;
+        int n = 0;
+        for (; pindex && n < nBlocks; pindex = pindex->pprev, ++n) sum += GetDifficulty(pindex);
+        return n ? sum / n : 0.0;
+    }
+    double bobGetNetworkHashPS(int nBlocks) override
+    {
+        // Same estimator as the getnetworkhashps RPC: chain-work delta over wall time.
+        LOCK(::cs_main);
+        const CBlockIndex* pb = ::ChainActive().Tip();
+        if (!pb || !pb->nHeight) return 0.0;
+        int lookup = nBlocks;
+        if (lookup <= 0 || lookup > pb->nHeight) lookup = pb->nHeight;
+        const CBlockIndex* pb0 = pb;
+        int64_t minTime = pb0->GetBlockTime(), maxTime = minTime;
+        for (int i = 0; i < lookup; i++) {
+            pb0 = pb0->pprev;
+            const int64_t time = pb0->GetBlockTime();
+            minTime = std::min(time, minTime);
+            maxTime = std::max(time, maxTime);
+        }
+        if (minTime == maxTime) return 0.0;
+        return (pb->nChainWork - pb0->nChainWork).getdouble() / (double)(maxTime - minTime);
     }
     uint256 getBestBlockHash() override
     {

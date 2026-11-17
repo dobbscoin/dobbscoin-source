@@ -16,7 +16,10 @@
 #include <qt/transactiontablemodel.h>
 #include <qt/walletmodel.h>
 
+#include <interfaces/node.h>
+
 #include <QAbstractItemDelegate>
+#include <QLocale>
 #include <QApplication>
 #include <QPainter>
 #include <QStatusTipEvent>
@@ -145,6 +148,11 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
 {
     ui->setupUi(this);
 
+    // (BOB) 0.14 artwork; dark-theme variants (#49)
+    ui->label_6->setPixmap(QPixmap(GUIUtil::ThemedResource(":/images/overviewLeftTop")));
+    ui->label_7->setPixmap(QPixmap(GUIUtil::ThemedResource(":/images/overviewLeftBottom")));
+    ui->label_8->setPixmap(QPixmap(GUIUtil::ThemedResource(":/images/overviewRight")));
+
     m_balances.balance = -1;
 
     // use a SingleColorIcon for the "out of sync warning" icon
@@ -256,6 +264,12 @@ void OverviewPage::setClientModel(ClientModel *model)
         // Show warning, for example if this is a prerelease version
         connect(model, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
         updateAlerts(model->getStatusBarWarnings());
+
+        // (BOB) The Pipe: chain vitals refresh on every new block
+        connect(model, &ClientModel::numBlocksChanged, this, [this](int count, const QDateTime&, double, bool header, SynchronizationState) {
+            if (!header) updateChainVitals(count);
+        });
+        updateChainVitals(model->node().getNumBlocks());
     }
 }
 
@@ -319,4 +333,37 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 {
     ui->labelWalletStatus->setVisible(fShow);
     ui->labelTransactionsStatus->setVisible(fShow);
+}
+
+// ---- (BOB) The Pipe, ported from 0.14 ----------------------------------------
+
+static QString formatHashRate(double hps)
+{
+    static const char* units[] = {"H/s", "kH/s", "MH/s", "GH/s", "TH/s", "PH/s"};
+    int i = 0;
+    while (hps >= 1000.0 && i < 5) {
+        hps /= 1000.0;
+        i++;
+    }
+    return QString("%1 %2").arg(QString::number(hps, 'f', hps < 10 ? 2 : (hps < 100 ? 1 : 0))).arg(units[i]);
+}
+
+static QString formatDifficulty(double d)
+{
+    return QString::number(d, 'f', d >= 100 ? 0 : (d >= 1 ? 2 : 4));
+}
+
+void OverviewPage::updateChainVitals(int count)
+{
+    if (!clientModel)
+        return;
+    interfaces::Node& node = clientModel->node();
+    QLocale loc = QLocale::system();
+    ui->labelVitalsHeight->setText(loc.toString(count));
+    // current against a one-week mean, so a retarget spike reads as a spike
+    ui->labelVitalsDiff->setText(QString("%1 / %2 %3")
+        .arg(formatDifficulty(node.bobGetDifficulty()))
+        .arg(formatDifficulty(node.bobGetAvgDifficulty(7 * 1440)))
+        .arg(tr("avg")));
+    ui->labelVitalsHash->setText(formatHashRate(node.bobGetNetworkHashPS(120)));
 }

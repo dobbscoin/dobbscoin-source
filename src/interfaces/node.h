@@ -136,6 +136,12 @@ public:
     //! Get verification progress.
     virtual double getVerificationProgress() = 0;
 
+    //! (BOB) The Pipe: tip difficulty, mean difficulty of the last nBlocks, and
+    //! network hash rate over the last nBlocks (the getnetworkhashps estimator).
+    virtual double bobGetDifficulty() = 0;
+    virtual double bobGetAvgDifficulty(int nBlocks) = 0;
+    virtual double bobGetNetworkHashPS(int nBlocks) = 0;
+
     //! Is initial block download.
     virtual bool isInitialBlockDownload() = 0;
 
