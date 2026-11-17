@@ -1623,7 +1623,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                     Untranslated("\n\n") + _("Convert it now?"),
                 "This data directory holds a Dobbscoin 0.14 UTXO database. Converting it is one-way (0.14 would then need a full -reindex). "
                 "Back it up, then restart with -upgradechainstate to convert it, or use a different -datadir.",
-                "", CClientUIInterface::MSG_WARNING | CClientUIInterface::BTN_ABORT);
+                "Dobbscoin 0.14 data directory", CClientUIInterface::MSG_WARNING | CClientUIInterface::BTN_ABORT);
             if (!convert) {
                 LogPrintf("Not converting the Dobbscoin 0.14 UTXO database (no -upgradechainstate, or declined). Exiting.\n");
                 return false;
