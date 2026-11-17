@@ -3337,8 +3337,12 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
 
 bool CWallet::BobSegwitActive() const
 {
-    const Optional<int> height = chain().getHeight();
-    return height && *height + 1 >= Params().GetConsensus().SegwitHeight;
+    const int segwit_height = Params().GetConsensus().SegwitHeight;
+    // No chain attached (offline tools, unit tests): fall back to whether SegWit is
+    // scheduled at all on this network. On (BOB) mainnet today it is not.
+    if (!m_chain) return segwit_height != std::numeric_limits<int>::max();
+    const Optional<int> height = m_chain->getHeight();
+    return height && *height + 1 >= segwit_height;
 }
 
 bool CWallet::GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, std::string& error)
