@@ -1908,11 +1908,12 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     } // no default case, so the compiler can warn about missing cases
     assert(!desc_prefix.empty());
 
-    // Mainnet derives at 0', testnet and regtest derive at 1'
+    // (BOB): mainnet derives at coin type 13013' ((BOB)'s SLIP-44 number, chosen by btcbob
+    // 2026-11-17; Bitcoin uses 0'); testnet and regtest derive at 1' as in Bitcoin Core.
     if (Params().IsTestChain()) {
         desc_prefix += "/1'";
     } else {
-        desc_prefix += "/0'";
+        desc_prefix += "/13013'";
     }
 
     std::string internal_path = m_internal ? "/1" : "/0";
