@@ -40,7 +40,7 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 static const int TOOLTIP_WRAP_THRESHOLD = 80;
 
 /* Number of frames in spinner animation */
-#define SPINNER_FRAMES 36
+#define SPINNER_FRAMES 35  // (BOB) 0.14 spinner: 35 frames
 
 #define QAPP_ORG_NAME "Dobbscoin"
 #define QAPP_ORG_DOMAIN "dobbscoin.info"
