@@ -9,6 +9,7 @@
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 
+#include <bobminer.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
 #include <net.h>
@@ -124,7 +125,9 @@ MiningPage::~MiningPage()
 {
     // The solo miner holds this page's wallet (for coinbase addresses). If this page
     // started it, stop it with the page, so closing the wallet releases it.
-    if (fStartedSolo && model) {
+    // Only if what is running is still what this page started (not a later start
+    // from another wallet's page, setgenerate or -gen).
+    if (fStartedSolo && model && model->node().bobMinerStartCount() == nStartCount) {
         std::string error;
         model->node().bobSetGenerate(false, 0, nullptr, error);
     }
@@ -171,26 +174,11 @@ bool MiningPage::setSoloMining(bool on, int threads)
         fStartedSolo = false;
         return node.bobSetGenerate(false, 0, nullptr, error);
     }
-    // The miner runs on the node side; give it its own handle on this wallet.
-    std::shared_ptr<interfaces::Wallet> wallet;
-    const std::string name = model->wallet().getWalletName();
-    for (auto& w : node.walletClient().getWallets()) {
-        if (w->getWalletName() == name) {
-            wallet = std::shared_ptr<interfaces::Wallet>(std::move(w));
-            break;
-        }
-    }
-    if (!wallet) return false;
-    auto coinbase = [wallet](CScript& script, std::string& err) {
-        CTxDestination dest;
-        if (!wallet->getNewDestination(OutputType::LEGACY, "", dest)) {
-            err = "the wallet could not give a new address (keypool empty or wallet locked?)";
-            return false;
-        }
-        script = GetScriptForDestination(dest);
-        return true;
-    };
+    // The miner looks this wallet up by name for each coinbase and holds no
+    // reference to it, so closing the wallet is never blocked by mining.
+    auto coinbase = bobminer::WalletCoinbase(node.walletClient(), model->wallet().getWalletName());
     fStartedSolo = node.bobSetGenerate(true, threads, coinbase, error);
+    if (fStartedSolo) nStartCount = node.bobMinerStartCount();
     return fStartedSolo;
 }
 

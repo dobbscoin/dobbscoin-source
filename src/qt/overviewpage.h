@@ -46,6 +46,7 @@ Q_SIGNALS:
     void outOfSyncWarningClicked();
 
 private:
+    int64_t m_vitals_refreshed{0}; //!< (BOB) The Pipe: last difficulty/hash-rate refresh
     Ui::OverviewPage *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;

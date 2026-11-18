@@ -17,6 +17,7 @@
 #include <qt/walletmodel.h>
 
 #include <interfaces/node.h>
+#include <util/time.h>
 
 #include <QAbstractItemDelegate>
 #include <QLocale>
@@ -360,6 +361,12 @@ void OverviewPage::updateChainVitals(int count)
     interfaces::Node& node = clientModel->node();
     QLocale loc = QLocale::system();
     ui->labelVitalsHeight->setText(loc.toString(count));
+    // The one-week mean walks 10,080 block indexes under cs_main. During a sync
+    // numBlocksChanged fires several times a second, so refresh difficulty and hash
+    // rate at most every 30 s (the height above stays live).
+    const int64_t now = GetTime();
+    if (m_vitals_refreshed && now - m_vitals_refreshed < 30) return;
+    m_vitals_refreshed = now;
     // current against a one-week mean, so a retarget spike reads as a spike
     ui->labelVitalsDiff->setText(QString("%1 / %2 %3")
         .arg(formatDifficulty(node.bobGetDifficulty()))

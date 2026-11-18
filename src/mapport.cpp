@@ -63,6 +63,7 @@ static CThreadInterrupt g_mapport_interrupt;
 static std::thread g_mapport_thread;
 static std::atomic_uint g_mapport_enabled_protos{MapPortProtoFlag::NONE};
 static std::atomic<MapPortProtoFlag> g_mapport_current_proto{MapPortProtoFlag::NONE};
+static std::atomic<bool> g_mapport_thread_running{false};
 
 static constexpr std::chrono::minutes PORT_MAPPING_REANNOUNCE_PERIOD{20};
 static constexpr std::chrono::minutes PORT_MAPPING_RETRY_PERIOD{5};
@@ -259,7 +260,14 @@ static bool ProcessUpnp()
 }
 #endif // USE_UPNP
 
+static void ThreadMapPortLoop();
 static void ThreadMapPort()
+{
+    ThreadMapPortLoop();
+    g_mapport_thread_running = false;
+}
+
+static void ThreadMapPortLoop()
 {
     bool ok;
     do {
@@ -297,7 +305,13 @@ static void ThreadMapPort()
 
 static void StartThreadMapPort()
 {
+    if (g_mapport_thread.joinable() && !g_mapport_thread_running) {
+        // The thread already ran to its end (everything was disabled); reap it.
+        g_mapport_thread.join();
+        g_mapport_interrupt.reset();
+    }
     if (!g_mapport_thread.joinable()) {
+        g_mapport_thread_running = true;
         assert(!g_mapport_interrupt);
         g_mapport_thread = std::thread(std::bind(&TraceThread<void (*)()>, "mapport", &ThreadMapPort));
     }

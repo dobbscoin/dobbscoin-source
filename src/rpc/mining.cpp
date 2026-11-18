@@ -493,6 +493,9 @@ static RPCHelpMan setgenerate()
     NodeContext& node = EnsureNodeContext(request.context);
     const bool generate = request.params[0].get_bool();
     const int threads = request.params[1].isNull() ? 1 : request.params[1].get_int();
+    if (threads < -1 || threads > bobminer::MAX_THREADS) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("genproclimit must be -1 (one per core) or 0-%d", bobminer::MAX_THREADS));
+    }
     std::string error;
     if (!generate || threads == 0) {
         bobminer::SetGenerate(node, false, 0, nullptr, error);
@@ -502,15 +505,7 @@ static RPCHelpMan setgenerate()
     if (wallet->privateKeysDisabled()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "This wallet has private keys disabled, so it cannot provide a coinbase address");
     }
-    auto coinbase = [wallet](CScript& script, std::string& err) {
-        CTxDestination dest;
-        if (!wallet->getNewDestination(OutputType::LEGACY, "", dest)) {
-            err = "the wallet could not give a new address (keypool empty or wallet locked?)";
-            return false;
-        }
-        script = GetScriptForDestination(dest);
-        return true;
-    };
+    auto coinbase = bobminer::WalletCoinbase(*node.wallet_client, wallet->getWalletName());
     if (!bobminer::SetGenerate(node, true, threads, coinbase, error)) {
         throw JSONRPCError(RPC_MISC_ERROR, error);
     }
@@ -1105,7 +1100,14 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue);
     result.pushKV("longpollid", ::ChainActive().Tip()->GetBlockHash().GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
-    result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1);
+    int64_t nMinTime = pindexPrev->GetMedianTimePast() + 1;
+    if (pblock->nBits == UintToArith256(consensusParams.powLimit).GetCompact() &&
+        pblock->nBits != GetNextWorkRequired(pindexPrev, pblock, consensusParams)) {
+        // (BOB) the template claims powLimit through the >6h emergency valve; a miner that
+        // rolled nTime back to 6h or less after the previous block would make it invalid.
+        nMinTime = std::max<int64_t>(nMinTime, pindexPrev->GetBlockTime() + 6 * 60 * 60 + 1);
+    }
+    result.pushKV("mintime", nMinTime);
     result.pushKV("mutable", aMutable);
     result.pushKV("noncerange", "00000000ffffffff");
     int64_t nSigOpLimit = MAX_BLOCK_SIGOPS_COST;

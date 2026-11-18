@@ -82,7 +82,17 @@ public:
         }
     }
     bool shutdownRequested() override { return ShutdownRequested(); }
-    void mapPort(bool use_upnp, bool use_natpmp) override { StartMapPort(use_upnp, use_natpmp); }
+    void mapPort(bool use_upnp, bool use_natpmp) override
+    {
+        if (!use_upnp && !use_natpmp) {
+            // Interrupt and join, as 0.21 did: the thread may be in its 5-minute retry
+            // sleep, which StartMapPort(false, false) alone would leave unjoined.
+            InterruptMapPort();
+            StopMapPort();
+        } else {
+            StartMapPort(use_upnp, use_natpmp);
+        }
+    }
     std::string bobMapPortStatus() override { return GetMapPortStatus(); }
     bool getProxy(Network net, proxyType& proxy_info) override { return GetProxy(net, proxy_info); }
     size_t getNodeCount(CConnman::NumConnections flags) override
@@ -192,6 +202,7 @@ public:
     }
     bool bobIsGenerating() override { return bobminer::IsGenerating(); }
     double bobHashesPerSec() override { return bobminer::HashesPerSec(); }
+    uint64_t bobMinerStartCount() override { return bobminer::StartCount(); }
     bool bobStartStratum(const std::string& host, int port, const std::string& user, int threads) override
     {
         return StartStratum(host, port, user, threads);

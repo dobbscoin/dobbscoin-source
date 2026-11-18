@@ -151,6 +151,7 @@ public:
     virtual bool bobSetGenerate(bool generate, int threads, std::function<bool(CScript&, std::string&)> coinbase, std::string& error) = 0;
     virtual bool bobIsGenerating() = 0;
     virtual double bobHashesPerSec() = 0;
+    virtual uint64_t bobMinerStartCount() = 0;
     //! (BOB) the in-wallet stratum pool client (stratum.h)
     virtual bool bobStartStratum(const std::string& host, int port, const std::string& user, int threads) = 0;
     virtual void bobStopStratum() = 0;

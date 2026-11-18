@@ -91,13 +91,18 @@ void CStratumClient::Stop()
     // Unblock any blocking read by shutting down (not closing) the socket
     // under it — asio's destructor still owns the close. Can't use the
     // closesocket macro here: compat.h maps it to myclosesocket(SOCKET&).
-    intptr_t fd = nSocketFd;
-    if (fd != -1) {
+    {
+        // Under cs_fd: the session clears nSocketFd under the same lock BEFORE its
+        // socket closes, so this can never shut down a recycled descriptor.
+        LOCK(cs_fd);
+        intptr_t fd = nSocketFd;
+        if (fd != -1) {
 #ifdef WIN32
-        ::shutdown((SOCKET)fd, 2 /* SD_BOTH */);
+            ::shutdown((SOCKET)fd, 2 /* SD_BOTH */);
 #else
-        ::shutdown((int)fd, 2 /* SHUT_RDWR */);
+            ::shutdown((int)fd, 2 /* SHUT_RDWR */);
 #endif
+        }
     }
     if (threadClient.joinable())
         threadClient.join();
@@ -107,6 +112,35 @@ void CStratumClient::Stop()
     }
     vWorkers.clear();
     fRunning = false;
+}
+
+//! Declared right after the session socket, so it is destroyed first -- on the normal
+//! way out and while an exception unwinds -- and unpublishes the socket (pSocket for
+//! SubmitShare, nSocketFd for Stop) before the socket closes its descriptor.
+struct StratumSocketGuard {
+    CStratumClient& c;
+    explicit StratumSocketGuard(CStratumClient& client) : c(client) {}
+    ~StratumSocketGuard()
+    {
+        {
+            LOCK(c.cs_write);
+            c.pSocket = nullptr;
+        }
+        LOCK(c.cs_fd);
+        c.nSocketFd = -1;
+    }
+};
+
+//! How long a connect (resolve included) may take before the session gives up.
+static const int64_t STRATUM_CONNECT_TIMEOUT_MS = 15000;
+
+static std::string JsonLine(int64_t id, const std::string& method, const UniValue& params)
+{
+    UniValue req(UniValue::VOBJ);
+    req.pushKV("id", id);
+    req.pushKV("method", method);
+    req.pushKV("params", params);
+    return req.write() + "\n";
 }
 
 bool CStratumClient::IsRunning() const { return fRunning; }
@@ -244,11 +278,40 @@ bool CStratumClient::RunSession()
     try {
         boost::asio::io_service io_service;
         boost::asio::ip::tcp::resolver resolver(io_service);
-        boost::asio::ip::tcp::resolver::query query(strHost, strprintf("%d", nPort));
-        boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
         boost::asio::ip::tcp::socket socket(io_service);
-        boost::asio::connect(socket, endpoint_iterator);
-        nSocketFd = (intptr_t)socket.native_handle();
+        StratumSocketGuard guard(*this);
+
+        // Resolve and connect asynchronously, in short slices, so Stop() and a dead
+        // pool (SYNs blackholed, DNS hanging) cannot hold this thread -- and with it
+        // shutdown and the GUI -- for the OS connect timeout.
+        bool fDone = false;
+        boost::system::error_code ecResult;
+        resolver.async_resolve(boost::asio::ip::tcp::resolver::query(strHost, strprintf("%d", nPort)),
+            [&](const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator it) {
+                if (ec) {
+                    ecResult = ec;
+                    fDone = true;
+                    return;
+                }
+                boost::asio::async_connect(socket, it,
+                    [&](const boost::system::error_code& ec2, boost::asio::ip::tcp::resolver::iterator) {
+                        ecResult = ec2;
+                        fDone = true;
+                    });
+            });
+        const int64_t nDeadline = GetTimeMillis() + STRATUM_CONNECT_TIMEOUT_MS;
+        while (!fDone && !fShutdown && GetTimeMillis() < nDeadline)
+            io_service.run_for(std::chrono::milliseconds(200));
+        if (!fDone) {
+            io_service.stop();
+            throw std::runtime_error(fShutdown ? "stopped" : "connect timed out");
+        }
+        if (ecResult)
+            throw boost::system::system_error(ecResult);
+        {
+            LOCK(cs_fd);
+            nSocketFd = (intptr_t)socket.native_handle();
+        }
         {
             LOCK(cs_write);
             pSocket = &socket;
@@ -262,13 +325,14 @@ bool CStratumClient::RunSession()
         LogPrintf("stratum: connected to %s:%d\n", strHost, nPort);
 
         // subscribe (id 1) then authorize (id 2); responses matched by id below
-        std::string strSubscribe =
-            "{\"id\":1,\"method\":\"mining.subscribe\",\"params\":[\"" +
-            FormatFullVersion() + "\"]}\n";
+        UniValue subscribeParams(UniValue::VARR);
+        subscribeParams.push_back(FormatFullVersion());
+        std::string strSubscribe = JsonLine(1, "mining.subscribe", subscribeParams);
         boost::asio::write(socket, boost::asio::buffer(strSubscribe));
-        std::string strAuthorize =
-            "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"" +
-            strUser + "\",\"x\"]}\n";
+        UniValue authorizeParams(UniValue::VARR);
+        authorizeParams.push_back(strUser); // escaped: a .worker suffix is free text
+        authorizeParams.push_back("x");
+        std::string strAuthorize = JsonLine(2, "mining.authorize", authorizeParams);
         boost::asio::write(socket, boost::asio::buffer(strAuthorize));
 
         boost::asio::streambuf response;
@@ -289,17 +353,8 @@ bool CStratumClient::RunSession()
                     HandleLine(strLine);
             }
         }
-        {
-            LOCK(cs_write);
-            pSocket = NULL;
-        }
-        nSocketFd = -1;
     } catch (const std::exception& e) {
-        {
-            LOCK(cs_write);
-            pSocket = NULL;
-        }
-        nSocketFd = -1;
+        // (the socket guard already unpublished the socket while unwinding)
         {
             LOCK(cs);
             strLastError = e.what();
@@ -463,9 +518,13 @@ bool CStratumClient::SubmitShare(const std::string& strJobId, const std::string&
                 return false;
             }
         }
-        strLine = strprintf(
-            "{\"id\":%d,\"method\":\"mining.submit\",\"params\":[\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"]}\n",
-            nSubmitId++, strUser, strJobId, strExtraNonce2, strNTime, strNonce);
+        UniValue params(UniValue::VARR);
+        params.push_back(strUser);
+        params.push_back(strJobId);
+        params.push_back(strExtraNonce2);
+        params.push_back(strNTime);
+        params.push_back(strNonce);
+        strLine = JsonLine(nSubmitId++, "mining.submit", params);
         try {
             boost::asio::write(*static_cast<boost::asio::ip::tcp::socket*>(pSocket),
                                boost::asio::buffer(strLine));
@@ -747,8 +806,10 @@ bool StartStratumIfConfigured()
 bool StartStratum(const std::string& strHost, int nPort, const std::string& strUser,
                   int nThreads)
 {
+    StopStratum(); // joins the old client's threads without holding cs_stratum_control
     LOCK(cs_stratum_control);
-    StopStratum();
+    if (g_pStratumClient) // another start won the race
+        return false;
     g_pStratumClient = new CStratumClient();
     if (!g_pStratumClient->Start(strHost, nPort, strUser, nThreads)) {
         delete g_pStratumClient;
@@ -760,11 +821,17 @@ bool StartStratum(const std::string& strHost, int nPort, const std::string& strU
 
 void StopStratum()
 {
-    LOCK(cs_stratum_control);
-    if (g_pStratumClient) {
-        g_pStratumClient->Stop();
-        delete g_pStratumClient;
-        g_pStratumClient = NULL;
+    // Take the client out under the lock, stop it outside: Stop() joins threads, and
+    // GetStratumStatus() (the GUI's 2 s poll) must not wait on that.
+    CStratumClient* p;
+    {
+        LOCK(cs_stratum_control);
+        p = g_pStratumClient;
+        g_pStratumClient = nullptr;
+    }
+    if (p) {
+        p->Stop();
+        delete p;
     }
 }
 

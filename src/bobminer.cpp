@@ -10,6 +10,9 @@
 #include <chainparams.h>
 #include <crypto/common.h>
 #include <crypto/scrypt.h>
+#include <interfaces/wallet.h>
+#include <outputtype.h>
+#include <script/standard.h>
 #include <miner.h>
 #include <net.h>
 #include <node/context.h>
@@ -118,6 +121,7 @@ static std::atomic<double> g_hashes_per_sec{0.0};
 static std::atomic<int64_t> g_hps_timer_start{0};
 static std::atomic<int64_t> g_hash_counter{0};
 static std::atomic<int64_t> g_blocks_found{0};
+static std::atomic<uint64_t> g_start_count{0};
 
 static void LowerThreadPriority()
 {
@@ -341,6 +345,10 @@ bool SetGenerate(NodeContext& node, bool generate, int threads, CoinbaseScriptFn
     if (threads < 0) {
         threads = Params().MineBlocksOnDemand() ? 1 : (int)std::max(1u, std::thread::hardware_concurrency());
     }
+    if (threads > MAX_THREADS) {
+        error = strprintf("at most %d miner threads", MAX_THREADS);
+        return false;
+    }
     {
         std::lock_guard<std::mutex> lock(g_coinbase_mutex);
         g_coinbase = std::move(coinbase);
@@ -348,7 +356,15 @@ bool SetGenerate(NodeContext& node, bool generate, int threads, CoinbaseScriptFn
     g_stop = false;
     g_requested_threads = threads;
     g_active = threads;
-    for (int i = 0; i < threads; i++) g_threads.emplace_back(MinerThread, &node);
+    try {
+        for (int i = 0; i < threads; i++) g_threads.emplace_back(MinerThread, &node);
+    } catch (const std::system_error& e) {
+        g_active -= threads - (int)g_threads.size();
+        StopLocked();
+        error = strprintf("could not start the miner threads: %s", e.what());
+        return false;
+    }
+    ++g_start_count;
     return true;
 }
 
@@ -359,6 +375,26 @@ int Threads()
     return g_active > 0 ? g_requested_threads : 0;
 }
 double HashesPerSec() { return g_hashes_per_sec; }
+uint64_t StartCount() { return g_start_count; }
+
+CoinbaseScriptFn WalletCoinbase(interfaces::WalletClient& client, const std::string& name)
+{
+    interfaces::WalletClient* c = &client;
+    return [c, name](CScript& script, std::string& err) {
+        for (auto& w : c->getWallets()) {
+            if (w->getWalletName() != name) continue;
+            CTxDestination dest;
+            if (!w->getNewDestination(OutputType::LEGACY, "", dest)) {
+                err = "the wallet could not give a new address (keypool empty or wallet locked?)";
+                return false;
+            }
+            script = GetScriptForDestination(dest);
+            return true;
+        }
+        err = "wallet \"" + name + "\" is no longer loaded";
+        return false;
+    };
+}
 int64_t BlocksFound() { return g_blocks_found; }
 
 void Stop()

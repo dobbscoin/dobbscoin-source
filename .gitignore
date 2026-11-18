@@ -157,3 +157,6 @@ src/dobbscoin-wallet
 src/qt/dobbscoin-qt
 src/qt/test/test_dobbscoin-qt
 src/test/test_dobbscoin
+
+# editor and autoconf backups
+*~

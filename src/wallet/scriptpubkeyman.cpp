@@ -1579,8 +1579,11 @@ bool LegacyScriptPubKeyMan::BobRemoveKey(const CKeyID& keyID, bool keep_watch_on
         error = "Private key for this address is not in the wallet";
         return false;
     }
-    if (!m_hd_chain.seed_id.IsNull() && keyID == m_hd_chain.seed_id) {
-        error = "Refusing to remove the wallet's HD seed";
+    // The active HD seed, and the seeds of inactive chains left by sethdseed: an old
+    // chain is still topped up when a payment reaches one of its keys, and deriving
+    // without its seed throws inside the block-connected callback.
+    if ((!m_hd_chain.seed_id.IsNull() && keyID == m_hd_chain.seed_id) || m_inactive_hd_chains.count(keyID)) {
+        error = "Refusing to remove an HD seed of this wallet";
         return false;
     }
     // A key still in the keypool is about to be handed out as a fresh receiving
@@ -1589,9 +1592,26 @@ bool LegacyScriptPubKeyMan::BobRemoveKey(const CKeyID& keyID, bool keep_watch_on
         error = "Key is still in the keypool (not yet handed out); refusing to remove it";
         return false;
     }
+    // Birth time for the watch-only record: the key's own, else the wallet's, so that
+    // keeping the address watched never moves the wallet's first-key time back to 0.
+    int64_t create_time = nTimeFirstKey;
+    auto meta = mapKeyMetadata.find(keyID);
+    if (meta != mapKeyMetadata.end() && meta->second.nCreateTime > 1) create_time = meta->second.nCreateTime;
+
+    // All four record forms go in one transaction, and memory changes only after it
+    // commits, so disk and memory cannot disagree about whether the key is here.
     WalletBatch batch(m_storage.GetDatabase());
+    if (!batch.TxnBegin()) {
+        error = "Failed to start a wallet database transaction";
+        return false;
+    }
     if (!batch.BobEraseKey(pubkey)) {
+        batch.TxnAbort();
         error = "Failed to erase the key from the wallet file";
+        return false;
+    }
+    if (!batch.TxnCommit()) {
+        error = "Failed to commit the key removal to the wallet file";
         return false;
     }
     mapKeys.erase(keyID); // CKey keeps its secret in secure memory, cleansed on destruction
@@ -1599,7 +1619,7 @@ bool LegacyScriptPubKeyMan::BobRemoveKey(const CKeyID& keyID, bool keep_watch_on
     mapKeyMetadata.erase(keyID);
     if (keep_watch_only) {
         const CScript script = GetScriptForDestination(PKHash(keyID));
-        if (!HaveWatchOnly(script) && !AddWatchOnlyWithDB(batch, script)) {
+        if (!HaveWatchOnly(script) && !AddWatchOnlyWithDB(batch, script, create_time)) {
             error = "Key removed, but adding the address as watch-only failed";
             return false;
         }

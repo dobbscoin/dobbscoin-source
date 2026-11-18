@@ -119,11 +119,16 @@ void OptionsModel::Init(bool resetSettings)
     // Network
     if (!settings.contains("fUseUPnP"))
         settings.setValue("fUseUPnP", DEFAULT_UPNP);
-    if (!gArgs.SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool()))
-        addOverriddenOption("-upnp");
-    // (BOB) one checkbox, both protocols (NAT-PMP is tried first)
-    if (!gArgs.SoftSetBoolArg("-natpmp", settings.value("fUseUPnP").toBool()))
-        addOverriddenOption("-natpmp");
+    if (gArgs.IsArgSet("-mapport")) {
+        // (BOB) -mapport (0.14's switch) is applied after this in init; let it decide both.
+        addOverriddenOption("-mapport");
+    } else {
+        if (!gArgs.SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool()))
+            addOverriddenOption("-upnp");
+        // (BOB) one checkbox, both protocols (NAT-PMP is tried first)
+        if (!gArgs.SoftSetBoolArg("-natpmp", settings.value("fUseUPnP").toBool()))
+            addOverriddenOption("-natpmp");
+    }
 
     if (!settings.contains("fListen"))
         settings.setValue("fListen", DEFAULT_LISTEN);

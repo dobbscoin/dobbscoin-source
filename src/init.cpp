@@ -2116,15 +2116,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         if (!wallet) {
             InitWarning(Untranslated("-gen needs a loaded wallet for the coinbase; not mining"));
         } else {
-            auto coinbase = [wallet](CScript& script, std::string& err) {
-                CTxDestination dest;
-                if (!wallet->getNewDestination(OutputType::LEGACY, "", dest)) {
-                    err = "the wallet could not give a new address (keypool empty or wallet locked?)";
-                    return false;
-                }
-                script = GetScriptForDestination(dest);
-                return true;
-            };
+            auto coinbase = bobminer::WalletCoinbase(*node.wallet_client, wallet->getWalletName());
             std::string error;
             if (!bobminer::SetGenerate(node, true, (int)args.GetArg("-genproclimit", 1), coinbase, error)) {
                 InitWarning(Untranslated("-gen: " + error));

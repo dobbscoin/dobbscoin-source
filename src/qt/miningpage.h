@@ -70,6 +70,7 @@ private:
     QTimer *autoStartTimer{nullptr};
     bool fAutoStartDone{false};
     bool fStartedSolo{false};   //!< this page started the solo miner (stopped with the page)
+    uint64_t nStartCount{0};    //!< bobminer start count at that start
     int64_t nPeersSince{0};
 };
 

@@ -131,7 +131,9 @@ private:
     std::atomic<bool> fRunning;
     //! Raw handle of the live socket so Stop() can unblock a blocking read
     //! (intptr_t: Winsock SOCKET is pointer-sized, not int).
-    std::atomic<intptr_t> nSocketFd;
+    std::atomic<intptr_t> nSocketFd; //!< guarded for use by cs_fd: Stop() shuts it down only under cs_fd
+    Mutex cs_fd;
+    friend struct StratumSocketGuard;
 };
 
 /** Global client instance driven by -stratum=<host:port> / -stratumuser=<Q-address>

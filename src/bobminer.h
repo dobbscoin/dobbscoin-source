@@ -22,6 +22,7 @@
 #include <string>
 
 struct NodeContext;
+namespace interfaces { class WalletClient; }
 
 namespace bobminer {
 
@@ -52,6 +53,18 @@ bool ScryptCheck(ScryptImpl impl, const unsigned char* header80, const unsigned 
  * stops after the block it finds, as in 0.14.
  */
 bool SetGenerate(NodeContext& node, bool generate, int threads, CoinbaseScriptFn coinbase, std::string& error);
+/** Most threads SetGenerate starts (each holds a 768 KiB scratchpad). */
+static constexpr int MAX_THREADS = 64;
+/**
+ * A coinbase source paying a new legacy address of the wallet called name. It looks
+ * the wallet up on every call and keeps no reference to it, so unloadwallet is never
+ * blocked by a running miner: once the wallet is gone the next lookup fails and the
+ * miner thread stops.
+ */
+CoinbaseScriptFn WalletCoinbase(interfaces::WalletClient& client, const std::string& name);
+/** Bumped on every successful start, so a caller can tell whether the miner it
+ *  started is still the one running. */
+uint64_t StartCount();
 bool IsGenerating();
 /** Threads asked for at the last start (0 when stopped). */
 int Threads();
