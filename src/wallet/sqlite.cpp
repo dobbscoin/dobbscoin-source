@@ -249,6 +249,13 @@ void SQLiteDatabase::Open()
         throw std::runtime_error(strprintf("SQLiteDatabase: Failed to enable fullfsync: %s\n", sqlite3_errstr(ret)));
     }
 
+    // (BOB) as 0.14: overwrite freed content, so an erased key (removeprivkey, or the
+    // plaintext keys after encryptwallet) does not linger in a free page of the file.
+    ret = sqlite3_exec(m_db, "PRAGMA secure_delete = ON", nullptr, nullptr, nullptr);
+    if (ret != SQLITE_OK) {
+        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to enable secure_delete: %s\n", sqlite3_errstr(ret)));
+    }
+
     // Make the table for our key-value pairs
     // First check that the main table exists
     sqlite3_stmt* check_main_stmt{nullptr};
