@@ -113,6 +113,7 @@ BITCOIN_CORE_H = \
   bech32.h \
   blockencodings.h \
   blockfilter.h \
+  bobminer.h \
   bloom.h \
   chain.h \
   chainparams.h \
@@ -288,6 +289,7 @@ libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
+  bobminer.cpp \
   banman.cpp \
   blockencodings.cpp \
   blockfilter.cpp \

@@ -15,7 +15,11 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <key_io.h>
+#include <bobminer.h>
+#include <interfaces/wallet.h>
 #include <miner.h>
+#include <outputtype.h>
+#include <util/url.h>
 #include <net.h>
 #include <node/context.h>
 #include <policy/fees.h>
@@ -401,6 +405,115 @@ static RPCHelpMan generateblock()
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("hash", block_hash.GetHex());
     return obj;
+},
+    };
+}
+
+// ---- (BOB) the built-in CPU miner (0.14 setgenerate / getgenerate / gethashespersec) ----
+
+//! The wallet a request is for: the /wallet/<name> endpoint, or the only wallet loaded.
+static std::shared_ptr<interfaces::Wallet> BobMinerWallet(const JSONRPCRequest& request, NodeContext& node)
+{
+    if (!node.wallet_client) {
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Mining with setgenerate needs a wallet for the coinbase (the wallet is disabled)");
+    }
+    std::string wanted;
+    bool named = false;
+    const std::string prefix = "/wallet/";
+    if (request.URI.substr(0, prefix.size()) == prefix) {
+        wanted = URL_DECODE ? URL_DECODE(request.URI.substr(prefix.size())) : request.URI.substr(prefix.size());
+        named = true;
+    }
+    std::vector<std::unique_ptr<interfaces::Wallet>> wallets = node.wallet_client->getWallets();
+    if (named) {
+        for (auto& w : wallets) {
+            if (w->getWalletName() == wanted) return std::shared_ptr<interfaces::Wallet>(std::move(w));
+        }
+        throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
+    }
+    if (wallets.size() == 1) return std::shared_ptr<interfaces::Wallet>(std::move(wallets[0]));
+    if (wallets.empty()) throw JSONRPCError(RPC_WALLET_NOT_FOUND, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet.");
+    throw JSONRPCError(RPC_WALLET_NOT_SPECIFIED, "Wallet file not specified (must request wallet RPC through /wallet/<filename> uri-path).");
+}
+
+static RPCHelpMan getgenerate()
+{
+    return RPCHelpMan{"getgenerate",
+        "\nReturn true if the node is mining with its built-in miner (setgenerate, -gen).\n",
+        {},
+        RPCResult{RPCResult::Type::BOOL, "", "If the built-in miner is running"},
+        RPCExamples{HelpExampleCli("getgenerate", "") + HelpExampleRpc("getgenerate", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    return bobminer::IsGenerating();
+},
+    };
+}
+
+static RPCHelpMan gethashespersec()
+{
+    return RPCHelpMan{"gethashespersec",
+        "\nReturn the built-in miner's recent hashes per second (0 when it is not running).\n",
+        {},
+        RPCResult{RPCResult::Type::NUM, "", "Hashes per second"},
+        RPCExamples{HelpExampleCli("gethashespersec", "") + HelpExampleRpc("gethashespersec", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    return (int64_t)bobminer::HashesPerSec();
+},
+    };
+}
+
+static RPCHelpMan setgenerate()
+{
+    return RPCHelpMan{"setgenerate",
+        "\nTurn the built-in CPU miner on or off. It mines on top of this node's chain and\n"
+        "pays each block to a new address of the wallet (legacy addresses only).\n"
+        "Hashing uses the fastest scrypt this CPU supports (see -minerscrypt); every\n"
+        "solution is re-checked with the generic scrypt before it is submitted.\n"
+        "On regtest each thread stops after the block it finds.\n",
+        {
+            {"generate", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Set to true to turn on generation, false to turn off."},
+            {"genproclimit", RPCArg::Type::NUM, /* default */ "1", "Set the processor limit for when generation is on. Can be -1 for one thread per core."},
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+            "\nSet the generation on with a limit of one processor\n"
+            + HelpExampleCli("setgenerate", "true 1") +
+            "\nCheck the setting\n"
+            + HelpExampleCli("getgenerate", "") +
+            "\nTurn off generation\n"
+            + HelpExampleCli("setgenerate", "false") +
+            "\nUsing json rpc\n"
+            + HelpExampleRpc("setgenerate", "true, 1")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    NodeContext& node = EnsureNodeContext(request.context);
+    const bool generate = request.params[0].get_bool();
+    const int threads = request.params[1].isNull() ? 1 : request.params[1].get_int();
+    std::string error;
+    if (!generate || threads == 0) {
+        bobminer::SetGenerate(node, false, 0, nullptr, error);
+        return NullUniValue;
+    }
+    std::shared_ptr<interfaces::Wallet> wallet = BobMinerWallet(request, node);
+    if (wallet->privateKeysDisabled()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "This wallet has private keys disabled, so it cannot provide a coinbase address");
+    }
+    auto coinbase = [wallet](CScript& script, std::string& err) {
+        CTxDestination dest;
+        if (!wallet->getNewDestination(OutputType::LEGACY, "", dest)) {
+            err = "the wallet could not give a new address (keypool empty or wallet locked?)";
+            return false;
+        }
+        script = GetScriptForDestination(dest);
+        return true;
+    };
+    if (!bobminer::SetGenerate(node, true, threads, coinbase, error)) {
+        throw JSONRPCError(RPC_MISC_ERROR, error);
+    }
+    return NullUniValue;
 },
     };
 }
@@ -1388,6 +1501,9 @@ static const CRPCCommand commands[] =
   //  --------------------- ------------------------  -----------------------  ----------
     { "mining",             "getnetworkhashps",       &getnetworkhashps,       {"nblocks","height"} },
     { "mining",             "getmininginfo",          &getmininginfo,          {} },
+    { "generating",         "getgenerate",            &getgenerate,            {} },
+    { "generating",         "gethashespersec",        &gethashespersec,        {} },
+    { "generating",         "setgenerate",            &setgenerate,            {"generate","genproclimit"} },
     { "mining",             "prioritisetransaction",  &prioritisetransaction,  {"txid","dummy","fee_delta"} },
     { "mining",             "getblocktemplate",       &getblocktemplate,       {"template_request"} },
     { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },
