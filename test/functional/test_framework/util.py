@@ -304,7 +304,6 @@ def get_rpc_proxy(url, node_number, *, timeout=None, coveragedir=None):
     if timeout is not None:
         proxy_kwargs['timeout'] = int(timeout)
 
-    print("Proxy: " + url)
     proxy = AuthServiceProxy(url, **proxy_kwargs)
     proxy.url = url  # store URL on proxy for info
 
