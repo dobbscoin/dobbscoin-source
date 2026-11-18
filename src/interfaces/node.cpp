@@ -4,6 +4,9 @@
 
 #include <interfaces/node.h>
 
+#include <bobminer.h>
+#include <stratum.h>
+
 #include <addrdb.h>
 #include <banman.h>
 #include <chain.h>
@@ -189,6 +192,18 @@ public:
         for (; pindex && n < nBlocks; pindex = pindex->pprev, ++n) sum += GetDifficulty(pindex);
         return n ? sum / n : 0.0;
     }
+    bool bobSetGenerate(bool generate, int threads, std::function<bool(CScript&, std::string&)> coinbase, std::string& error) override
+    {
+        return bobminer::SetGenerate(*m_context, generate, threads, std::move(coinbase), error);
+    }
+    bool bobIsGenerating() override { return bobminer::IsGenerating(); }
+    double bobHashesPerSec() override { return bobminer::HashesPerSec(); }
+    bool bobStartStratum(const std::string& host, int port, const std::string& user, int threads) override
+    {
+        return StartStratum(host, port, user, threads);
+    }
+    void bobStopStratum() override { StopStratum(); }
+    StratumStatus bobStratumStatus() override { return GetStratumStatus(); }
     double bobGetNetworkHashPS(int nBlocks) override
     {
         // Same estimator as the getnetworkhashps RPC: chain-work delta over wall time.

@@ -13,6 +13,8 @@
 #include <amount.h>
 #include <banman.h>
 #include <bobminer.h>
+#include <interfaces/wallet.h>
+#include <outputtype.h>
 #include <stratum.h>
 #include <blockfilter.h>
 #include <chain.h>
@@ -577,6 +579,8 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-stratum=<host:port>", "(BOB) Mine to a stratum pool at <host:port> on startup (also see the setstratum RPC and the GUI Mining tab)", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-stratumuser=<address>", "(BOB) Dobbscoin address the pool pays out to (required with -stratum)", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-stratumthreads=<n>", "(BOB) Number of pool-mining worker threads (default: 1, 0 = protocol only)", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
+    argsman.AddArg("-gen", "(BOB) Mine with the built-in CPU miner on startup, paying the first loaded wallet (default: 0)", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
+    argsman.AddArg("-genproclimit=<n>", "(BOB) Threads for -gen (-1 = one per core; default: 1)", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-minerscrypt=<impl>", "(BOB) Scrypt implementation for the built-in miner and pool mining: auto, generic, sse2, avx or avx2 (default: auto, the fastest this CPU supports)", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockmintxfee=<amt>", strprintf("Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)", CURRENCY_UNIT, FormatMoney(DEFAULT_BLOCK_MIN_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockversion=<n>", "Override block version to test forking scenarios", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::BLOCK_CREATION);
@@ -2086,6 +2090,31 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     // (BOB) the miners' scrypt implementation, chosen and logged once
     bobminer::ScryptSelect(args.GetArg("-minerscrypt", "auto"));
     // (BOB) in-wallet pool mining: -stratum=<host:port> -stratumuser=<address> -stratumthreads=<n>
+    if (args.GetBoolArg("-gen", false)) {
+        // (BOB) -gen: the built-in miner, paying a new address of the first loaded wallet per block
+        std::shared_ptr<interfaces::Wallet> wallet;
+        if (node.wallet_client) {
+            auto wallets = node.wallet_client->getWallets();
+            if (!wallets.empty()) wallet = std::shared_ptr<interfaces::Wallet>(std::move(wallets[0]));
+        }
+        if (!wallet) {
+            InitWarning(Untranslated("-gen needs a loaded wallet for the coinbase; not mining"));
+        } else {
+            auto coinbase = [wallet](CScript& script, std::string& err) {
+                CTxDestination dest;
+                if (!wallet->getNewDestination(OutputType::LEGACY, "", dest)) {
+                    err = "the wallet could not give a new address (keypool empty or wallet locked?)";
+                    return false;
+                }
+                script = GetScriptForDestination(dest);
+                return true;
+            };
+            std::string error;
+            if (!bobminer::SetGenerate(node, true, (int)args.GetArg("-genproclimit", 1), coinbase, error)) {
+                InitWarning(Untranslated("-gen: " + error));
+            }
+        }
+    }
     if (!StartStratumIfConfigured()) {
         return InitError(Untranslated("Invalid -stratum / -stratumuser / -stratumthreads configuration"));
     }

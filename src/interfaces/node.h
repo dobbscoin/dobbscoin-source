@@ -7,6 +7,7 @@
 
 #include <amount.h>     // For CAmount
 #include <net.h>        // For CConnman::NumConnections
+#include <stratum.h>    // For StratumStatus ((BOB) pool client)
 #include <net_types.h>  // For banmap_t
 #include <netaddress.h> // For Network
 #include <support/allocators/secure.h> // For SecureString
@@ -24,6 +25,7 @@ class BanMan;
 class CCoinControl;
 class CFeeRate;
 class CNodeStats;
+class CScript;
 class Coin;
 class RPCTimerInterface;
 class UniValue;
@@ -141,6 +143,15 @@ public:
     virtual double bobGetDifficulty() = 0;
     virtual double bobGetAvgDifficulty(int nBlocks) = 0;
     virtual double bobGetNetworkHashPS(int nBlocks) = 0;
+
+    //! (BOB) the built-in solo miner (bobminer.h); coinbase gives the payout script per block.
+    virtual bool bobSetGenerate(bool generate, int threads, std::function<bool(CScript&, std::string&)> coinbase, std::string& error) = 0;
+    virtual bool bobIsGenerating() = 0;
+    virtual double bobHashesPerSec() = 0;
+    //! (BOB) the in-wallet stratum pool client (stratum.h)
+    virtual bool bobStartStratum(const std::string& host, int port, const std::string& user, int threads) = 0;
+    virtual void bobStopStratum() = 0;
+    virtual StratumStatus bobStratumStatus() = 0;
 
     //! Is initial block download.
     virtual bool isInitialBlockDownload() = 0;
