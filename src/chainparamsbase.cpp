@@ -42,14 +42,14 @@ const CBaseChainParams& BaseParams()
 /**
  * (BOB): mainnet RPC 19984 and regtest RPC 39984 are (BOB) 0.14's. The Tor onion
  * target is 19987, not P2P+1 (19986): on vps1 19986 is a 0.14 daemon's RPC port,
- * and -listenonion would race it. Testnet/signet ports are still Dogecoin's.
+ * and -listenonion would race it. Testnet is 0.14's (P2P 39985, RPC 39984); signet's ports are still Dogecoin's.
  */
 std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN) {
         return MakeUnique<CBaseChainParams>("", 19984, 19987);
     } else if (chain == CBaseChainParams::TESTNET) {
-        return MakeUnique<CBaseChainParams>("testnet3", 44555, 44557);
+        return MakeUnique<CBaseChainParams>("testnet3", 39984, 39987); // (BOB) 0.14 testnet RPC 39984 (as regtest), onion P2P+2
     } else if (chain == CBaseChainParams::SIGNET) {
         return MakeUnique<CBaseChainParams>("signet", 55555, 55557);
     } else if (chain == CBaseChainParams::REGTEST) {

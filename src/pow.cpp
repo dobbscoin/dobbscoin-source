@@ -237,6 +237,16 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     // All five (BOB) regimes, each ported and validated against real history: V1 (<13579),
     // KGW [13579,31597), DigiShield V3 [31597,68425) and V4 [68425,1888808), LWMA-3 (>=1888808).
     // Unit vectors from real mainnet headers: src/test/dogecoin_tests.cpp (bob_retarget_*).
+    if (!params.fPowNoRetargeting && params.fPowAllowMinDifficultyBlocks) {
+        // (BOB) testnet, as 0.14 GetNextWorkRequired's AllowMinDifficultyBlocks branch: V1 below
+        // 20, KGW from 20, DigiShield (10-minute target) from 50, LWMA-3 from 100
+        // (HARDFORK_LWMA3_TESTNET; 0.14's mode-4 switch at 200 is dead code, LWMA-3 wins first).
+        const int h = pindexLast->nHeight + 1;
+        if (h < 20)  return BobGetNextWorkRequired_V1(pindexLast, pblock, params);
+        if (h < 50)  return BobGetNextWorkRequired_KGW(pindexLast, pblock, params);
+        if (h < 100) return BobGetNextWorkRequired_DigiShield(pindexLast, pblock, params, 600);
+        return BobGetNextWorkRequired_LWMA3(pindexLast, pblock, params);
+    }
     if (!params.fPowNoRetargeting) {
         const int h = pindexLast->nHeight + 1;
         if (h < 13579)                    return BobGetNextWorkRequired_V1(pindexLast, pblock, params);
