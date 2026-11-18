@@ -1,0 +1,793 @@
+// Copyright (c) 2013-2014 The Offerings developers
+// Copyright (c) 2026 The Offerings Conclave / SubGenius.Finance community
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <stratum.h>
+
+#include <arith_uint256.h>
+#include <bobminer.h>
+#include <clientversion.h>
+#include <compat.h>
+#include <crypto/common.h>
+#include <crypto/scrypt_nway.h>
+#include <hash.h>
+#include <logging.h>
+#include <primitives/block.h>
+#include <serialize.h>
+#include <streams.h>
+#include <tinyformat.h>
+#include <uint256.h>
+#include <univalue.h>
+#include <util/strencodings.h>
+#include <util/system.h>
+#include <util/threadnames.h>
+#include <util/time.h>
+#include <version.h>
+
+#include <boost/asio.hpp>
+
+#include <algorithm>
+#include <cassert>
+#include <chrono>
+#include <cmath>
+#include <cstring>
+
+
+CStratumClient* g_pStratumClient = NULL;
+RecursiveMutex cs_stratum_control;
+
+CStratumClient::CStratumClient()
+    : nPort(0),
+      fConnected(false),
+      fAuthorized(false),
+      fSessionAuthorized(false),
+      dDifficulty(0.0),
+      nExtraNonce2Size(0),
+      nJobsReceived(0),
+      nSessionSeq(0),
+      nStaleSharesDropped(0),
+      nThreads(0),
+      nSharesSubmitted(0),
+      nSharesAccepted(0),
+      nSharesRejected(0),
+      nHashCounter(0),
+      nHashRateTime(0),
+      nHashRateCount(0),
+      dHashRate(0.0),
+      pSocket(NULL),
+      nSubmitId(10),
+      fShutdown(false),
+      fRunning(false),
+      nSocketFd(-1)
+{
+}
+
+CStratumClient::~CStratumClient()
+{
+    Stop();
+}
+
+bool CStratumClient::Start(const std::string& strHostIn, int nPortIn, const std::string& strUserIn,
+                           int nThreadsIn)
+{
+    if (fRunning)
+        return false;
+    strHost = strHostIn;
+    nPort = nPortIn;
+    strUser = strUserIn;
+    nThreads = nThreadsIn;
+    fShutdown = false;
+    fRunning = true;
+    threadClient = std::thread(&CStratumClient::ThreadStratum, this);
+    for (int i = 0; i < nThreads; i++)
+        vWorkers.emplace_back(&CStratumClient::ThreadWorker, this, i);
+    return true;
+}
+
+void CStratumClient::Stop()
+{
+    fShutdown = true;
+    // Unblock any blocking read by shutting down (not closing) the socket
+    // under it — asio's destructor still owns the close. Can't use the
+    // closesocket macro here: compat.h maps it to myclosesocket(SOCKET&).
+    intptr_t fd = nSocketFd;
+    if (fd != -1) {
+#ifdef WIN32
+        ::shutdown((SOCKET)fd, 2 /* SD_BOTH */);
+#else
+        ::shutdown((int)fd, 2 /* SHUT_RDWR */);
+#endif
+    }
+    if (threadClient.joinable())
+        threadClient.join();
+    for (std::thread& t : vWorkers) {
+        if (t.joinable())
+            t.join();
+    }
+    vWorkers.clear();
+    fRunning = false;
+}
+
+bool CStratumClient::IsRunning() const { return fRunning; }
+
+bool CStratumClient::IsConnected() const
+{
+    LOCK(cs);
+    return fConnected;
+}
+
+std::string CStratumClient::GetHost() const
+{
+    LOCK(cs);
+    return strHost;
+}
+
+int CStratumClient::GetPort() const
+{
+    LOCK(cs);
+    return nPort;
+}
+
+std::string CStratumClient::GetUser() const
+{
+    LOCK(cs);
+    return strUser;
+}
+
+int CStratumClient::GetThreads() const
+{
+    LOCK(cs);
+    return nThreads;
+}
+
+bool CStratumClient::IsAuthorized() const
+{
+    LOCK(cs);
+    return fAuthorized;
+}
+
+double CStratumClient::GetDifficulty() const
+{
+    LOCK(cs);
+    return dDifficulty;
+}
+
+std::string CStratumClient::GetExtraNonce1() const
+{
+    LOCK(cs);
+    return strExtraNonce1;
+}
+
+int CStratumClient::GetExtraNonce2Size() const
+{
+    LOCK(cs);
+    return nExtraNonce2Size;
+}
+
+bool CStratumClient::GetCurrentJob(StratumJob& jobOut) const
+{
+    LOCK(cs);
+    if (currentJob.IsNull())
+        return false;
+    jobOut = currentJob;
+    return true;
+}
+
+int64_t CStratumClient::GetJobsReceived() const
+{
+    LOCK(cs);
+    return nJobsReceived;
+}
+
+std::string CStratumClient::GetLastError() const
+{
+    LOCK(cs);
+    return strLastError;
+}
+
+void CStratumClient::ThreadStratum()
+{
+    util::ThreadRename("stratum");
+    LogPrintf("stratum: client thread started (%s:%d, user %s)\n", strHost, nPort, strUser);
+
+    int64_t nBackoff = 5;
+    while (!fShutdown) {
+        bool fWorked = RunSession();
+        if (fShutdown)
+            break;
+        // Decide BEFORE sleeping. The old code recomputed after the sleep, so
+        // the delay always used the previous iteration's value and a long
+        // healthy session still ate whatever penalty the ladder had climbed to.
+        // Reset only on a session that AUTHORIZED: a pool that accepts the
+        // socket and then drops it (miningcore does exactly that for a banned
+        // IP, and bans for 60s on an unauthorized worker) must still escalate,
+        // or a mistyped payout address becomes 12 reconnects a minute forever.
+        nBackoff = fWorked ? 5 : std::min<int64_t>(nBackoff * 2, 60);
+        LogPrintf("stratum: disconnected, reconnecting in %ds\n", (int)nBackoff);
+        for (int64_t i = 0; i < nBackoff * 10 && !fShutdown; i++)
+            UninterruptibleSleep(std::chrono::milliseconds{100});
+    }
+    LogPrintf("stratum: client thread exiting\n");
+}
+
+bool CStratumClient::RunSession()
+{
+    {
+        LOCK(cs);
+        fConnected = false;
+        fAuthorized = false;
+        fSessionAuthorized = false;
+        // Drop every scrap of the previous session. The worker readiness gate
+        // only tests that these are present, so leaving them set means workers
+        // resume the DEAD session's job and extranonce the moment authorize
+        // succeeds on the new one -- every such share is rejected as
+        // "job not found" until the first mining.notify arrives.
+        strExtraNonce1.clear();
+        nExtraNonce2Size = 0;
+        currentJob = StratumJob();
+        // Stays 0.0 on purpose: the readiness gate requires dDiff > 0.0, so
+        // workers idle until the pool announces a difficulty. Do NOT seed this
+        // with the nominal stratum default of 1 -- the bound below is
+        // DIFF1_TARGET * SHARE_MULTIPLIER / dDiff, so difficulty 1 qualifies
+        // roughly one hash in 65536 and floods the pool with invalid submits.
+        dDifficulty = 0.0;
+        // Invalidate work in flight so workers re-snapshot immediately.
+        nJobsReceived++;
+        // (BOB) and mark everything built so far as from an old session: after a
+        // reconnect the pool re-sends the SAME job id under a NEW extranonce1, so a
+        // share from the old snapshot would carry a valid-looking job id and be
+        // rebuilt by the pool with the wrong extranonce1 ("low difficulty share").
+        nSessionSeq++;
+    }
+
+    try {
+        boost::asio::io_service io_service;
+        boost::asio::ip::tcp::resolver resolver(io_service);
+        boost::asio::ip::tcp::resolver::query query(strHost, strprintf("%d", nPort));
+        boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+        boost::asio::ip::tcp::socket socket(io_service);
+        boost::asio::connect(socket, endpoint_iterator);
+        nSocketFd = (intptr_t)socket.native_handle();
+        {
+            LOCK(cs_write);
+            pSocket = &socket;
+        }
+
+        {
+            LOCK(cs);
+            fConnected = true;
+            strLastError.clear();
+        }
+        LogPrintf("stratum: connected to %s:%d\n", strHost, nPort);
+
+        // subscribe (id 1) then authorize (id 2); responses matched by id below
+        std::string strSubscribe =
+            "{\"id\":1,\"method\":\"mining.subscribe\",\"params\":[\"" +
+            FormatFullVersion() + "\"]}\n";
+        boost::asio::write(socket, boost::asio::buffer(strSubscribe));
+        std::string strAuthorize =
+            "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"" +
+            strUser + "\",\"x\"]}\n";
+        boost::asio::write(socket, boost::asio::buffer(strAuthorize));
+
+        boost::asio::streambuf response;
+        std::string strBuffer;
+        while (!fShutdown) {
+            boost::asio::read_until(socket, response, "\n");
+            // Drain everything received, but only hand off complete lines —
+            // a partial line after the last '\n' stays buffered for the next read.
+            strBuffer.append(std::istreambuf_iterator<char>(&response),
+                             std::istreambuf_iterator<char>());
+            size_t pos;
+            while ((pos = strBuffer.find('\n')) != std::string::npos) {
+                std::string strLine = strBuffer.substr(0, pos);
+                strBuffer.erase(0, pos + 1);
+                if (!strLine.empty() && strLine[strLine.size() - 1] == '\r')
+                    strLine.erase(strLine.size() - 1);
+                if (!strLine.empty())
+                    HandleLine(strLine);
+            }
+        }
+        {
+            LOCK(cs_write);
+            pSocket = NULL;
+        }
+        nSocketFd = -1;
+    } catch (const std::exception& e) {
+        {
+            LOCK(cs_write);
+            pSocket = NULL;
+        }
+        nSocketFd = -1;
+        {
+            LOCK(cs);
+            strLastError = e.what();
+            fConnected = false;
+            fAuthorized = false;
+        }
+        if (!fShutdown)
+            LogPrintf("stratum: session error: %s\n", e.what());
+    }
+    LOCK(cs);
+    return fSessionAuthorized;
+}
+
+void CStratumClient::HandleLine(const std::string& strLine)
+{
+    LogPrint(BCLog::NET, "stratum: <<< %s\n", strLine);
+
+    UniValue valLine;
+    if (!valLine.read(strLine) || !valLine.isObject()) {
+        LogPrintf("stratum: unparseable line from pool (%u bytes)\n", (unsigned)strLine.size());
+        return;
+    }
+
+    const UniValue valMethod = find_value(valLine, "method");
+    if (valMethod.isStr()) {
+        const std::string strMethod = valMethod.get_str();
+        const UniValue params = find_value(valLine, "params");
+        if (!params.isArray())
+            return;
+
+        if (strMethod == "mining.set_difficulty") {
+            if (params.size() >= 1 && params[0].isNum()) {
+                double dNew = params[0].get_real();
+                LOCK(cs);
+                dDifficulty = dNew;
+                LogPrintf("stratum: difficulty set to %g\n", dNew);
+            }
+        } else if (strMethod == "mining.notify") {
+            // [jobId, prevHash, coinb1, coinb2, merkleBranch[], version, nBits, nTime, clean]
+            if (params.size() < 9) {
+                LogPrintf("stratum: short mining.notify (%u params)\n", (unsigned)params.size());
+                return;
+            }
+            StratumJob job;
+            try {
+                job.strJobId = params[0].get_str();
+                job.strPrevHash = params[1].get_str();
+                job.strCoinb1 = params[2].get_str();
+                job.strCoinb2 = params[3].get_str();
+                const UniValue& branch = params[4].get_array();
+                for (unsigned int i = 0; i < branch.size(); i++)
+                    job.vMerkleBranch.push_back(branch[i].get_str());
+                job.strVersion = params[5].get_str();
+                job.strNBits = params[6].get_str();
+                job.strNTime = params[7].get_str();
+                job.fCleanJobs = params[8].get_bool();
+            } catch (const std::runtime_error& e) {
+                LogPrintf("stratum: malformed mining.notify: %s\n", e.what());
+                return;
+            }
+
+            LOCK(cs);
+            currentJob = job;
+            nJobsReceived++;
+            LogPrintf("stratum: job %s (prev %s.., nbits %s, ntime %s%s, %u branch)\n",
+                      job.strJobId, job.strPrevHash.substr(0, 16), job.strNBits,
+                      job.strNTime, job.fCleanJobs ? ", CLEAN" : "",
+                      (unsigned)job.vMerkleBranch.size());
+        } else {
+            LogPrint(BCLog::NET, "stratum: ignoring method %s\n", strMethod);
+        }
+        return;
+    }
+
+    // A response to one of our requests: match by id.
+    const UniValue valId = find_value(valLine, "id");
+    const UniValue valResult = find_value(valLine, "result");
+    const UniValue valError = find_value(valLine, "error");
+    int64_t nId = valId.isNum() ? valId.get_int64() : -1;
+
+    if (!valError.isNull()) {
+        std::string strErr = valError.write();
+        if (nId >= 10) {
+            // A rejected mining.submit. Deliberately does NOT touch strLastError:
+            // that is the connection status the GUI shows, and one bad share is
+            // not a connection failure.
+            int64_t nAcc, nRej;
+            {
+                LOCK(cs);
+                nSharesRejected++;
+                nAcc = nSharesAccepted;
+                nRej = nSharesRejected;
+            }
+            LogPrintf("stratum: share rejected: %s (accepted %d / rejected %d)\n",
+                      strErr, (int)nAcc, (int)nRej);
+            return;
+        }
+        LOCK(cs);
+        strLastError = strErr;
+        LogPrintf("stratum: request id %d rejected: %s\n", (int)nId, strErr);
+        return;
+    }
+
+    if (nId == 1 && valResult.isArray()) {
+        // subscribe result: [[subscriptions..], extranonce1, extranonce2_size]
+        if (valResult.size() >= 3 && valResult[1].isStr() && valResult[2].isNum()) {
+            LOCK(cs);
+            strExtraNonce1 = valResult[1].get_str();
+            nExtraNonce2Size = valResult[2].get_int();
+            LogPrintf("stratum: subscribed, extranonce1=%s extranonce2_size=%d\n",
+                      strExtraNonce1, nExtraNonce2Size);
+        } else {
+            LogPrintf("stratum: malformed subscribe result\n");
+        }
+    } else if (nId == 2) {
+        bool fOk = valResult.isBool() && valResult.get_bool();
+        {
+            LOCK(cs);
+            fAuthorized = fOk;
+            // Sticky for the lifetime of this session: fAuthorized is cleared
+            // on the way out, but the reconnect ladder needs to know the
+            // session was genuinely productive, not merely TCP-connected.
+            if (fOk)
+                fSessionAuthorized = true;
+        }
+        LogPrintf("stratum: authorize %s for %s\n", fOk ? "ACCEPTED" : "REJECTED", strUser);
+    } else if (nId >= 10) {
+        // response to one of our mining.submit requests
+        bool fOk = valResult.isBool() && valResult.get_bool();
+        int64_t nAcc, nRej;
+        {
+            LOCK(cs);
+            if (fOk)
+                nSharesAccepted++;
+            else
+                nSharesRejected++;
+            nAcc = nSharesAccepted;
+            nRej = nSharesRejected;
+        }
+        LogPrintf("stratum: share %s (accepted %d / rejected %d)\n",
+                  fOk ? "ACCEPTED" : "rejected", (int)nAcc, (int)nRej);
+    }
+}
+
+bool CStratumClient::SubmitShare(const std::string& strJobId, const std::string& strExtraNonce2,
+                                 const std::string& strNTime, const std::string& strNonce, int64_t nSession)
+{
+    // Miningcore param order (verified in the pool's BitcoinJobManager):
+    // [worker, jobId, extraNonce2, nTime, nonce] — nTime/nonce exactly 8 hex chars.
+    std::string strLine;
+    {
+        LOCK(cs_write);
+        if (!pSocket)
+            return false;
+        {
+            // Lock order cs_write -> cs; nothing takes them the other way round.
+            LOCK(cs);
+            if (nSession != nSessionSeq || !fAuthorized) {
+                nStaleSharesDropped++;
+                LogPrint(BCLog::NET, "stratum: dropped a share built in an earlier session (job %s)\n", strJobId);
+                return false;
+            }
+        }
+        strLine = strprintf(
+            "{\"id\":%d,\"method\":\"mining.submit\",\"params\":[\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"]}\n",
+            nSubmitId++, strUser, strJobId, strExtraNonce2, strNTime, strNonce);
+        try {
+            boost::asio::write(*static_cast<boost::asio::ip::tcp::socket*>(pSocket),
+                               boost::asio::buffer(strLine));
+        } catch (const std::exception& e) {
+            LogPrintf("stratum: submit write failed: %s\n", e.what());
+            return false;
+        }
+    }
+    {
+        LOCK(cs);
+        nSharesSubmitted++;
+    }
+    LogPrint(BCLog::NET, "stratum: >>> %s", strLine);
+    return true;
+}
+
+// Bitcoin difficulty-1 target (0x00000000ffff0000…) as a double; Miningcore's
+// share test for this coin is diff1 / scrypt(header) >= 0.99 * vardiff
+// (see SHARE_MULTIPLIER below).
+static const double DIFF1_TARGET = 65535.0 * std::pow(2.0, 208.0);
+
+// Miningcore scores a share as (DIFF1_TARGET / scrypt(header)) * shareMultiplier
+// >= 0.99 * vardiff, where shareMultiplier comes from the pool coin template.
+// For (BOB) scrypt it is 65536, NOT 1 as the comment above previously asserted.
+// That error made the client bar 65536x stricter than the pool bar, so the miner
+// hashed at full rate and never submitted a share on any port. Verified against
+// the live pool 2026-09-08: with the bound corrected, shares are accepted at D=2.
+// (OFF)/quark uses 256 -- change this if pointing the client at that pool.
+static const double SHARE_MULTIPLIER = 65536.0;
+
+//! Stratum prevhash (dword-order-reversed RPC hash) → uint256 (internal LE),
+//! per research/stratum-dialect-probe-2026-08-07.md: reversing the 8 words
+//! yields the RPC display hex, which SetHex() then byte-reverses internally.
+static bool ParsePrevHash(const std::string& strStratumHex, uint256& hashOut)
+{
+    if (strStratumHex.size() != 64)
+        return false;
+    std::string strRpcHex;
+    for (int i = 7; i >= 0; i--)
+        strRpcHex += strStratumHex.substr(i * 8, 8);
+    hashOut.SetHex(strRpcHex);
+    return true;
+}
+
+static uint32_t ParseHexBE32(const std::string& strHex)
+{
+    return (uint32_t)strtoul(strHex.c_str(), NULL, 16);
+}
+
+void CStratumClient::ThreadWorker(int nWorkerId)
+{
+    util::ThreadRename("stratum-worker");
+    LogPrintf("stratum: hash worker %d started\n", nWorkerId);
+
+    uint32_t nEn2Counter = 0;
+    // Per-worker scrypt scratchpad, big enough for the widest implementation.
+    std::vector<unsigned char> vchScratchpad(ScryptNwayScratchpadSize(ScryptImpl::AVX2));
+
+    while (!fShutdown) {
+        // Snapshot the current work; anything missing → idle and retry.
+        StratumJob job;
+        std::string strEn1;
+        int nEn2Size;
+        double dDiff;
+        int64_t nJobSeq;
+        int64_t nSession;
+        bool fReady;
+        {
+            LOCK(cs);
+            job = currentJob;
+            strEn1 = strExtraNonce1;
+            nEn2Size = nExtraNonce2Size;
+            dDiff = dDifficulty;
+            nJobSeq = nJobsReceived;
+            nSession = nSessionSeq;
+            fReady = fAuthorized && !job.IsNull() && dDiff > 0.0 && !strEn1.empty();
+        }
+        if (!fReady) {
+            UninterruptibleSleep(std::chrono::milliseconds{250});
+            continue;
+        }
+        if (nEn2Size != 4) {
+            // Layout below packs worker id + counter into exactly 4 bytes;
+            // the pool advertises 4. Bail loudly rather than mis-mine.
+            LogPrintf("stratum: unsupported extranonce2_size %d (worker %d idle)\n",
+                      nEn2Size, nWorkerId);
+            UninterruptibleSleep(std::chrono::milliseconds{5000});
+            continue;
+        }
+
+        // Unique extranonce2 per (worker, rebuild): 1 byte worker id + 3 byte counter.
+        uint32_t nEn2 = ((uint32_t)nWorkerId << 24) | (nEn2Counter++ & 0x00ffffff);
+        std::string strEn2 = strprintf("%08x", nEn2);
+
+        // coinbase = coinb1 ‖ extranonce1 ‖ extranonce2 ‖ coinb2, txid = sha256d
+        std::vector<unsigned char> vchCoinbase = ParseHex(job.strCoinb1);
+        std::vector<unsigned char> vchEn1 = ParseHex(strEn1);
+        std::vector<unsigned char> vchEn2 = ParseHex(strEn2);
+        std::vector<unsigned char> vchCoinb2 = ParseHex(job.strCoinb2);
+        vchCoinbase.insert(vchCoinbase.end(), vchEn1.begin(), vchEn1.end());
+        vchCoinbase.insert(vchCoinbase.end(), vchEn2.begin(), vchEn2.end());
+        vchCoinbase.insert(vchCoinbase.end(), vchCoinb2.begin(), vchCoinb2.end());
+        uint256 hashMerkleRoot = Hash(vchCoinbase);
+
+        // Fold through the branch: root = sha256d(root ‖ branch[i]), branch
+        // hashes arrive as raw-byte hex (no reversal — Miningcore convention).
+        bool fBadBranch = false;
+        for (unsigned int i = 0; i < job.vMerkleBranch.size(); i++) {
+            std::vector<unsigned char> vchBranch = ParseHex(job.vMerkleBranch[i]);
+            if (vchBranch.size() != 32) {
+                fBadBranch = true;
+                break;
+            }
+            uint256 hashBranch;
+            memcpy(hashBranch.begin(), vchBranch.data(), 32);
+            hashMerkleRoot = Hash(hashMerkleRoot, hashBranch);
+        }
+        if (fBadBranch) {
+            LogPrintf("stratum: malformed merkle branch in job %s\n", job.strJobId);
+            UninterruptibleSleep(std::chrono::milliseconds{1000});
+            continue;
+        }
+
+        CBlockHeader header;
+        header.nVersion = (int)ParseHexBE32(job.strVersion);
+        if (!ParsePrevHash(job.strPrevHash, header.hashPrevBlock)) {
+            LogPrintf("stratum: malformed prevhash in job %s\n", job.strJobId);
+            UninterruptibleSleep(std::chrono::milliseconds{1000});
+            continue;
+        }
+        header.hashMerkleRoot = hashMerkleRoot;
+        header.nTime = ParseHexBE32(job.strNTime);
+        header.nBits = ParseHexBE32(job.strNBits);
+        header.nNonce = 0;
+
+        // Share bound: scrypt(header) <= diff1/vardiff. Compared in doubles —
+        // plenty for share screening; the pool revalidates every submit.
+        const double dTargetBound = DIFF1_TARGET * SHARE_MULTIPLIER / dDiff;
+
+        // Hash with the miner's scrypt (-minerscrypt; see MinerScryptCheck in
+        // miner.cpp): ScryptImplLanes() consecutive nonces per step. The pure
+        // 80-byte header is serialized once and only the nonce (bytes 76..79,
+        // little-endian) is patched per lane. The hash compared against the
+        // share bound is the same scrypt(header) GetPoWHash() gives; any share
+        // the fast path claims is recomputed with the generic scrypt first.
+        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+        ss << *(const CPureBlockHeader*)&header;
+        assert(ss.size() == 80);
+        unsigned char headers[SCRYPT_NWAY_MAX_LANES * 80];
+        unsigned char hashes[SCRYPT_NWAY_MAX_LANES * 32];
+        for (int l = 0; l < SCRYPT_NWAY_MAX_LANES; l++)
+            memcpy(headers + 80 * l, ss.data(), 80);
+
+        uint64_t nNext = 0;      // next nonce to hash; 2^32 = nonce space exhausted
+        uint64_t nCounted = 0;   // nonces already added to nHashCounter
+        bool fNewSession = false;
+        while (!fShutdown && nNext <= 0xffffffffULL) {
+            const ScryptImpl impl = bobminer::Impl();
+            const int nUsed = (int)std::min<uint64_t>(ScryptImplLanes(impl), 0x100000000ULL - nNext);
+            for (int l = 0; l < ScryptImplLanes(impl); l++)
+                WriteLE32(headers + 80 * l + 76, (uint32_t)(nNext + l));
+            scrypt_1024_1_1_256_nway(impl, headers, hashes, &vchScratchpad[0]);
+
+            for (int l = 0; l < nUsed; l++) {
+                uint256 hash;
+                memcpy(hash.begin(), hashes + 32 * l, 32);
+                if (UintToArith256(hash).getdouble() > dTargetBound)
+                    continue;
+                if (!bobminer::ScryptCheck(impl, headers + 80 * l, hashes + 32 * l))
+                    continue; // fast path wrong: not submitted, now on generic
+                const uint32_t nNonce = (uint32_t)(nNext + l);
+                LogPrintf("stratum: worker %d found share (job %s, nonce %08x, hash %s)\n",
+                          nWorkerId, job.strJobId, nNonce, hash.GetHex().substr(0, 24));
+                if (!SubmitShare(job.strJobId, strEn2, job.strNTime, strprintf("%08x", nNonce), nSession)) {
+                    bool fOld;
+                    {
+                        LOCK(cs);
+                        fOld = nSession != nSessionSeq;
+                    }
+                    if (fOld) {
+                        fNewSession = true; // re-snapshot under the new session
+                        break;
+                    }
+                }
+            }
+            if (fNewSession)
+                break;
+
+            const uint64_t nPrev = nNext;
+            nNext += nUsed;
+            if ((nPrev >> 12) != (nNext >> 12)) {
+                // Every 4096 nonces: spot-check one fast hash against generic,
+                // count every lane hashed, and notice a new job.
+                bobminer::ScryptCheck(impl, headers, hashes);
+                bool fStale;
+                {
+                    LOCK(cs);
+                    nHashCounter += nNext - nCounted;
+                    fStale = (nJobsReceived != nJobSeq);
+                }
+                nCounted = nNext;
+                if (fStale)
+                    break; // re-snapshot: new job (and a fresh extranonce2)
+            }
+        }
+        {
+            LOCK(cs);
+            nHashCounter += nNext - nCounted;
+        }
+        // nonce space exhausted (or stale/shutdown): the outer loop rolls extranonce2
+    }
+    LogPrintf("stratum: hash worker %d exiting\n", nWorkerId);
+}
+
+int64_t CStratumClient::GetSharesSubmitted() const
+{
+    LOCK(cs);
+    return nSharesSubmitted;
+}
+
+int64_t CStratumClient::GetSharesAccepted() const
+{
+    LOCK(cs);
+    return nSharesAccepted;
+}
+
+int64_t CStratumClient::GetSharesRejected() const
+{
+    LOCK(cs);
+    return nSharesRejected;
+}
+
+double CStratumClient::GetHashRate() const
+{
+    LOCK(cs);
+    int64_t nNow = GetTimeMillis();
+    if (nHashRateTime == 0) {
+        // first call: establish the baseline
+        nHashRateTime = nNow;
+        nHashRateCount = nHashCounter;
+        return 0.0;
+    }
+    if (nNow - nHashRateTime >= 5000) {
+        dHashRate = (double)(nHashCounter - nHashRateCount) * 1000.0 / (double)(nNow - nHashRateTime);
+        nHashRateTime = nNow;
+        nHashRateCount = nHashCounter;
+    }
+    return dHashRate;
+}
+
+bool StartStratumIfConfigured()
+{
+    std::string strEndpoint = gArgs.GetArg("-stratum", "");
+    if (strEndpoint.empty())
+        return true;
+
+    size_t colon = strEndpoint.rfind(':');
+    if (colon == std::string::npos) {
+        LogPrintf("stratum: invalid -stratum=%s (expected host:port)\n", strEndpoint);
+        return false;
+    }
+    std::string strHost = strEndpoint.substr(0, colon);
+    int nPort = atoi(strEndpoint.substr(colon + 1).c_str());
+    std::string strUser = gArgs.GetArg("-stratumuser", "");
+    if (strHost.empty() || nPort <= 0 || nPort > 65535 || strUser.empty()) {
+        LogPrintf("stratum: -stratum needs host:port and -stratumuser=<address>\n");
+        return false;
+    }
+
+    int nThreads = (int)gArgs.GetArg("-stratumthreads", 1);
+    if (nThreads < 0 || nThreads > 64) {
+        LogPrintf("stratum: invalid -stratumthreads=%d\n", nThreads);
+        return false;
+    }
+
+    return StartStratum(strHost, nPort, strUser, nThreads);
+}
+
+bool StartStratum(const std::string& strHost, int nPort, const std::string& strUser,
+                  int nThreads)
+{
+    LOCK(cs_stratum_control);
+    StopStratum();
+    g_pStratumClient = new CStratumClient();
+    if (!g_pStratumClient->Start(strHost, nPort, strUser, nThreads)) {
+        delete g_pStratumClient;
+        g_pStratumClient = nullptr;
+        return false;
+    }
+    return true;
+}
+
+void StopStratum()
+{
+    LOCK(cs_stratum_control);
+    if (g_pStratumClient) {
+        g_pStratumClient->Stop();
+        delete g_pStratumClient;
+        g_pStratumClient = NULL;
+    }
+}
+
+StratumStatus GetStratumStatus()
+{
+    StratumStatus st;
+    LOCK(cs_stratum_control);
+    if (!g_pStratumClient || !g_pStratumClient->IsRunning())
+        return st;
+    CStratumClient& sc = *g_pStratumClient;
+    st.running = true;
+    st.connected = sc.IsConnected();
+    st.authorized = sc.IsAuthorized();
+    st.host = sc.GetHost();
+    st.port = sc.GetPort();
+    st.user = sc.GetUser();
+    st.threads = sc.GetThreads();
+    st.difficulty = sc.GetDifficulty();
+    st.jobs = sc.GetJobsReceived();
+    st.submitted = sc.GetSharesSubmitted();
+    st.accepted = sc.GetSharesAccepted();
+    st.rejected = sc.GetSharesRejected();
+    st.hashrate = sc.GetHashRate();
+    st.last_error = sc.GetLastError();
+    return st;
+}

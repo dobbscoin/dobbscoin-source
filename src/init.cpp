@@ -13,6 +13,7 @@
 #include <amount.h>
 #include <banman.h>
 #include <bobminer.h>
+#include <stratum.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
@@ -186,6 +187,7 @@ void Interrupt(NodeContext& node)
 void Shutdown(NodeContext& node)
 {
     bobminer::Stop(); // (BOB) built-in miner threads use the chainstate: stop them first
+    StopStratum();    // (BOB) pool client
     static Mutex g_shutdown_mutex;
     TRY_LOCK(g_shutdown_mutex, lock_shutdown);
     if (!lock_shutdown) return;
@@ -572,6 +574,9 @@ void SetupServerArgs(NodeContext& node)
 
 
     argsman.AddArg("-blockmaxweight=<n>", strprintf("Set maximum BIP141 block weight (default: %d)", DEFAULT_BLOCK_MAX_WEIGHT), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
+    argsman.AddArg("-stratum=<host:port>", "(BOB) Mine to a stratum pool at <host:port> on startup (also see the setstratum RPC and the GUI Mining tab)", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
+    argsman.AddArg("-stratumuser=<address>", "(BOB) Dobbscoin address the pool pays out to (required with -stratum)", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
+    argsman.AddArg("-stratumthreads=<n>", "(BOB) Number of pool-mining worker threads (default: 1, 0 = protocol only)", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-minerscrypt=<impl>", "(BOB) Scrypt implementation for the built-in miner and pool mining: auto, generic, sse2, avx or avx2 (default: auto, the fastest this CPU supports)", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockmintxfee=<amt>", strprintf("Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)", CURRENCY_UNIT, FormatMoney(DEFAULT_BLOCK_MIN_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockversion=<n>", "Override block version to test forking scenarios", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::BLOCK_CREATION);
@@ -2080,6 +2085,10 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
     // (BOB) the miners' scrypt implementation, chosen and logged once
     bobminer::ScryptSelect(args.GetArg("-minerscrypt", "auto"));
+    // (BOB) in-wallet pool mining: -stratum=<host:port> -stratumuser=<address> -stratumthreads=<n>
+    if (!StartStratumIfConfigured()) {
+        return InitError(Untranslated("Invalid -stratum / -stratumuser / -stratumthreads configuration"));
+    }
 
     // ********************************************************* Step 13: finished
 

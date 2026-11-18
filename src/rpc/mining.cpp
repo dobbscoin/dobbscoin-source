@@ -16,6 +16,7 @@
 #include <core_io.h>
 #include <key_io.h>
 #include <bobminer.h>
+#include <stratum.h>
 #include <interfaces/wallet.h>
 #include <miner.h>
 #include <outputtype.h>
@@ -514,6 +515,118 @@ static RPCHelpMan setgenerate()
         throw JSONRPCError(RPC_MISC_ERROR, error);
     }
     return NullUniValue;
+},
+    };
+}
+
+static UniValue StratumInfoObject()
+{
+    const StratumStatus st = GetStratumStatus();
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("running", st.running);
+    if (!st.running) return obj;
+    obj.pushKV("pool", strprintf("%s:%d", st.host, st.port));
+    obj.pushKV("user", st.user);
+    obj.pushKV("threads", st.threads);
+    obj.pushKV("connected", st.connected);
+    obj.pushKV("authorized", st.authorized);
+    obj.pushKV("sharedifficulty", st.difficulty);
+    obj.pushKV("jobsreceived", st.jobs);
+    obj.pushKV("hashespersec", st.hashrate);
+    obj.pushKV("sharessubmitted", st.submitted);
+    obj.pushKV("sharesaccepted", st.accepted);
+    obj.pushKV("sharesrejected", st.rejected);
+    obj.pushKV("errors", st.last_error);
+    return obj;
+}
+
+static RPCResult StratumInfoResult()
+{
+    return RPCResult{RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::BOOL, "running", "Pool mining is on; the other fields appear only then"},
+            {RPCResult::Type::STR, "pool", /* optional */ true, "The pool endpoint, host:port"},
+            {RPCResult::Type::STR, "user", /* optional */ true, "The payout address (pool-side username)"},
+            {RPCResult::Type::NUM, "threads", /* optional */ true, "Worker threads grinding hashes"},
+            {RPCResult::Type::BOOL, "connected", /* optional */ true, "TCP session with the pool is up"},
+            {RPCResult::Type::BOOL, "authorized", /* optional */ true, "The pool accepted the payout address"},
+            {RPCResult::Type::NUM, "sharedifficulty", /* optional */ true, "Current vardiff share difficulty"},
+            {RPCResult::Type::NUM, "jobsreceived", /* optional */ true, "mining.notify jobs received"},
+            {RPCResult::Type::NUM, "hashespersec", /* optional */ true, "Hashes per second across all workers"},
+            {RPCResult::Type::NUM, "sharessubmitted", /* optional */ true, "Shares sent to the pool"},
+            {RPCResult::Type::NUM, "sharesaccepted", /* optional */ true, "Shares the pool accepted"},
+            {RPCResult::Type::NUM, "sharesrejected", /* optional */ true, "Shares the pool rejected"},
+            {RPCResult::Type::STR, "errors", /* optional */ true, "Last connection error, if any"},
+        }};
+}
+
+static RPCHelpMan getstratuminfo()
+{
+    return RPCHelpMan{"getstratuminfo",
+        "\nReturns a json object describing the in-wallet stratum pool-mining client.\n",
+        {},
+        StratumInfoResult(),
+        RPCExamples{HelpExampleCli("getstratuminfo", "") + HelpExampleRpc("getstratuminfo", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    return StratumInfoObject();
+},
+    };
+}
+
+static RPCHelpMan setstratum()
+{
+    return RPCHelpMan{"setstratum",
+        "\nStart or stop mining to a stratum pool, like the GUI Mining tab's pool section.\n"
+        "Replaces any pool client already running (from -stratum args, the GUI, or a\n"
+        "previous setstratum). Unlike solo generation this needs no wallet: rewards go\n"
+        "to the payout address at the pool. See getstratuminfo for live status.\n",
+        {
+            {"enable", RPCArg::Type::BOOL, RPCArg::Optional::NO, "true to start pool mining, false to stop."},
+            {"pool", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "The pool endpoint as host:port (required when enabling)."},
+            {"payoutaddress", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Dobbscoin address the pool pays out to (required when enabling). A \".worker\" suffix after the address is passed through."},
+            {"threads", RPCArg::Type::NUM, /* default */ "1", "Worker threads, 0 = protocol only."},
+        },
+        StratumInfoResult(),
+        RPCExamples{
+            "\nMine to the (BOB) pool with two threads\n"
+            + HelpExampleCli("setstratum", "true \"pool.dobbscoin.info:3033\" \"youraddress\" 2") +
+            "\nStop pool mining\n"
+            + HelpExampleCli("setstratum", "false") +
+            "\nUsing json rpc\n"
+            + HelpExampleRpc("setstratum", "true, \"pool.dobbscoin.info:3033\", \"youraddress\", 2")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    if (!request.params[0].get_bool()) {
+        StopStratum();
+        return StratumInfoObject();
+    }
+    if (request.params[1].isNull() || request.params[2].isNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Enabling needs a pool (host:port) and a payout address");
+    }
+    const std::string endpoint = request.params[1].get_str();
+    const size_t colon = endpoint.rfind(':');
+    const std::string host = colon != std::string::npos ? endpoint.substr(0, colon) : "";
+    const int port = colon != std::string::npos ? atoi(endpoint.substr(colon + 1).c_str()) : 0;
+    if (host.empty() || port <= 0 || port > 65535) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Pool must be host:port");
+    }
+    // Validate the address part (anything before an optional .worker suffix).
+    const std::string user = request.params[2].get_str();
+    const std::string addr_part = user.substr(0, user.find('.'));
+    if (!IsValidDestination(DecodeDestination(addr_part))) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dobbscoin payout address: " + addr_part);
+    }
+    int threads = 1;
+    if (!request.params[3].isNull()) {
+        threads = request.params[3].get_int();
+        if (threads < 0 || threads > 64) throw JSONRPCError(RPC_INVALID_PARAMETER, "threads must be 0-64");
+    }
+    if (!StartStratum(host, port, user, threads)) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Failed to start the stratum client");
+    }
+    return StratumInfoObject();
 },
     };
 }
@@ -1504,6 +1617,8 @@ static const CRPCCommand commands[] =
     { "generating",         "getgenerate",            &getgenerate,            {} },
     { "generating",         "gethashespersec",        &gethashespersec,        {} },
     { "generating",         "setgenerate",            &setgenerate,            {"generate","genproclimit"} },
+    { "mining",             "getstratuminfo",         &getstratuminfo,         {} },
+    { "mining",             "setstratum",             &setstratum,             {"enable","pool","payoutaddress","threads"} },
     { "mining",             "prioritisetransaction",  &prioritisetransaction,  {"txid","dummy","fee_delta"} },
     { "mining",             "getblocktemplate",       &getblocktemplate,       {"template_request"} },
     { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },

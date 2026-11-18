@@ -32,6 +32,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "generatetoaddress", 0, "nblocks" },
     { "setgenerate", 0, "generate" },
     { "setgenerate", 1, "genproclimit" },
+    { "setstratum", 0, "enable" },
+    { "setstratum", 3, "threads" },
     { "generatetoaddress", 2, "maxtries" },
     { "generatetodescriptor", 0, "num_blocks" },
     { "generatetodescriptor", 2, "maxtries" },

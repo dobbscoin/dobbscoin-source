@@ -15,6 +15,9 @@ import argparse, base64, hashlib, json, os, socket, struct, subprocess, sys, thr
 ap = argparse.ArgumentParser()
 ap.add_argument("--pool-on", choices=["rebase", "old"], required=True)
 ap.add_argument("--blocks", type=int, default=25)
+ap.add_argument("--miner", choices=["python", "node"], default="python",
+                help="python: the minimal stratum miner below; node: the rebase node's own pool client (setstratum)")
+ap.add_argument("--rebase-bin", default=None, help="dobbscoind of the rebase (default: <basedir>/dogecoin-121dev/src/dobbscoind)")
 ap.add_argument("base"); ap.add_argument("work")
 A = ap.parse_args()
 BASE, WORK = os.path.abspath(A.base), os.path.abspath(A.work)
@@ -133,7 +136,7 @@ def main():
     refenv = dict(os.environ, LD_LIBRARY_PATH=os.path.join(BASE, "ref-0.14.1", "lib"))
     old = Node("old-0.14.1", [os.path.join(BASE, "ref-0.14.1", "dobbscoind"), "-port=19556", "-listen=1",
                               "-bind=127.0.0.1"], 19555, refenv)
-    new = Node("rebase", [os.path.join(BASE, "dogecoin-121dev", "src", "dobbscoind"), "-port=19566", "-listen=0",
+    new = Node("rebase", [A.rebase_bin or os.path.join(BASE, "dogecoin-121dev", "src", "dobbscoind"), "-port=19566", "-listen=0",
                           "-connect=127.0.0.1:19556", "-disablewallet"], 19565)
     nodes = {"old": old, "rebase": new}
     pool_node, follower = nodes[A.pool_on], nodes["old" if A.pool_on == "rebase" else "rebase"]
@@ -179,7 +182,11 @@ def main():
                               cwd=mcdir, stdin=subprocess.DEVNULL, stdout=mclog, stderr=subprocess.STDOUT,
                               env=dict(os.environ, DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1",
                                        LD_LIBRARY_PATH=os.path.join(BASE, "pooltest", "lib")))
-        miner = Miner(); miner.start()
+        if A.miner == "node":
+            time.sleep(5)  # let MiningCore open its stratum port
+            new.call("setstratum", True, "127.0.0.1:%d" % STRATUM_PORT, POOL_ADDR + ".node", 2)
+        else:
+            miner = Miner(); miner.start()
 
         start_h, deadline = pool_node.call("getblockcount"), time.time() + 900
         target_h = start_h + A.blocks
@@ -187,9 +194,14 @@ def main():
             if mc.poll() is not None:
                 raise SystemExit("MiningCore exited (%s); see miningcore.log" % mc.returncode)
             time.sleep(1)
-        miner.stop_flag = True
+        if A.miner == "node":
+            info = new.call("getstratuminfo")
+            new.call("setstratum", False)
+            print("node pool client:", {k: info.get(k) for k in ("authorized", "sharedifficulty", "sharessubmitted", "sharesaccepted", "sharesrejected", "errors")})
+        else:
+            miner.stop_flag = True
         h = pool_node.call("getblockcount")
-        print("pool on %s: height %d -> %d (%d submits)" % (pool_node.name, start_h, h, miner.submits))
+        print("pool on %s: height %d -> %d (%s)" % (pool_node.name, start_h, h, "node client" if A.miner == "node" else "%d submits" % miner.submits))
         if h < target_h:
             raise SystemExit("FAIL: pool only reached %d of %d" % (h, target_h))
         time.sleep(3)
@@ -218,9 +230,12 @@ def main():
         print("miningcore: %d 'Daemon accepted block' lines, %d reject/invalid lines" % (found, len(rejected)))
         for l in rejected[:10]:
             print("   ", l[:200])
-        print("stratum results:", sum(1 for r, e in miner.results if r is True), "accepted,",
-              sum(1 for r, e in miner.results if r is not True), "not accepted",
-              [e for r, e in miner.results if r is not True][:5])
+        if A.miner == "node":
+            bad += info.get("sharesrejected", 0) != 0 or info.get("sharesaccepted", 0) == 0
+        else:
+            print("stratum results:", sum(1 for r, e in miner.results if r is True), "accepted,",
+                  sum(1 for r, e in miner.results if r is not True), "not accepted",
+                  [e for r, e in miner.results if r is not True][:5])
         bad += found != h - start_h          # MiningCore must have seen every block accepted
         print("PASS" if bad == 0 else "FAIL: %d problem(s)" % bad)
         return 0 if bad == 0 else 1
