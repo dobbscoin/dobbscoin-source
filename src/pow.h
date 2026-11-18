@@ -16,6 +16,10 @@ class uint256;
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
 bool BobIsEmergencyDifficultyBlock(const CBlockHeader& block, const CBlockIndex* pindexPrev, const Consensus::Params& params);
+/** (BOB) mining-side valve (0.14 v0.13.3 GetNextWorkRequiredForMining): once the tip is more than
+ *  6h old (past the activation height) a template claims powLimit, so the valve can actually fire.
+ *  Miner policy only; validation is unchanged (BobIsEmergencyDifficultyBlock). */
+unsigned int BobGetNextWorkRequiredForMining(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params);
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */

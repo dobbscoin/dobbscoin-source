@@ -34,9 +34,10 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     if (nOldTime < nNewTime)
         pblock->nTime = nNewTime;
 
-    // Updating time can change work required on testnet:
-    if (consensusParams.fPowAllowMinDifficultyBlocks)
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
+    // Updating time can change work required on testnet, and (BOB) on mainnet a
+    // long-lived template newly qualifies for the emergency-difficulty valve once
+    // the tip gap crosses 6h (0.14 v0.13.3). Idempotent everywhere else.
+    pblock->nBits = BobGetNextWorkRequiredForMining(pindexPrev, pblock, consensusParams);
 
     return nNewTime - nOldTime;
 }
@@ -193,7 +194,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
     UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
-    pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
+    pblock->nBits          = BobGetNextWorkRequiredForMining(pindexPrev, pblock, chainparams.GetConsensus()); // (BOB) 6h valve
     pblock->nNonce         = 0;
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 

@@ -201,6 +201,10 @@ BOOST_AUTO_TEST_CASE(bob_retarget_lwma3_real_chain)
         for (size_t i = 0; i < 61; ++i) SetHdr(idx[i], c.first[i]);
         const BobHdr& target = c.first[61];
         BOOST_CHECK_EQUAL(BobNext(idx, target.time, chainParams->GetConsensus()), target.bits);
+        // outside the 6h window the mining chooser is just the retarget
+        CBlockHeader next;
+        next.nTime = target.time;
+        BOOST_CHECK_EQUAL(BobGetNextWorkRequiredForMining(&idx.back(), &next, chainParams->GetConsensus()), target.bits);
     }
 }
 
@@ -225,6 +229,13 @@ BOOST_AUTO_TEST_CASE(bob_emergency_difficulty_valve_real_block)
     BOOST_CHECK(!BobIsEmergencyDifficultyBlock(six_hours, &prev, p));
     six_hours.nTime += 1;
     BOOST_CHECK(BobIsEmergencyDifficultyBlock(six_hours, &prev, p));
+
+    // (BOB) mining side (0.14 v0.13.3): the template for block 1899995 claims powLimit.
+    CBlockHeader tmpl;
+    tmpl.nTime = VALVE[1].time;
+    BOOST_CHECK_EQUAL(BobGetNextWorkRequiredForMining(&prev, &tmpl, p), UintToArith256(p.powLimit).GetCompact());
+    tmpl.nTime = VALVE[0].time + 21601;            // the first second of the window
+    BOOST_CHECK_EQUAL(BobGetNextWorkRequiredForMining(&prev, &tmpl, p), UintToArith256(p.powLimit).GetCompact());
 }
 
 BOOST_AUTO_TEST_CASE(get_next_work_difficulty_limit)

@@ -217,6 +217,17 @@ bool BobIsEmergencyDifficultyBlock(const CBlockHeader& block, const CBlockIndex*
     return block.nBits == UintToArith256(params.powLimit).GetCompact();   // (c) must claim min difficulty
 }
 
+unsigned int BobGetNextWorkRequiredForMining(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params)
+{
+    // Same predicate as the validation exemption, so the two can never disagree about
+    // when the window is open: the header as it would be at powLimit.
+    CBlockHeader at_limit = *pblock;
+    at_limit.nBits = UintToArith256(params.powLimit).GetCompact();
+    if (BobIsEmergencyDifficultyBlock(at_limit, pindexLast, params))
+        return at_limit.nBits;
+    return GetNextWorkRequired(pindexLast, pblock, params);
+}
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
