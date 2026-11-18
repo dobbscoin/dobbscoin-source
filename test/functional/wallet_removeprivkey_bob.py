@@ -128,6 +128,10 @@ class RemovePrivKeyTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "HD seed", n1.removeprivkey, seed_addr, False, True)
         assert_raises_rpc_error(-4, "keypool", n1.removeprivkey, reserve_addr, False, True)
         assert self.ismine(n1, seed_addr) and self.ismine(n1, reserve_addr)
+        # (review fix) the seed of an INACTIVE chain, left behind by sethdseed, too (after the keypool check: sethdseed replaces the keypool)
+        n1.sethdseed()
+        assert_raises_rpc_error(-4, "HD seed", n1.removeprivkey, seed_addr, False, True)
+        assert self.ismine(n1, seed_addr)
 
         self.log.info("importprivkey brings it back")
         n1.importprivkey(wif_a, "alpha")

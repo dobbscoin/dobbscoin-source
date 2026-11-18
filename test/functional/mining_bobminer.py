@@ -67,6 +67,21 @@ class BobMinerTest(BitcoinTestFramework):
         node.setgenerate(False)
         assert_equal(node.getgenerate(), False)
 
+        self.log.info("genproclimit is capped")
+        assert_raises_rpc_error(-8, "genproclimit", node.setgenerate, True, 100000)
+        assert_raises_rpc_error(-8, "genproclimit", node.setgenerate, True, -2)
+
+        self.log.info("unloadwallet is not blocked by a running miner (review fix)")
+        node.createwallet("busy")
+        busy = node.get_wallet_rpc("busy")
+        busy.setgenerate(True, 1)     # regtest: mines one block, then the thread ends
+        self.wait_mined(node, node.getblockcount())
+        busy.setgenerate(True, 1)
+        t0 = time.time()
+        node.unloadwallet("busy")     # used to hang forever while the miner held the wallet
+        assert time.time() - t0 < 30
+        node.setgenerate(False)
+
         self.log.info("mining needs a wallet for the coinbase")
         node.unloadwallet(self.default_wallet_name)
         assert_raises_rpc_error(-18, "No wallet is loaded", node.setgenerate, True, 1)

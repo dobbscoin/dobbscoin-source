@@ -167,6 +167,14 @@ class StratumTest(BitcoinTestFramework):
             node.setstratum(False)
             assert_equal(node.getstratuminfo(), {"running": False})
 
+        self.log.info("stopping a client stuck connecting to a dead pool returns promptly (review fix)")
+        node.setstratum(True, "10.255.255.1:3033", payout, 1)  # unroutable: the connect never answers
+        time.sleep(2)
+        t0 = time.time()
+        node.setstratum(False)
+        assert time.time() - t0 < 5, "setstratum false took %.1fs" % (time.time() - t0)
+        assert_equal(node.getstratuminfo(), {"running": False})
+
         self.log.info("a bad payout address and a bad endpoint are refused")
         assert_raises_rpc_error(-5, "Invalid Dobbscoin payout address", node.setstratum, True, "127.0.0.1:%d" % pool.port, "notanaddress")
         assert_raises_rpc_error(-8, "host:port", node.setstratum, True, "nocolon", payout)
