@@ -69,6 +69,8 @@ private Q_SLOTS:
     void onCopyLabelAction();
     /** Edit currently selected address entry (no button) */
     void onEditAction();
+    /** (BOB) #46: forget the selected receiving address's private key */
+    void onForgetKeyAction();
     /** Export button clicked */
     void on_exportButton_clicked();
 

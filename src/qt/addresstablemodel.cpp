@@ -409,6 +409,26 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex &parent
     return true;
 }
 
+bool AddressTableModel::removePrivKey(const QString &address, bool keepWatchOnly, QString &error)
+{
+    const CTxDestination dest = DecodeDestination(address.toStdString());
+    if (!boost::get<PKHash>(&dest)) {
+        error = tr("This is not a key address.");
+        return false;
+    }
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+    if (!ctx.isValid()) {
+        error = tr("Wallet unlock was cancelled.");
+        return false;
+    }
+    std::string strError;
+    if (!walletModel->wallet().bobRemovePrivKey(dest, keepWatchOnly, strError)) {
+        error = QString::fromStdString(strError);
+        return false;
+    }
+    return true;
+}
+
 QString AddressTableModel::labelForAddress(const QString &address) const
 {
     std::string name;

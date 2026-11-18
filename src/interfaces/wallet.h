@@ -103,6 +103,9 @@ public:
     // Remove address.
     virtual bool delAddressBook(const CTxDestination& dest) = 0;
 
+    //! (BOB) #46: forget a receiving address's private key (never forces change keys).
+    virtual bool bobRemovePrivKey(const CTxDestination& dest, bool keep_watch_only, std::string& error) = 0;
+
     //! Look up address in wallet, return whether exists.
     virtual bool getAddress(const CTxDestination& dest,
         std::string* name,

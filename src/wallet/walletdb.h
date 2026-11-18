@@ -230,6 +230,8 @@ public:
 
     bool WriteWatchOnly(const CScript &script, const CKeyMetadata &keymeta);
     bool EraseWatchOnly(const CScript &script);
+    //! (BOB) #46: erase a key in every form it may be stored (key, wkey, ckey, keymeta)
+    bool BobEraseKey(const CPubKey& pubkey);
 
     bool WriteBestBlock(const CBlockLocator& locator);
     bool ReadBestBlock(CBlockLocator& locator);

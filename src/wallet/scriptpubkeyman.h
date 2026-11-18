@@ -458,6 +458,9 @@ public:
     bool ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
     bool ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
     bool ImportScriptPubKeys(const std::set<CScript>& script_pub_keys, const bool have_solving_data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    /** (BOB) #46: remove a private key from memory and disk. Refuses keys still in the
+     *  keypool and the HD seed. With keep_watch_only the address becomes watch-only. */
+    bool BobRemoveKey(const CKeyID& keyID, bool keep_watch_only, std::string& error);
 
     /* Returns true if the wallet can generate new keys */
     bool CanGenerateKeys() const;

@@ -125,6 +125,11 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     contextMenu->addAction(editAction);
     if(tab == SendingTab)
         contextMenu->addAction(deleteAction);
+    // (BOB) #46
+    QAction *forgetKeyAction = new QAction(tr("&Forget private key..."), this);
+    if(tab == ReceivingTab)
+        contextMenu->addAction(forgetKeyAction);
+    connect(forgetKeyAction, &QAction::triggered, this, &AddressBookPage::onForgetKeyAction);
     contextMenu->addSeparator();
 
     // Connect signals for context menu actions
@@ -332,4 +337,37 @@ void AddressBookPage::selectNewAddress(const QModelIndex &parent, int begin, int
         ui->tableView->selectRow(idx.row());
         newAddressToSelect.clear();
     }
+}
+
+void AddressBookPage::onForgetKeyAction()
+{
+    if(!model || !ui->tableView->selectionModel())
+        return;
+    QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows(AddressTableModel::Address);
+    if(indexes.isEmpty())
+        return;
+    QString address = indexes.at(0).data(Qt::EditRole).toString();
+
+    QMessageBox::StandardButton confirm = QMessageBox::warning(this, tr("Forget private key"),
+        tr("Remove the private key for %1 from this wallet?").arg(address) + "<br><br>" +
+        tr("Coins at this address can no longer be spent from this wallet. "
+           "Backups made before now still contain the key; keep one if you may need these coins."),
+        QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+    if(confirm != QMessageBox::Yes)
+        return;
+
+    bool keepWatching = QMessageBox::question(this, tr("Forget private key"),
+        tr("Keep watching this address, so its balance and transactions stay visible?"),
+        QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes;
+
+    QString error;
+    if(!model->removePrivKey(address, keepWatching, error))
+    {
+        QMessageBox::critical(this, tr("Forget private key"), error);
+        return;
+    }
+    QMessageBox::information(this, tr("Forget private key"),
+        tr("The private key for %1 was removed from this wallet.").arg(address) + "<br><br>" +
+        (keepWatching ? tr("The address stays in this list as watch-only.")
+                      : tr("The address and its label were removed from this list.")));
 }

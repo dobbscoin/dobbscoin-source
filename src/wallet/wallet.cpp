@@ -3273,6 +3273,38 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& s
     return SetAddressBookWithDB(batch, address, strName, strPurpose);
 }
 
+bool CWallet::BobRemovePrivKey(const CTxDestination& dest, bool keep_watch_only, bool force, std::string& error)
+{
+    LOCK(cs_wallet);
+    LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        error = "Forgetting a private key is only available in legacy (non-descriptor) wallets";
+        return false;
+    }
+    const PKHash* pkhash = boost::get<PKHash>(&dest);
+    if (!pkhash) {
+        error = "Address does not refer to a key";
+        return false;
+    }
+    if (!spk_man->HaveKey(ToKeyID(*pkhash))) {
+        error = "Private key for this address is not in the wallet";
+        return false;
+    }
+    // Ours but not in the address book is how IsChange() recognises change.
+    // Nobody picked a change address by hand, so its coins are easy to strand
+    // by accident; removing one takes an explicit force.
+    if (!force && !FindAddressBookEntry(dest)) {
+        error = "Key has no address-book entry, so the wallet treats it as a change address; pass force=true to remove it anyway";
+        return false;
+    }
+    if (!spk_man->BobRemoveKey(ToKeyID(*pkhash), keep_watch_only, error)) return false;
+    // Without watch-only the address is no longer ours in any way. Drop its address-book entry
+    // too, or it lingers in Receiving addresses and turns up under Sending on the next start.
+    if (!keep_watch_only && FindAddressBookEntry(dest)) DelAddressBook(dest);
+    MarkDirty(); // cached credit/debit per transaction depends on which keys are ours
+    return true;
+}
+
 bool CWallet::DelAddressBook(const CTxDestination& address)
 {
     bool is_mine;

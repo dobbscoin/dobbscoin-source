@@ -163,6 +163,16 @@ bool WalletBatch::EraseWatchOnly(const CScript &dest)
     return EraseIC(std::make_pair(DBKeys::WATCHS, dest));
 }
 
+bool WalletBatch::BobEraseKey(const CPubKey& pubkey)
+{
+    // Erasing a record that is not there succeeds, so a plain wallet (key +
+    // keymeta) and an encrypted one (ckey + keymeta) both come out clean.
+    return EraseIC(std::make_pair(DBKeys::KEY, pubkey)) &&
+           EraseIC(std::make_pair(DBKeys::OLD_KEY, pubkey)) &&
+           EraseIC(std::make_pair(DBKeys::CRYPTED_KEY, pubkey)) &&
+           EraseIC(std::make_pair(DBKeys::KEYMETA, pubkey));
+}
+
 bool WalletBatch::WriteBestBlock(const CBlockLocator& locator)
 {
     WriteIC(DBKeys::BESTBLOCK, CBlockLocator()); // Write empty block locator so versions that require a merkle branch automatically rescan

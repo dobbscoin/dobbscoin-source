@@ -1571,6 +1571,46 @@ bool LegacyScriptPubKeyMan::ImportPubKeys(const std::vector<CKeyID>& ordered_pub
     return true;
 }
 
+bool LegacyScriptPubKeyMan::BobRemoveKey(const CKeyID& keyID, bool keep_watch_only, std::string& error)
+{
+    LOCK(cs_KeyStore);
+    CPubKey pubkey;
+    if (!HaveKey(keyID) || !GetPubKey(keyID, pubkey)) {
+        error = "Private key for this address is not in the wallet";
+        return false;
+    }
+    if (!m_hd_chain.seed_id.IsNull() && keyID == m_hd_chain.seed_id) {
+        error = "Refusing to remove the wallet's HD seed";
+        return false;
+    }
+    // A key still in the keypool is about to be handed out as a fresh receiving
+    // or change address; removing it would make coins sent there unspendable.
+    if (m_pool_key_to_index.count(keyID)) {
+        error = "Key is still in the keypool (not yet handed out); refusing to remove it";
+        return false;
+    }
+    WalletBatch batch(m_storage.GetDatabase());
+    if (!batch.BobEraseKey(pubkey)) {
+        error = "Failed to erase the key from the wallet file";
+        return false;
+    }
+    mapKeys.erase(keyID); // CKey keeps its secret in secure memory, cleansed on destruction
+    mapCryptedKeys.erase(keyID);
+    mapKeyMetadata.erase(keyID);
+    if (keep_watch_only) {
+        const CScript script = GetScriptForDestination(PKHash(keyID));
+        if (!HaveWatchOnly(script) && !AddWatchOnlyWithDB(batch, script)) {
+            error = "Key removed, but adding the address as watch-only failed";
+            return false;
+        }
+    }
+    if (HaveKey(keyID)) {
+        error = "The key is still in the wallet after removing it";
+        return false;
+    }
+    return true;
+}
+
 bool LegacyScriptPubKeyMan::ImportScriptPubKeys(const std::set<CScript>& script_pub_keys, const bool have_solving_data, const int64_t timestamp)
 {
     WalletBatch batch(m_storage.GetDatabase());

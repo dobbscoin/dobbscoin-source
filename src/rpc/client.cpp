@@ -134,6 +134,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "send", 3, "fee_rate"},
     { "send", 4, "options" },
     { "importprivkey", 2, "rescan" },
+    { "removeprivkey", 1, "keepwatchonly" },
+    { "removeprivkey", 2, "force" },
     { "importaddress", 2, "rescan" },
     { "importaddress", 3, "p2sh" },
     { "importpubkey", 2, "rescan" },

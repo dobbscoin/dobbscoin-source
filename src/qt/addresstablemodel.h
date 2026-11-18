@@ -67,6 +67,11 @@ public:
      */
     QString addRow(const QString &type, const QString &label, const QString &address, const OutputType address_type);
 
+    /* Forget the private key of a receiving address ((BOB) #46). Unlocks the
+       wallet if needed. With keepWatchOnly the address stays watch-only.
+       Returns false and sets error on failure. */
+    bool removePrivKey(const QString &address, bool keepWatchOnly, QString &error);
+
     /** Look up label for address in address book, if not found return empty string. */
     QString labelForAddress(const QString &address) const;
 

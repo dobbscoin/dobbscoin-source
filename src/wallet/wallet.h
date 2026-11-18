@@ -1088,6 +1088,9 @@ public:
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
 
     bool DelAddressBook(const CTxDestination& address);
+    /** (BOB) #46: forget the private key of a P2PKH address (legacy wallets). A key with no
+     *  address-book entry is change and needs force. Without keep_watch_only the label goes too. */
+    bool BobRemovePrivKey(const CTxDestination& dest, bool keep_watch_only, bool force, std::string& error);
 
     unsigned int GetKeyPoolSize() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 

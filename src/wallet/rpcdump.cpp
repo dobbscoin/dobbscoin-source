@@ -666,6 +666,54 @@ RPCHelpMan importwallet()
     };
 }
 
+RPCHelpMan removeprivkey()
+{
+    return RPCHelpMan{"removeprivkey",
+                "\nRemoves the private key for 'address' from the wallet, in memory and on disk.\n"
+                "Use it after importprivkey to take a key back out, so coins at that address are no\n"
+                "longer spendable from this wallet. Backups made before the removal still hold the key.\n"
+                "Refuses the HD seed and any key still in the keypool. A change address\n"
+                "(a key with no address-book entry) is refused unless force is true.\n"
+                "Legacy (non-descriptor) wallets only.\n",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address whose private key to remove"},
+                    {"keepwatchonly", RPCArg::Type::BOOL, /* default */ "false", "Keep the address as watch-only, so its balance and transactions stay visible. Without it the address's label (address-book entry) is deleted as well"},
+                    {"force", RPCArg::Type::BOOL, /* default */ "false", "Also remove a change address's key"},
+                },
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("removeprivkey", "\"myaddress\"")
+            + HelpExampleCli("removeprivkey", "\"myaddress\" true")
+            + HelpExampleRpc("removeprivkey", "\"myaddress\", true")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    EnsureLegacyScriptPubKeyMan(*wallet);
+
+    LOCK(wallet->cs_wallet);
+    EnsureWalletIsUnlocked(wallet.get());
+
+    const CTxDestination dest = DecodeDestination(request.params[0].get_str());
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dobbscoin address");
+    }
+    if (!boost::get<PKHash>(&dest)) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
+    }
+    const bool keep_watch_only = !request.params[1].isNull() && request.params[1].get_bool();
+    const bool force = !request.params[2].isNull() && request.params[2].get_bool();
+
+    std::string error;
+    if (!wallet->BobRemovePrivKey(dest, keep_watch_only, force, error)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, error);
+    }
+    return NullUniValue;
+},
+    };
+}
+
 RPCHelpMan dumpprivkey()
 {
     return RPCHelpMan{"dumpprivkey",

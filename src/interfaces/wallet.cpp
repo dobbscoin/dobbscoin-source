@@ -155,6 +155,10 @@ public:
     {
         return m_wallet->DelAddressBook(dest);
     }
+    bool bobRemovePrivKey(const CTxDestination& dest, bool keep_watch_only, std::string& error) override
+    {
+        return m_wallet->BobRemovePrivKey(dest, keep_watch_only, /* force */ false, error);
+    }
     bool getAddress(const CTxDestination& dest,
         std::string* name,
         isminetype* is_mine,
