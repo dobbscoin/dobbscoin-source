@@ -47,8 +47,16 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     connect(ui->prune, &QPushButton::toggled, ui->pruneSize, &QWidget::setEnabled);
 
     /* Network elements init */
-#ifndef USE_UPNP
+#if !defined(USE_NATPMP) && !defined(USE_UPNP)
     ui->mapPortUpnp->setEnabled(false);
+    ui->mapPortStatus->setText(tr("This build has no port-mapping support."));
+#else
+    // (BOB, 0.14) A checkbox that silently does nothing is the failure this is meant
+    // to avoid, so poll the mapper and say what actually happened.
+    QTimer* map_port_status_timer = new QTimer(this);
+    map_port_status_timer->setInterval(1000);
+    connect(map_port_status_timer, &QTimer::timeout, this, &OptionsDialog::updateMapPortStatus);
+    map_port_status_timer->start();
 #endif
 
     ui->proxyIp->setEnabled(false);
@@ -389,4 +397,15 @@ QValidator::State ProxyAddressValidator::validate(QString &input, int &pos) cons
         return QValidator::Acceptable;
 
     return QValidator::Invalid;
+}
+
+void OptionsDialog::updateMapPortStatus()
+{
+#if defined(USE_NATPMP) || defined(USE_UPNP)
+    if (!model || !ui->mapPortUpnp->isChecked()) {
+        ui->mapPortStatus->setText("");
+        return;
+    }
+    ui->mapPortStatus->setText(QString::fromStdString(model->node().bobMapPortStatus()));
+#endif
 }

@@ -610,9 +610,6 @@ private:
     friend struct ConnmanTestMsg;
 };
 void Discover();
-void StartMapPort();
-void InterruptMapPort();
-void StopMapPort();
 uint16_t GetListenPort();
 
 /**

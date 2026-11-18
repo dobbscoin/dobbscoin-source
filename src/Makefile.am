@@ -114,6 +114,7 @@ BITCOIN_CORE_H = \
   blockencodings.h \
   blockfilter.h \
   bobminer.h \
+  mapport.h \
   stratum.h \
   bloom.h \
   chain.h \
@@ -285,12 +286,13 @@ libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 # Contains code accessing mempool and chain state that is meant to be separated
 # from wallet and gui code (see node/README.md). Shared code should go in
 # libbitcoin_common or libbitcoin_util libraries, instead.
-libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   bobminer.cpp \
+  mapport.cpp \
   stratum.cpp \
   banman.cpp \
   blockencodings.cpp \
@@ -611,7 +613,7 @@ dobbscoin_bin_ldadd = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-dobbscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
+dobbscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
 dobbscoind_SOURCES = $(dobbscoin_daemon_sources)
 dobbscoind_CPPFLAGS = $(dobbscoin_bin_cppflags)

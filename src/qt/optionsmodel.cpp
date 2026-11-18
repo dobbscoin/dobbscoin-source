@@ -121,6 +121,9 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("fUseUPnP", DEFAULT_UPNP);
     if (!gArgs.SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool()))
         addOverriddenOption("-upnp");
+    // (BOB) one checkbox, both protocols (NAT-PMP is tried first)
+    if (!gArgs.SoftSetBoolArg("-natpmp", settings.value("fUseUPnP").toBool()))
+        addOverriddenOption("-natpmp");
 
     if (!settings.contains("fListen"))
         settings.setValue("fListen", DEFAULT_LISTEN);
@@ -355,7 +358,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             break;
         case MapPortUPnP: // core option - can be changed on-the-fly
             settings.setValue("fUseUPnP", value.toBool());
-            node().mapPort(value.toBool());
+            node().mapPort(value.toBool(), value.toBool()); // (BOB) NAT-PMP first, then UPnP
             break;
         case MinimizeOnClose:
             fMinimizeOnClose = value.toBool();

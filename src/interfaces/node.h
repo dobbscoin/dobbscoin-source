@@ -84,7 +84,10 @@ public:
     virtual bool shutdownRequested() = 0;
 
     //! Map port.
-    virtual void mapPort(bool use_upnp) = 0;
+    virtual void mapPort(bool use_upnp, bool use_natpmp) = 0;
+
+    //! (BOB) what the port mapper last did, for the options dialog
+    virtual std::string bobMapPortStatus() = 0;
 
     //! Get proxy.
     virtual bool getProxy(Network net, proxyType& proxy_info) = 0;

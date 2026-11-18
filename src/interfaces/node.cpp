@@ -5,6 +5,7 @@
 #include <interfaces/node.h>
 
 #include <bobminer.h>
+#include <mapport.h>
 #include <stratum.h>
 
 #include <addrdb.h>
@@ -81,15 +82,8 @@ public:
         }
     }
     bool shutdownRequested() override { return ShutdownRequested(); }
-    void mapPort(bool use_upnp) override
-    {
-        if (use_upnp) {
-            StartMapPort();
-        } else {
-            InterruptMapPort();
-            StopMapPort();
-        }
-    }
+    void mapPort(bool use_upnp, bool use_natpmp) override { StartMapPort(use_upnp, use_natpmp); }
+    std::string bobMapPortStatus() override { return GetMapPortStatus(); }
     bool getProxy(Network net, proxyType& proxy_info) override { return GetProxy(net, proxy_info); }
     size_t getNodeCount(CConnman::NumConnections flags) override
     {

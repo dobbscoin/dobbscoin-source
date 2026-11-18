@@ -50,6 +50,8 @@ public:
     void setCurrentTab(OptionsDialog::Tab tab);
 
 private Q_SLOTS:
+    /* (BOB) Port mapping: report what the mapper actually did. */
+    void updateMapPortStatus();
     /* set OK button state (enabled / disabled) */
     void setOkButtonState(bool fState);
     void on_resetButton_clicked();
