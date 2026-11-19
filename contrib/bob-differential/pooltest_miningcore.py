@@ -18,6 +18,9 @@ ap.add_argument("--blocks", type=int, default=25)
 ap.add_argument("--miner", choices=["python", "node"], default="python",
                 help="python: the minimal stratum miner below; node: the rebase node's own pool client (setstratum)")
 ap.add_argument("--rebase-bin", default=None, help="dobbscoind of the rebase (default: <basedir>/dogecoin-121dev/src/dobbscoind)")
+ap.add_argument("--segwit", type=int, default=0,
+                help="SegWit+CSV activation height on the rebase node (0 = off). The pool starts 5 blocks before it, "
+                     "and a wallet keeps bech32 payments and witness spends in the mempool from the height on.")
 ap.add_argument("base"); ap.add_argument("work")
 A = ap.parse_args()
 BASE, WORK = os.path.abspath(A.base), os.path.abspath(A.work)
@@ -137,7 +140,8 @@ def main():
     old = Node("old-0.14.1", [os.path.join(BASE, "ref-0.14.1", "dobbscoind"), "-port=19556", "-listen=1",
                               "-bind=127.0.0.1"], 19555, refenv)
     new = Node("rebase", [A.rebase_bin or os.path.join(BASE, "dogecoin-121dev", "src", "dobbscoind"), "-port=19566", "-listen=0",
-                          "-connect=127.0.0.1:19556", "-disablewallet"], 19565)
+                          "-connect=127.0.0.1:19556"] + (["-segwitheight=%d" % A.segwit, "-csvheight=%d" % A.segwit]
+                                                         if A.segwit else ["-disablewallet"]), 19565)
     nodes = {"old": old, "rebase": new}
     pool_node, follower = nodes[A.pool_on], nodes["old" if A.pool_on == "rebase" else "rebase"]
     mc = None
@@ -154,8 +158,33 @@ def main():
         # One block with a current timestamp ends initial block download on both.
         desc = new.call("getdescriptorinfo", "raw(51)")["descriptor"]
         new.call("generatetodescriptor", 1, desc)
+        feeder_stop = threading.Event()
+        if A.segwit:
+            # mature wallet coins, and stop 5 blocks short so the POOL mines across the activation
+            new.call("createwallet", "w")
+            wa = new.call("getnewaddress", "", "legacy")
+            new.call("generatetoaddress", A.segwit - 5 - new.call("getblockcount"), wa)
+            def feeder():
+                while not feeder_stop.is_set():
+                    try:
+                        if new.call("getblockcount") >= A.segwit:
+                            for _ in range(2):
+                                new.call("sendtoaddress", new.call("getnewaddress", "", "bech32"), 1)
+                            # and spend witness outputs (unconfirmed ones too: the pool mines a block a
+                            # second here), so blocks carry witness inputs
+                            for u in [u for u in new.call("listunspent", 0) if u.get("desc", "").startswith("wpkh(")][:4]:
+                                raw = new.call("createrawtransaction", [{"txid": u["txid"], "vout": u["vout"]}],
+                                               {new.call("getnewaddress", "", "bech32"): float(u["amount"]) - 0.001})
+                                new.call("sendrawtransaction", new.call("signrawtransactionwithwallet", raw)["hex"])
+                    except Exception as e:
+                        print("   feeder:", str(e)[:100])
+                    feeder_stop.wait(0.2)
+            threading.Thread(target=feeder, daemon=True).start()
         time.sleep(2)
-        assert old.call("getblockcount") == 1
+        for _ in range(60):
+            if old.call("getblockcount") == new.call("getblockcount"): break
+            time.sleep(1)
+        assert old.call("getblockcount") == new.call("getblockcount"), "0.14.1 did not follow the setup blocks"
 
         cfg = {
             "logging": {"level": "info", "enableConsoleLog": True, "enableConsoleColors": False,
@@ -237,6 +266,17 @@ def main():
                   sum(1 for r, e in miner.results if r is not True), "not accepted",
                   [e for r, e in miner.results if r is not True][:5])
         bad += found != h - start_h          # MiningCore must have seen every block accepted
+        if A.segwit:
+            feeder_stop.set()
+            wit = commit = after = 0
+            for height in range(max(start_h + 1, A.segwit), h + 1):
+                blk = pool_node.call("getblock", pool_node.call("getblockhash", height), 2)
+                after += 1
+                wit += sum(1 for tx in blk["tx"][1:] for vin in tx["vin"] if vin.get("txinwitness"))
+                commit += any(o["scriptPubKey"]["hex"].startswith("6a24aa21a9ed") for o in blk["tx"][0]["vout"])
+            print("segwit: %d pool blocks from the activation height, %d witness inputs in them, %d with a witness commitment"
+                  % (after, wit, commit))
+            bad += wit == 0
         print("PASS" if bad == 0 else "FAIL: %d problem(s)" % bad)
         return 0 if bad == 0 else 1
     finally:
