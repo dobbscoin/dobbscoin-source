@@ -2078,12 +2078,15 @@ void CWallet::ResendWalletTransactions()
     // unconfirmed. Don't resend them as that would spam other nodes.
     if (!chain().isReadyToBroadcast()) return;
 
-    // Do this infrequently and randomly to avoid giving away
-    // that these are our transactions.
+    // Do this randomly to avoid giving away that these are our transactions.
     if (GetTime() < nNextResend || !fBroadcastTransactions) return;
     bool fFirst = (nNextResend == 0);
-    // resend 12-36 hours from now, ~1 day on average.
-    nNextResend = GetTime() + (12 * 60 * 60) + GetRand(24 * 60 * 60);
+    // (BOB) every 5-15 minutes, not Core 0.21's 12-36 hours (#54). On a network of a
+    // few dozen nodes with 2-minute blocks, a transaction whose first relay died with
+    // its peers sat unconfirmed until it was re-sent by hand; 0.14 re-sent every 0-30
+    // minutes. Only unconfirmed, unconflicted wallet transactions more than 5 minutes
+    // older than the last block are re-sent (below), so this costs little.
+    nNextResend = GetTime() + (5 * 60) + GetRand(10 * 60);
     if (fFirst) return;
 
     int submitted_tx_count = 0;

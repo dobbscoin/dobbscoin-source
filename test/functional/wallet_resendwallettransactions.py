@@ -45,31 +45,33 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         # after the last time we tried to broadcast. Use mocktime and give an extra minute to be sure.
         block_time = int(time.time()) + 6 * 60
         node.setmocktime(block_time)
-        block = create_block(int(node.getbestblockhash(), 16), create_coinbase(node.getblockcount() + 1), block_time)
-        block.rehash()
-        block.solve()
-        node.submitblock(ToHex(block))
+        # (BOB): the block must carry the AuxPoW chain ID (regtest forks at 10), which
+        # test_framework.blocktools does not stamp. generateblock goes through the node's
+        # own BlockAssembler, and the empty transaction list keeps our transaction unconfirmed.
+        height_before = node.getblockcount()
+        node.generateblock(node.getnewaddress(), [])
+        assert_equal(node.getblockcount(), height_before + 1)
 
         node.syncwithvalidationinterfacequeue()
         now = int(time.time())
 
-        # Transaction should not be rebroadcast within first 12 hours
-        # Leave 2 mins for buffer
-        twelve_hrs = 12 * 60 * 60
-        two_min = 2 * 60
-        node.setmocktime(now + twelve_hrs - two_min)
-        node.mockscheduler(1)  # Tell scheduler to call MaybeResendWalletTxn now
+        # (BOB) #54: the wallet re-sends every 5-15 minutes (Core 0.21: 12-36 hours). A re-send
+        # may already fire at the block above (mocktime +6 min), which puts the next one at
+        # +21 min at the latest, so +22 is certain.
+        self.log.info("Bump time & check that transaction is rebroadcast within 22 minutes")
+        with node.assert_debug_log(['ResendWalletTransactions: resubmit 1 unconfirmed transactions']):
+            node.setmocktime(now + 22 * 60)
+            node.mockscheduler(1)  # Tell scheduler to call MaybeResendWalletTxn now
+
+        self.log.info("Check that it does not re-send again a minute later")
+        with node.assert_debug_log([], unexpected_msgs=['ResendWalletTransactions: resubmit']):
+            node.setmocktime(now + 23 * 60)
+            node.mockscheduler(1)
         assert_equal(int(txid, 16) in peer_second.get_invs(), False)
 
-        self.log.info("Bump time & check that transaction is rebroadcast")
-        # Transaction should be rebroadcast approximately 24 hours in the future,
-        # but can range from 12-36. So bump 36 hours to be sure.
-        with node.assert_debug_log(['ResendWalletTransactions: resubmit 1 unconfirmed transactions']):
-            node.setmocktime(now + 36 * 60 * 60)
-            # Tell scheduler to call MaybeResendWalletTxn now.
-            node.mockscheduler(1)
         # Give some time for trickle to occur
-        node.setmocktime(now + 36 * 60 * 60 + 600)
+        node.setmocktime(now + 33 * 60)
+        node.mockscheduler(1)
         peer_second.wait_for_broadcast([txid])
 
 
