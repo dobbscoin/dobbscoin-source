@@ -77,12 +77,12 @@ def base58_to_byte(s):
 
 def keyhash_to_p2pkh(hash, main=False):
     assert len(hash) == 20
-    version = 30 if main else 113
+    version = 0 if main else 111  # (BOB): mainnet 0, test chains 111 (was Dogecoin 30/113)
     return byte_to_base58(hash, version)
 
 def scripthash_to_p2sh(hash, main=False):
     assert len(hash) == 20
-    version = 22 if main else 196
+    version = 5 if main else 196  # (BOB): mainnet 5, test chains 196 (was Dogecoin 22/196)
     return byte_to_base58(hash, version)
 
 def key_to_p2pkh(key, main=False):

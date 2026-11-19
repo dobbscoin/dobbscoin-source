@@ -5,6 +5,7 @@
 '''Test generateblock rpc.
 '''
 
+from test_framework.address import key_to_p2pkh
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -45,7 +46,7 @@ class GenerateBlockTest(BitcoinTestFramework):
 
         self.log.info('Generate an empty block to a combo descriptor with uncompressed pubkey')
         combo_key = '0408ef68c46d20596cc3f6ddf7c8794f71913add807f1dc55949fa805d764d191c0b7ce6894c126fce0babc6663042f3dde9b0cf76467ea315514e5a6731149c67'
-        combo_address = 'nZHMQgDEDZYVSPWhgwHQ4MFsrnFEaUT2gT'
+        combo_address = key_to_p2pkh(combo_key)  # (BOB) regtest P2PKH (version 111); was a Dogecoin (113) literal
         hash = node.generateblock('combo(' + combo_key + ')', [])['hash']
         block = node.getblock(hash, 2)
         assert_equal(len(block['tx']), 1)
