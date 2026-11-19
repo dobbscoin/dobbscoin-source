@@ -45,7 +45,13 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 void RegenerateCommitments(CBlock& block)
 {
     CMutableTransaction tx{*block.vtx.at(0)};
-    tx.vout.erase(tx.vout.begin() + GetWitnessCommitmentIndex(block));
+    // (BOB) a block without SegWit (every (BOB) block until activation) has no witness
+    // commitment, and GetWitnessCommitmentIndex() returns NO_WITNESS_COMMITMENT (-1);
+    // erasing begin() - 1 corrupted the heap and crashed generateblock. As fixed upstream.
+    const int commitpos = GetWitnessCommitmentIndex(block);
+    if (commitpos != NO_WITNESS_COMMITMENT) {
+        tx.vout.erase(tx.vout.begin() + commitpos);
+    }
     block.vtx.at(0) = MakeTransactionRef(tx);
 
     GenerateCoinbaseCommitment(block, WITH_LOCK(cs_main, return LookupBlockIndex(block.hashPrevBlock)), Params().GetConsensus());
