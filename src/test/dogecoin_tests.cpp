@@ -136,6 +136,31 @@ static const BobHdr LWMA_1950100[] = {   // 61-header window + target
     {1950096, 1794904759u, 0x1d1ea08fu}, {1950097, 1794904794u, 0x1d1db96cu}, {1950098, 1794904888u, 0x1d1cf1d5u},
     {1950099, 1794904903u, 0x1d1cb6cdu}, {1950100, 1794905003u, 0x1d1bc0ddu},
 };
+// (BOB) testnet blocks 98..159 (0.14.1 and EndTimes agree) + block 160 as 0.14.1 computes it:
+// the first LWMA-3 retarget after the testnet bootstrap (fork 100, N=60).
+static const BobHdr TESTNET_LWMA_160[] = {
+    {98, 1795088218u, 0x1e03106fu}, {99, 1795088264u, 0x1e02ebd3u}, {100, 1795088321u, 0x1e02ebd3u},
+    {101, 1795088393u, 0x1e02ebd3u}, {102, 1795089180u, 0x1e02ebd3u}, {103, 1795089373u, 0x1e02ebd3u},
+    {104, 1795089746u, 0x1e02ebd3u}, {105, 1795089889u, 0x1e02ebd3u}, {106, 1795091524u, 0x1e02ebd3u},
+    {107, 1795093352u, 0x1e02ebd3u}, {108, 1795093812u, 0x1e02ebd3u}, {109, 1795093994u, 0x1e02ebd3u},
+    {110, 1795095309u, 0x1e02ebd3u}, {111, 1795096233u, 0x1e02ebd3u}, {112, 1795096581u, 0x1e02ebd3u},
+    {113, 1795096634u, 0x1e02ebd3u}, {114, 1795096693u, 0x1e02ebd3u}, {115, 1795097387u, 0x1e02ebd3u},
+    {116, 1795097864u, 0x1e02ebd3u}, {117, 1795097896u, 0x1e02ebd3u}, {118, 1795098666u, 0x1e02ebd3u},
+    {119, 1795100334u, 0x1e02ebd3u}, {120, 1795101210u, 0x1e02ebd3u}, {121, 1795101825u, 0x1e02ebd3u},
+    {122, 1795102525u, 0x1e02ebd3u}, {123, 1795103069u, 0x1e02ebd3u}, {124, 1795103194u, 0x1e02ebd3u},
+    {125, 1795103788u, 0x1e02ebd3u}, {126, 1795103906u, 0x1e02ebd3u}, {127, 1795103921u, 0x1e02ebd3u},
+    {128, 1795104008u, 0x1e02ebd3u}, {129, 1795104389u, 0x1e02ebd3u}, {130, 1795104708u, 0x1e02ebd3u},
+    {131, 1795105019u, 0x1e02ebd3u}, {132, 1795105074u, 0x1e02ebd3u}, {133, 1795107534u, 0x1e02ebd3u},
+    {134, 1795107591u, 0x1e02ebd3u}, {135, 1795108155u, 0x1e02ebd3u}, {136, 1795108582u, 0x1e02ebd3u},
+    {137, 1795109326u, 0x1e02ebd3u}, {138, 1795109400u, 0x1e02ebd3u}, {139, 1795109936u, 0x1e02ebd3u},
+    {140, 1795109999u, 0x1e02ebd3u}, {141, 1795110822u, 0x1e02ebd3u}, {142, 1795110959u, 0x1e02ebd3u},
+    {143, 1795111084u, 0x1e02ebd3u}, {144, 1795112071u, 0x1e02ebd3u}, {145, 1795112126u, 0x1e02ebd3u},
+    {146, 1795112162u, 0x1e02ebd3u}, {147, 1795113345u, 0x1e02ebd3u}, {148, 1795113760u, 0x1e02ebd3u},
+    {149, 1795114967u, 0x1e02ebd3u}, {150, 1795115300u, 0x1e02ebd3u}, {151, 1795115682u, 0x1e02ebd3u},
+    {152, 1795115739u, 0x1e02ebd3u}, {153, 1795116664u, 0x1e02ebd3u}, {154, 1795117447u, 0x1e02ebd3u},
+    {155, 1795119223u, 0x1e02ebd3u}, {156, 1795119376u, 0x1e02ebd3u}, {157, 1795119614u, 0x1e02ebd3u},
+    {158, 1795119650u, 0x1e02ebd3u}, {159, 1795119751u, 0x1e02ebd3u}, {160, 1795120493u, 0x1e0919d3u},
+};
 static const BobHdr VALVE[] = {{1899994, 1788827237u, 0x1c3b9832u}, {1899995, 1788848855u, 0x1e0fffffu}};   // emergency-difficulty block 1899995
 
 static void SetHdr(CBlockIndex& b, const BobHdr& x)
@@ -205,6 +230,22 @@ BOOST_AUTO_TEST_CASE(bob_retarget_lwma3_real_chain)
         CBlockHeader next;
         next.nTime = target.time;
         BOOST_CHECK_EQUAL(BobGetNextWorkRequiredForMining(&idx.back(), &next, chainParams->GetConsensus()), target.bits);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(bob_retarget_lwma3_testnet_bootstrap_ends)
+{
+    // Testnet LWMA-3 forks at 100 and inherits the previous bits for N=60 blocks, so
+    // 159 still inherits and 160 is the first computed retarget (0.14.1's answer). The
+    // port once used mainnet's fork height here and testnet never retargeted.
+    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::TESTNET);
+    const size_t n = sizeof(TESTNET_LWMA_160) / sizeof(BobHdr);
+    BOOST_REQUIRE_EQUAL(n, 63U);
+    for (size_t first : {0U, 1U}) {             // window ending at 158 (next=159), at 159 (next=160)
+        std::vector<CBlockIndex> idx(61);
+        for (size_t i = 0; i < 61; ++i) SetHdr(idx[i], TESTNET_LWMA_160[first + i]);
+        const BobHdr& target = TESTNET_LWMA_160[first + 61];
+        BOOST_CHECK_EQUAL(BobNext(idx, target.time, chainParams->GetConsensus()), target.bits);
     }
 }
 

@@ -165,7 +165,9 @@ static unsigned int BobGetNextWorkRequired_LWMA3(const CBlockIndex* pindexLast, 
     const int64_t T = 120;
     const int64_t k = (int64_t(N) * (N + 1) * T) / 2;   // 219600
     const int64_t NK = int64_t(N) * k;                  // 13,176,000
-    const int FORK = 1888808;                           // HARDFORK_LWMA3_MAIN
+    // HARDFORK_LWMA3_MAIN / HARDFORK_LWMA3_TESTNET: the bootstrap below counts from the
+    // network's own fork height (testnet once inherited mainnet's and never retargeted)
+    const int FORK = params.fPowAllowMinDifficultyBlocks ? 100 : 1888808;
     const arith_uint256 powLimit = UintToArith256(params.powLimit);
 
     if (pindexLast == nullptr) return powLimit.GetCompact();
