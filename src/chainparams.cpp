@@ -222,9 +222,24 @@ public:
 /**
  * Testnet (v3)
  */
+// (BOB) -segwitheight / -csvheight on testnet too, for activation rehearsals on a private
+// testnet (DEBUG_ONLY; a node using them forks off the public testnet at that height).
+static void BobTestActivationHeightsFromArgs(const ArgsManager& args, Consensus::Params& consensus)
+{
+    for (const auto& a : {std::make_pair("-segwitheight", &consensus.SegwitHeight), std::make_pair("-csvheight", &consensus.CSVHeight)}) {
+        if (!args.IsArgSet(a.first)) continue;
+        int64_t height = args.GetArg(a.first, *a.second);
+        if (height < -1 || height >= std::numeric_limits<int>::max()) {
+            throw std::runtime_error(strprintf("Activation height %ld for %s is out of valid range. Use -1 to disable.", height, a.first));
+        }
+        *a.second = height == -1 ? std::numeric_limits<int>::max() : static_cast<int>(height);
+        LogPrintf("(BOB) testnet %s=%d (activation rehearsal)\n", a.first, *a.second);
+    }
+}
+
 class CTestNetParams : public CChainParams {
 public:
-    CTestNetParams() {
+    explicit CTestNetParams(const ArgsManager& args) {
         // (BOB) 0.14's testnet: CTestNetParams there derives from the mainnet params and
         // changes the genesis time/nonce, magic, ports, prefixes and the test-chain rules
         // below; the fork heights are 0.14 pow.h's *_TESTNET constants.
@@ -305,6 +320,8 @@ public:
         };
 
         chainTxData = ChainTxData{0, 0, 0};
+
+        BobTestActivationHeightsFromArgs(args, consensus);
     }
 };
 
@@ -602,7 +619,7 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
     if (chain == CBaseChainParams::MAIN) {
         return std::unique_ptr<CChainParams>(new CMainParams());
     } else if (chain == CBaseChainParams::TESTNET) {
-        return std::unique_ptr<CChainParams>(new CTestNetParams());
+        return std::unique_ptr<CChainParams>(new CTestNetParams(args));
     } else if (chain == CBaseChainParams::SIGNET) {
         return std::unique_ptr<CChainParams>(new SigNetParams(args));
     } else if (chain == CBaseChainParams::REGTEST) {
