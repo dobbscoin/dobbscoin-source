@@ -8,8 +8,8 @@ node1 receives many small payouts on one address (like pool payouts), plus a few
 other addresses. With small thresholds (-consolidatemin=20 -consolidatebatch=15
 -consolidatebelow=2) the background pass (driven here with mockscheduler) must:
   - do nothing while it is turned off, or at or under the threshold;
-  - merge the 15 smallest coins of the busiest address into one fresh "Consolidation"
-    address of the same wallet, paying only a fee, and never touch the other addresses;
+  - merge the 15 smallest coins of the busiest address into one coin on that same
+    address, paying only a fee, and never touch the other addresses;
   - send no second batch until the first one confirms, then send the next one;
   - wait while the wallet is locked, and run once it is unlocked;
   - with -consolidateall, merge across addresses.
@@ -82,9 +82,7 @@ class ConsolidateBobTest(BitcoinTestFramework):
         assert_equal(sorted(Decimal(str(o["value"])) for o in spent),
                      [Decimal("0.5") + Decimal(i) / 100 for i in range(15)])           # the smallest 15
         dest = tx["vout"][0]["scriptPubKey"]["addresses"][0]
-        info = n1.getaddressinfo(dest)
-        assert info["ismine"] and info["labels"] == ["Consolidation"], info
-        assert dest not in (payout, other)
+        assert_equal(dest, payout)   # back to the same address: no new key, nothing newly linked
         fee = -n1.gettransaction(c["txid"])["fee"]
         self.log.info("  merged 15 coins, fee %s" % fee)
 

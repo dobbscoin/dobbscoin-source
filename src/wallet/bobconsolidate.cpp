@@ -18,7 +18,6 @@
 #include <algorithm>
 #include <map>
 
-const std::string BOB_CONSOLIDATION_LABEL{"Consolidation"};
 const std::string BOB_CONSOLIDATION_KEY{"bobconsolidation"};
 
 // Bytes an input adds with an uncompressed-key P2PKH signature, the worst case 0.14
@@ -61,6 +60,7 @@ std::string BobMaybeConsolidate(CWallet& wallet, std::string& why_not)
     const bool any_address = gArgs.GetBoolArg("-consolidateall", DEFAULT_BOB_CONSOLIDATE_ALL);
 
     std::vector<COutput> picked;
+    CScript dest_script;
     {
         LOCK(wallet.cs_wallet);
         if (PendingConsolidation(wallet)) { why_not = "waiting for the last batch to confirm"; return ""; }
@@ -89,17 +89,18 @@ std::string BobMaybeConsolidate(CWallet& wallet, std::string& why_not)
             return "";
         }
         picked = *best;
+        // Pay the merged coin back to the address the coins sit on (with -consolidateall: the
+        // address holding most of them). A fresh address would exist only in this wallet file:
+        // anyone running a copy of a non-HD 0.14 wallet (as testers are told to) would see the
+        // merged coins vanish from the original. The same address also links nothing new.
+        std::map<CScript, size_t> count;
+        for (const COutput& out : picked) ++count[out.tx->tx->vout[out.i].scriptPubKey];
+        dest_script = std::max_element(count.begin(), count.end(),
+                                       [](const std::pair<const CScript, size_t>& a, const std::pair<const CScript, size_t>& b) { return a.second < b.second; })->first;
         std::sort(picked.begin(), picked.end(), [](const COutput& a, const COutput& b) {
             return a.tx->tx->vout[a.i].nValue < b.tx->tx->vout[b.i].nValue;
         });
         if ((int64_t)picked.size() > batch) picked.erase(picked.begin() + batch, picked.end());
-    }
-
-    CTxDestination dest;
-    std::string error;
-    if (!wallet.GetNewDestination(OutputType::LEGACY, BOB_CONSOLIDATION_LABEL, dest, error)) {
-        why_not = "no fresh address: " + error;
-        return "";
     }
 
     // Build; if the transaction comes out too large (unusual key types), halve the batch.
@@ -112,7 +113,7 @@ std::string BobMaybeConsolidate(CWallet& wallet, std::string& why_not)
             cc.Select(COutPoint(out.tx->GetHash(), out.i));
             total += out.tx->tx->vout[out.i].nValue;
         }
-        std::vector<CRecipient> recipients{{GetScriptForDestination(dest), total, /* fSubtractFeeFromAmount */ true}};
+        std::vector<CRecipient> recipients{{dest_script, total, /* fSubtractFeeFromAmount */ true}};
         CTransactionRef tx;
         CAmount fee = 0;
         int change_pos = -1;
