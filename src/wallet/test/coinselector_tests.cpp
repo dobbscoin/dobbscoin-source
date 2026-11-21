@@ -587,6 +587,34 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
     empty_wallet();
 }
 
+BOOST_AUTO_TEST_CASE(bob_knapsack_input_cap)
+{
+    // (BOB) #55: a mining wallet of 1,000 small payouts plus one 1,200 coin. A 1,000 send used to
+    // take hundreds of small coins; now it takes the one larger coin. A small send still sweeps
+    // a few small coins (at most BOB_KNAPSACK_MAX_INPUTS).
+    for (int run = 0; run < 10; run++) {
+        std::vector<CInputCoin> coins;
+        for (int i = 0; i < 1000; i++) add_coin(4 * COIN + i * 1000, i, coins);
+        add_coin(1200 * COIN, 5000, coins);
+        std::set<CInputCoin> sel;
+        CAmount value = 0;
+
+        BOOST_CHECK(KnapsackSolver(1000 * COIN, GroupCoins(coins), sel, value));
+        BOOST_CHECK_EQUAL(sel.size(), 1U);
+        BOOST_CHECK_EQUAL(value, 1200 * COIN);
+
+        BOOST_CHECK(KnapsackSolver(30 * COIN, GroupCoins(coins), sel, value));
+        BOOST_CHECK(sel.size() > 1 && sel.size() <= BOB_KNAPSACK_MAX_INPUTS);
+        BOOST_CHECK(value >= 30 * COIN && value < 1200 * COIN);
+
+        // no larger coin: the knapsack still answers with small coins, however many it takes
+        coins.pop_back();
+        BOOST_CHECK(KnapsackSolver(1000 * COIN, GroupCoins(coins), sel, value));
+        BOOST_CHECK(sel.size() > BOB_KNAPSACK_MAX_INPUTS);
+        BOOST_CHECK(value >= 1000 * COIN);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
 {
     CoinSet setCoinsRet;

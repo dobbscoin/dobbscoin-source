@@ -15,6 +15,11 @@ class CFeeRate;
 static constexpr CAmount MIN_CHANGE{COIN / 100};
 //! final minimum change amount after paying for fees
 static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
+//! (BOB) #55: when the knapsack's best subset of smaller coins would spend more than this many
+//! inputs and one larger coin covers the amount, spend the larger coin. Mining wallets hold
+//! thousands of small payouts; the plain knapsack built 1,000+ input (over 100 kB, unrelayable)
+//! sends from them while a single coin could pay. Smaller subsets still sweep some dust.
+static constexpr size_t BOB_KNAPSACK_MAX_INPUTS{20};
 
 class CInputCoin {
 public:

@@ -266,10 +266,17 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& group
         ApproximateBestSubset(applicable_groups, nTotalLower, nTargetValue + MIN_CHANGE, vfBest, nBest);
     }
 
+    size_t best_inputs = 0;
+    for (unsigned int i = 0; i < applicable_groups.size(); i++) {
+        if (vfBest[i]) best_inputs += applicable_groups[i].m_outputs.size();
+    }
+
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
-    //                                   or the next bigger coin is closer), return the bigger coin
+    //                                   or the next bigger coin is closer,
+    //                                   or (BOB #55) the subset spends too many inputs), return the bigger coin
     if (lowest_larger &&
-        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || lowest_larger->m_value <= nBest)) {
+        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || lowest_larger->m_value <= nBest ||
+         best_inputs > BOB_KNAPSACK_MAX_INPUTS)) {
         util::insert(setCoinsRet, lowest_larger->m_outputs);
         nValueRet += lowest_larger->m_value;
     } else {
