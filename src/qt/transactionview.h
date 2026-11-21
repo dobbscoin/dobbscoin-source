@@ -54,7 +54,7 @@ public:
         STATUS_COLUMN_WIDTH = 30,
         WATCHONLY_COLUMN_WIDTH = 23,
         DATE_COLUMN_WIDTH = 120,
-        TYPE_COLUMN_WIDTH = 113,
+        TYPE_COLUMN_WIDTH = 190, // (BOB) fits "Auto coin merge (to yourself)"
         AMOUNT_MINIMUM_COLUMN_WIDTH = 120,
         MINIMUM_COLUMN_WIDTH = 23
     };
