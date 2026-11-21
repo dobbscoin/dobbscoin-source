@@ -114,6 +114,10 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("bSpendZeroConfChange", true);
     if (!gArgs.SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
         addOverriddenOption("-spendzeroconfchange");
+    if (!settings.contains("bConsolidate"))
+        settings.setValue("bConsolidate", true);
+    if (!gArgs.SoftSetBoolArg("-consolidate", settings.value("bConsolidate").toBool()))
+        addOverriddenOption("-consolidate");
 #endif
 
     // Network
@@ -312,6 +316,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
+        case Consolidate:
+            return settings.value("bConsolidate");
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -428,6 +434,11 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 settings.setValue("bSpendZeroConfChange", value);
                 setRestartRequired(true);
             }
+            break;
+        case Consolidate:
+            // takes effect at once: the background pass reads -consolidate every minute
+            settings.setValue("bConsolidate", value);
+            gArgs.ForceSetArg("-consolidate", value.toBool() ? "1" : "0");
             break;
 #endif
         case DisplayUnit:

@@ -251,6 +251,7 @@ BITCOIN_CORE_H = \
   versionbitsinfo.h \
   wallet/bdb.h \
   wallet/coincontrol.h \
+  wallet/bobconsolidate.h \
   wallet/coinselection.h \
   wallet/context.h \
   wallet/crypter.h \
@@ -383,6 +384,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
+  wallet/bobconsolidate.cpp \
   wallet/coinselection.cpp \
   $(BITCOIN_CORE_H)
 

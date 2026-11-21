@@ -65,6 +65,7 @@ public:
         PruneSize,              // int
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
+        Consolidate,            // bool ((BOB) #55: merge small coins)
         Listen,                 // bool
         OptionIDRowCount,
     };

@@ -226,6 +226,16 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="consolidate">
+            <property name="toolTip">
+             <string>Mining payouts pile up as hundreds of small coins, which make sends large and slow. When more than 500 coins under 10 BOB sit on one address, the wallet merges them, up to 400 at a time, into one coin on a new address of this wallet, labelled "Consolidation". It costs a small fee, the coins never leave the wallet, and a locked wallet waits until it is unlocked.</string>
+            </property>
+            <property name="text">
+             <string>&amp;Merge small coins automatically (mining payouts)</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

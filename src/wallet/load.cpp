@@ -11,6 +11,7 @@
 #include <util/string.h>
 #include <util/system.h>
 #include <util/translation.h>
+#include <wallet/bobconsolidate.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 
@@ -131,6 +132,8 @@ void StartWallets(CScheduler& scheduler, const ArgsManager& args)
         scheduler.scheduleEvery(MaybeCompactWalletDB, std::chrono::milliseconds{500});
     }
     scheduler.scheduleEvery(MaybeResendWalletTxs, std::chrono::milliseconds{1000});
+    // (BOB) #55 part B: merge piles of small coins (mining payouts) in the background
+    scheduler.scheduleEvery(BobMaybeConsolidateWallets, std::chrono::seconds{60});
 }
 
 void FlushWallets()
