@@ -33,11 +33,17 @@ void BobAddConsolidateOptions(ArgsManager& argsman)
     argsman.AddArg("-consolidatebatch=<n>", strprintf("Coins merged per transaction, at most %d (default: %d)", MAX_BOB_CONSOLIDATE_BATCH, DEFAULT_BOB_CONSOLIDATE_BATCH), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET);
 }
 
+// Wait until the wallet has caught up with the chain: merging while it is still adding
+// blocks from a long time offline could pick coins already spent elsewhere.
+static constexpr int64_t MAX_TIP_AGE_FOR_MERGE{60 * 60};
+
 static bool PendingConsolidation(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
+    // Only a merge that is still in the mempool counts as pending. One that the network
+    // refused or that lost to a conflicting spend must not stop merging for good.
     for (const auto& entry : wallet.mapWallet) {
         const CWalletTx& wtx = entry.second;
-        if (wtx.mapValue.count(BOB_CONSOLIDATION_KEY) && !wtx.isAbandoned() && wtx.GetDepthInMainChain() == 0) return true;
+        if (wtx.mapValue.count(BOB_CONSOLIDATION_KEY) && !wtx.isAbandoned() && wtx.GetDepthInMainChain() == 0 && wtx.InMempool()) return true;
     }
     return false;
 }
@@ -63,6 +69,12 @@ std::string BobMaybeConsolidate(CWallet& wallet, std::string& why_not)
     CScript dest_script;
     {
         LOCK(wallet.cs_wallet);
+        int64_t tip_time = 0;
+        if (!wallet.chain().findBlock(wallet.GetLastBlockHash(), interfaces::FoundBlock().time(tip_time)) ||
+            tip_time < wallet.chain().getAdjustedTime() - MAX_TIP_AGE_FOR_MERGE) {
+            why_not = "catching up with the chain";
+            return "";
+        }
         if (PendingConsolidation(wallet)) { why_not = "waiting for the last batch to confirm"; return ""; }
 
         CCoinControl cc;
@@ -122,7 +134,7 @@ std::string BobMaybeConsolidate(CWallet& wallet, std::string& why_not)
         if (wallet.CreateTransaction(recipients, tx, fee, change_pos, create_error, cc, fee_calc)) {
             mapValue_t value;
             value[BOB_CONSOLIDATION_KEY] = "1";
-            value["comment"] = strprintf("Consolidation of %u small coins", picked.size());
+            value["comment"] = strprintf("Automatic maintenance: merged %u small coins into one. Nothing left your wallet.", picked.size());
             wallet.CommitTransaction(tx, std::move(value), {});
             wallet.WalletLogPrintf("Consolidation: merged %u small coins (%s) into one, fee %s, tx %s\n",
                                    picked.size(), FormatMoney(total), FormatMoney(fee), tx->GetHash().GetHex());

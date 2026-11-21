@@ -80,7 +80,8 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
+        Consolidation   // (BOB) #55: the wallet merged small coins back onto the same address
     };
 
     /** Number of confirmation recommended for accepting a transaction */

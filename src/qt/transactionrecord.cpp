@@ -99,7 +99,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
             }
 
             CAmount nChange = wtx.change;
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, address, -(nDebit - nChange), nCredit - nChange));
+            const bool merged = wtx.value_map.count("bobconsolidation") > 0;
+            parts.append(TransactionRecord(hash, nTime, merged ? TransactionRecord::Consolidation : TransactionRecord::SendToSelf, address, -(nDebit - nChange), nCredit - nChange));
             parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
         }
         else if (fAllFromMe)

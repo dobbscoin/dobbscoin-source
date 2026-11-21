@@ -7,7 +7,8 @@
 node1 receives many small payouts on one address (like pool payouts), plus a few on
 other addresses. With small thresholds (-consolidatemin=20 -consolidatebatch=15
 -consolidatebelow=2) the background pass (driven here with mockscheduler) must:
-  - do nothing while it is turned off, or at or under the threshold;
+  - do nothing while it is turned off, at or under the threshold, or while the wallet
+    is still catching up with the chain;
   - merge the 15 smallest coins of the busiest address into one coin on that same
     address, paying only a fee, and never touch the other addresses;
   - send no second batch until the first one confirms, then send the next one;
@@ -39,7 +40,7 @@ class ConsolidateBobTest(BitcoinTestFramework):
         n1 = self.nodes[1]
         seen, out = set(), []   # a send-to-self lists twice (send and receive)
         for t in n1.listtransactions("*", 1000):
-            if t.get("comment", "").startswith("Consolidation of") and t["txid"] not in seen:
+            if t.get("comment", "").startswith("Automatic maintenance: merged") and t["txid"] not in seen:
                 seen.add(t["txid"])
                 out.append(t)
         return out
@@ -71,6 +72,12 @@ class ConsolidateBobTest(BitcoinTestFramework):
         self.log.info("turned on: the 15 smallest coins of the payout address merge into one")
         self.restart_node(1, ARGS)
         self.connect_nodes(0, 1)
+        self.log.info("  but not while the wallet is behind the chain (tip over an hour old)")
+        import time
+        n1.setmocktime(int(time.time()) + 2 * 3600)
+        self.tick()
+        assert_equal(self.consolidations(), [])
+        n1.setmocktime(0)
         self.tick()
         self.wait_until(lambda: len(self.consolidations()) == 1)
         c = self.consolidations()[0]
