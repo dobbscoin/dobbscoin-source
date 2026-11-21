@@ -92,13 +92,15 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
         // Last 2 columns are set by the columnResizingFixer, when the table geometry is ready.
         columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, AMOUNT_MINIMUM_COLUMN_WIDTH, DATE_COLUMN_WIDTH, this);
 
-        if (model->wallet().getDefaultAddressType() == OutputType::BECH32) {
-            ui->useBech32->setCheckState(Qt::Checked);
-        } else {
-            ui->useBech32->setCheckState(Qt::Unchecked);
-            // Dogecoin: Don't allow the user to generate BECH32 addresses as we don't support them except for test networks.
-            // If you need to test, override the default on the command line.
-            ui->useBech32->setEnabled(false);
+        ui->useBech32->setCheckState(model->wallet().getDefaultAddressType() == OutputType::BECH32 ? Qt::Checked : Qt::Unchecked);
+        // (BOB) A SegWit output is spendable by anyone until SegWit activates, so the wallet refuses
+        // bech32 addresses before the activation height. Offer the box once it is active, and
+        // re-check while the wallet is open so it turns on by itself when the chain gets there.
+        updateBech32Availability();
+        if (!ui->useBech32->isEnabled()) {
+            m_bech32_timer = new QTimer(this);
+            connect(m_bech32_timer, &QTimer::timeout, this, &ReceiveCoinsDialog::updateBech32Availability);
+            m_bech32_timer->start(10000);
         }
 
         // Set the button to be enabled or disabled based on whether the wallet can give out new addresses.
@@ -114,6 +116,14 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
 ReceiveCoinsDialog::~ReceiveCoinsDialog()
 {
     delete ui;
+}
+
+void ReceiveCoinsDialog::updateBech32Availability()
+{
+    if (!model) return;
+    const bool available = model->wallet().getDefaultAddressType() == OutputType::BECH32 || model->wallet().bobSegwitActive();
+    ui->useBech32->setEnabled(available);
+    if (available && m_bech32_timer) m_bech32_timer->stop();
 }
 
 void ReceiveCoinsDialog::clear()

@@ -13,6 +13,7 @@
 #include <QKeyEvent>
 #include <QMenu>
 #include <QPoint>
+#include <QTimer>
 #include <QVariant>
 
 class PlatformStyle;
@@ -50,6 +51,7 @@ public Q_SLOTS:
     void accept() override;
 
 private:
+    QTimer* m_bech32_timer{nullptr};
     Ui::ReceiveCoinsDialog *ui;
     GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
     WalletModel *model;
@@ -61,6 +63,7 @@ private:
     virtual void resizeEvent(QResizeEvent *event) override;
 
 private Q_SLOTS:
+    void updateBech32Availability();
     void on_receiveButton_clicked();
     void on_showRequestButton_clicked();
     void on_removeRequestButton_clicked();
