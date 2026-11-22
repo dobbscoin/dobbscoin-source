@@ -45,7 +45,7 @@ QString BitcoinUnits::longName(int unit)
     case BTC: return QString("BOB");
     case mBTC: return QString("mBOB");
     case uBTC: return QString::fromUtf8("μBOB");
-    case SAT: return QString("Koinu");
+    case SAT: return QString("dobbalina");
     default: return QString("???");
     }
 }
@@ -62,7 +62,7 @@ QString BitcoinUnits::description(int unit)
     case BTC: return QString("Dobbscoins");
     case mBTC: return QString("Milli-Dobbscoins (1 / 1" THIN_SP_UTF8 "000)");
     case uBTC: return QString("Micro-Dobbscoins (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-    case SAT: return QString("Koinu (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case SAT: return QString("Dobbalinas (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
 }
