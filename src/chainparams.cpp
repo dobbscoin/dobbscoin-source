@@ -97,8 +97,10 @@ public:
         consensus.BIP34Hash = uint256S("0xe613b5a195556386f422875d8df68e3e154f37b4981dec641fe041211672870f"); // (BOB) block 1
         consensus.BIP65Height = 2000000; // (BOB) CLTV @ HARDFORK_CLTV_MAIN (not yet active)
         consensus.BIP66Height = 68425; // (BOB) v3/DERSIG from the 68425 fork (last v2 block = 68424)
-        consensus.CSVHeight = std::numeric_limits<int>::max(); // Disabled on Dogecoin
-        consensus.SegwitHeight = std::numeric_limits<int>::max(); // Disabled on Dogecoin
+        // (BOB) SegWit (BIP141/143/147) and CSV (BIP68/112/113) activate by height at the
+        // 2,000,000 fork, together with AuxPoW and CLTV. 0.14 nodes keep following the chain.
+        consensus.CSVHeight = 2000000;
+        consensus.SegwitHeight = 2000000;
         consensus.MinBIP9WarningHeight = std::numeric_limits<int>::max(); // Dogecoin does not use BIP9
         consensus.powLimit = uint256S("0x00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20;
         consensus.nPowTargetTimespan = 4 * 60 * 60; // pre-digishield: 4 hours
