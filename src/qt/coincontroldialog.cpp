@@ -656,6 +656,20 @@ void CoinControlDialog::updateView()
                 itemOutput->setText(COLUMN_LABEL, sLabel);
             }
 
+            // (BOB) a block this wallet mined: pickaxe, block number, and what it is on hover
+            if (out.is_coinbase) {
+                const QString mined = out.block_height >= 0 ? tr("Mined block %1").arg(out.block_height) : tr("Mined block");
+                const QString existing = itemOutput->text(COLUMN_LABEL);
+                itemOutput->setText(COLUMN_LABEL, existing.isEmpty() ? mined : existing + " · " + mined);
+                itemOutput->setIcon(COLUMN_LABEL, GUIUtil::ThemedIcon(":/icons/tx_mined"));
+                const QString tip = out.block_height >= 0
+                    ? tr("Block %1, mined by this wallet on %2. Never spent.").arg(out.block_height).arg(GUIUtil::dateTimeStr(out.time))
+                    : tr("A block mined by this wallet on %1. Never spent.").arg(GUIUtil::dateTimeStr(out.time));
+                for (int column : {COLUMN_CHECKBOX, COLUMN_AMOUNT, COLUMN_LABEL, COLUMN_ADDRESS, COLUMN_DATE, COLUMN_CONFIRMATIONS}) {
+                    itemOutput->setToolTip(column, tip);
+                }
+            }
+
             // amount
             itemOutput->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.txout.nValue));
             itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.txout.nValue)); // padding so that sorting works correctly

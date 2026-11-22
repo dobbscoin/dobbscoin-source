@@ -92,6 +92,8 @@ WalletTxOut MakeWalletTxOut(CWallet& wallet,
     result.time = wtx.GetTxTime();
     result.depth_in_main_chain = depth;
     result.is_spent = wallet.IsSpent(wtx.GetHash(), n);
+    result.is_coinbase = wtx.IsCoinBase();
+    result.block_height = depth > 0 ? wtx.m_confirm.block_height : -1;
     return result;
 }
 

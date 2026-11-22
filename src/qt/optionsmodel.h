@@ -66,6 +66,7 @@ public:
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
         Consolidate,            // bool ((BOB) #55: merge small coins)
+        KeepMinedBlocks,        // bool ((BOB): never merge mined blocks, spend them last)
         Listen,                 // bool
         OptionIDRowCount,
     };

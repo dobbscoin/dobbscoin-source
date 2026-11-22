@@ -30,6 +30,7 @@
 #include <util/rbf.h>
 #include <util/string.h>
 #include <util/translation.h>
+#include <wallet/bobconsolidate.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 
@@ -2478,14 +2479,44 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     }
     std::vector<OutputGroup> groups = GroupOutputs(vCoins, !coin_control.m_avoid_partial_spends, max_ancestors);
 
-    bool res = value_to_select <= 0 ||
-        SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(1, 6, 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
-        SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(1, 1, 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, 2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, max_ancestors/2, max_descendants/2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && !fRejectLongChains && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used));
+    // The ladder of eligibility filters, most conservative first, over one pool of coins.
+    const auto select_from = [&](const std::vector<OutputGroup>& pool) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
+        return
+        SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(1, 6, 0), pool, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
+        SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(1, 1, 0), pool, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, 2), pool, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)), pool, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, max_ancestors/2, max_descendants/2), pool, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1), pool, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && !fRejectLongChains && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), pool, setCoinsRet, nValueRet, coin_selection_params, bnb_used));
+    };
+
+    bool res = value_to_select <= 0;
+    if (!res) {
+        // (BOB) keep mined blocks intact: first try to pay without any coinbase coin, and only
+        // when the other coins cannot cover the payment let the mined blocks in. Coins the
+        // user picked by hand (the preset inputs above) are used whatever they are.
+        bool hold_back = false; // set when the mined blocks must stay out of this pass
+        if (BobKeepMinedBlocks()) {
+            std::vector<COutput> plain;
+            CAmount plain_total = 0;
+            for (const COutput& out : vCoins) {
+                if (out.tx->IsCoinBase()) continue;
+                plain.push_back(out);
+                plain_total += out.tx->tx->vout[out.i].nValue;
+            }
+            if (plain.size() == vCoins.size()) {
+                // no mined blocks among the candidates: one ordinary pass
+            } else if (plain_total >= value_to_select) {
+                res = select_from(GroupOutputs(plain, !coin_control.m_avoid_partial_spends, max_ancestors));
+                // The exact-match pass (BnB) fails far more often than it succeeds. While the
+                // plain coins could still cover the payment, do not let that pass reach for a
+                // mined block: report the miss, and the caller comes back with the knapsack.
+                if (!res && coin_selection_params.use_bnb) hold_back = true;
+            }
+        }
+        if (!res && !hold_back) res = select_from(groups);
+    }
 
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     util::insert(setCoinsRet, setPresetCoins);

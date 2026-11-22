@@ -21,6 +21,10 @@
 #include <qt/walletmodel.h>
 
 #include <interfaces/node.h>
+#include <interfaces/wallet.h>
+#include <uint256.h>
+
+#include <algorithm>
 #include <node/ui_interface.h>
 #include <psbt.h>
 #include <util/strencodings.h>
@@ -159,7 +163,20 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     QString address = ttm->data(index, TransactionTableModel::AddressRole).toString();
     QString label = GUIUtil::HtmlEscape(ttm->data(index, TransactionTableModel::LabelRole).toString());
 
-    Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label, GUIUtil::HtmlEscape(walletModel->getWalletName()));
+    // (BOB) a block this wallet just mined gets its own notice: -1 for anything else, 0 when
+    // the block number is not known
+    int mined_block_height = -1;
+    {
+        const uint256 txid = uint256S(ttm->data(index, TransactionTableModel::TxHashRole).toString().toStdString());
+        interfaces::WalletTxStatus tx_status;
+        interfaces::WalletOrderForm order_form;
+        bool in_mempool = false;
+        int num_blocks = 0;
+        const interfaces::WalletTx wtx = walletModel->wallet().getWalletTxDetails(txid, tx_status, order_form, in_mempool, num_blocks);
+        if (wtx.tx && tx_status.is_coinbase) mined_block_height = std::max(0, tx_status.block_height);
+    }
+
+    Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label, GUIUtil::HtmlEscape(walletModel->getWalletName()), mined_block_height);
 }
 
 void WalletView::gotoOverviewPage()

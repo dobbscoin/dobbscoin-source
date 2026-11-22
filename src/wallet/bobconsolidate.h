@@ -27,10 +27,20 @@ static constexpr int DEFAULT_BOB_CONSOLIDATE_BATCH{400};
 static constexpr int MAX_BOB_CONSOLIDATE_BATCH{500};
 static constexpr CAmount DEFAULT_BOB_CONSOLIDATE_BELOW{10 * COIN};
 static constexpr bool DEFAULT_BOB_CONSOLIDATE_ALL{false};
+//! Coins confirmed before this time (2026-01-28 00:00 UTC) are never merged: moving a coin
+//! resets its age, and the (BOB) buyback pays by age. Same boundary as the buyback checker.
+static constexpr int64_t DEFAULT_BOB_CONSOLIDATE_KEEP_BEFORE{1769558400};
+//! A coinbase output paid to this wallet is a block its owner mined: a coin nobody else has
+//! ever held. Spending or merging it ends that for good, so by default merging skips mined
+//! blocks and ordinary sends use them only when the other coins cannot cover the payment.
+static constexpr bool DEFAULT_BOB_KEEP_MINED_BLOCKS{true};
 //! mapValue key marking a consolidation transaction
 extern const std::string BOB_CONSOLIDATION_KEY;
 
 void BobAddConsolidateOptions(ArgsManager& argsman);
+
+/** Whether mined blocks are kept intact (-keepminedblocks). */
+bool BobKeepMinedBlocks();
 
 /** One consolidation pass over one wallet. Returns the txid of the consolidation it
  *  sent, or "" and sets why_not to the reason nothing was done. */

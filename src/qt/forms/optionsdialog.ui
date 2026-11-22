@@ -236,6 +236,32 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QLabel" name="consolidateSkipsLabel">
+            <property name="toolTip">
+             <string>Moving a coin resets its age, and the (BOB) buyback pays more for older coins. Merging therefore never touches coins that confirmed before January 28, 2026.</string>
+            </property>
+            <property name="text">
+             <string>Merging leaves alone coins from before Jan 28, 2026, and mined blocks while the box below is ticked.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="indent">
+             <number>22</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="keepMinedBlocks">
+            <property name="toolTip">
+             <string>A block you mined yourself is a coin nobody else has ever owned. Once it is spent or merged, that is gone for good. With this on, the wallet never merges your mined blocks and spends them only when your other coins can't cover a payment. Pool payouts are not affected.</string>
+            </property>
+            <property name="text">
+             <string>&amp;Keep solo-mined blocks intact (never merge, spend last)</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

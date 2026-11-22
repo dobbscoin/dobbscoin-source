@@ -30,7 +30,14 @@ void BobAddConsolidateOptions(ArgsManager& argsman)
     argsman.AddArg("-consolidateall", strprintf("Let automatic merging combine coins from different addresses, which shows publicly that they belong together. Otherwise only coins on the same address are merged (default: %u)", DEFAULT_BOB_CONSOLIDATE_ALL), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-consolidatemin=<n>", strprintf("Merge once more than this many small coins have collected (default: %d)", DEFAULT_BOB_CONSOLIDATE_MIN), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-consolidatebelow=<amt>", strprintf("Coins below this amount count as small (default: %s)", FormatMoney(DEFAULT_BOB_CONSOLIDATE_BELOW)), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
+    argsman.AddArg("-keepminedblocks", strprintf("Keep blocks mined by this wallet intact: never merge them, and spend them only when the other coins cannot cover a payment (default: %u)", DEFAULT_BOB_KEEP_MINED_BLOCKS), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
+    argsman.AddArg("-consolidatekeepbefore=<unix time>", strprintf("Never merge coins confirmed before this time, 0 for no limit (default: %d)", DEFAULT_BOB_CONSOLIDATE_KEEP_BEFORE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET);
     argsman.AddArg("-consolidatebatch=<n>", strprintf("Coins merged per transaction, at most %d (default: %d)", MAX_BOB_CONSOLIDATE_BATCH, DEFAULT_BOB_CONSOLIDATE_BATCH), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET);
+}
+
+bool BobKeepMinedBlocks()
+{
+    return gArgs.GetBoolArg("-keepminedblocks", DEFAULT_BOB_KEEP_MINED_BLOCKS);
 }
 
 // Wait until the wallet has caught up with the chain: merging while it is still adding
@@ -64,6 +71,8 @@ std::string BobMaybeConsolidate(CWallet& wallet, std::string& why_not)
         return "";
     }
     const bool any_address = gArgs.GetBoolArg("-consolidateall", DEFAULT_BOB_CONSOLIDATE_ALL);
+    const bool keep_mined = BobKeepMinedBlocks();
+    const int64_t keep_before = gArgs.GetArg("-consolidatekeepbefore", DEFAULT_BOB_CONSOLIDATE_KEEP_BEFORE);
 
     std::vector<COutput> picked;
     CScript dest_script;
@@ -85,8 +94,22 @@ std::string BobMaybeConsolidate(CWallet& wallet, std::string& why_not)
         wallet.AvailableCoins(coins, /* fOnlySafe */ true, &cc, /* nMinimumAmount */ 1, /* nMaximumAmount */ below - 1);
 
         std::map<CScript, std::vector<COutput>> by_script;
+        std::map<uint256, int64_t> block_times; // many coins share a block
         for (const COutput& out : coins) {
             if (!out.fSpendable || !out.fSolvable) continue;
+            if (keep_mined && out.tx->IsCoinBase()) continue; // a mined block stays whole
+            if (keep_before > 0) {
+                // Old coins keep their age. The age is the time of the block the coin
+                // confirmed in; a coin whose block cannot be found is left alone too.
+                const uint256& block_hash = out.tx->m_confirm.hashBlock;
+                auto it = block_times.find(block_hash);
+                if (it == block_times.end()) {
+                    int64_t block_time = 0;
+                    if (!wallet.chain().findBlock(block_hash, interfaces::FoundBlock().time(block_time))) block_time = 0;
+                    it = block_times.emplace(block_hash, block_time).first;
+                }
+                if (it->second < keep_before) continue;
+            }
             const CTxOut& txout = out.tx->tx->vout[out.i];
             if (txout.nValue < skip_below) continue; // costs more to spend than it is worth
             by_script[any_address ? CScript() : txout.scriptPubKey].push_back(out);

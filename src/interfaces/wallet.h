@@ -409,6 +409,8 @@ struct WalletTxOut
     int64_t time;
     int depth_in_main_chain = -1;
     bool is_spent = false;
+    bool is_coinbase = false; //!< a block mined by this wallet
+    int block_height = -1;    //!< height of the block it confirmed in, -1 if unconfirmed
 };
 
 //! Return implementation of Wallet interface. This function is defined in

@@ -1229,11 +1229,20 @@ void BitcoinGUI::showEvent(QShowEvent *event)
 }
 
 #ifdef ENABLE_WALLET
-void BitcoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName)
+void BitcoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName, int minedBlockHeight)
 {
     // On new transaction, make an info balloon
-    QString msg = tr("Date: %1\n").arg(date) +
-                  tr("Amount: %1\n").arg(BitcoinUnits::formatWithUnit(unit, amount, true));
+    QString msg;
+    if (minedBlockHeight >= 0) {
+        // (BOB) the moment a solo miner is looking: say what the block is and what happens to it
+        msg += minedBlockHeight > 0 ? tr("You mined block %1.").arg(minedBlockHeight) : tr("You mined a block.");
+        if (gArgs.GetBoolArg("-keepminedblocks", true)) {
+            msg += " " + tr("This block is yours alone and the wallet will keep it intact.");
+        }
+        msg += "\n";
+    }
+    msg += tr("Date: %1\n").arg(date) +
+           tr("Amount: %1\n").arg(BitcoinUnits::formatWithUnit(unit, amount, true));
     if (m_node.walletClient().getWallets().size() > 1 && !walletName.isEmpty()) {
         msg += tr("Wallet: %1\n").arg(walletName);
     }
@@ -1242,7 +1251,7 @@ void BitcoinGUI::incomingTransaction(const QString& date, int unit, const CAmoun
         msg += tr("Label: %1\n").arg(label);
     else if (!address.isEmpty())
         msg += tr("Address: %1\n").arg(address);
-    message((amount)<0 ? tr("Sent transaction") : tr("Incoming transaction"),
+    message(minedBlockHeight >= 0 ? tr("You mined a block") : (amount)<0 ? tr("Sent transaction") : tr("Incoming transaction"),
              msg, CClientUIInterface::MSG_INFORMATION);
 }
 #endif // ENABLE_WALLET

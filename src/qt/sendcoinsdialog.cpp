@@ -24,6 +24,7 @@
 #include <node/ui_interface.h>
 #include <policy/fees.h>
 #include <txmempool.h>
+#include <util/system.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
@@ -341,6 +342,25 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
             question_string.append(tr("Not signalling Replace-By-Fee, BIP-125."));
         }
         question_string.append("</span>");
+    }
+
+    // (BOB) say so when this payment spends blocks the wallet mined: the one moment they can be lost
+    if (gArgs.GetBoolArg("-keepminedblocks", true)) {
+        int mined_blocks = 0;
+        for (const CTxIn& txin : m_current_transaction->getWtx()->vin) {
+            const CTransactionRef prev = model->wallet().getTx(txin.prevout.hash);
+            if (prev && prev->IsCoinBase()) ++mined_blocks;
+        }
+        if (mined_blocks > 0) {
+            const QString how_many = mined_blocks == 1 ? tr("This payment will use one of your mined blocks")
+                                                       : tr("This payment will use %1 of your mined blocks").arg(mined_blocks);
+            // picked by hand in Coin Control, or taken because nothing else was enough
+            const QString why = m_coin_control->HasSelected() ? QString(".") : tr(", because your other coins don't cover it.");
+            question_string.append("<hr /><span style='color:#aa0000;'>");
+            question_string.append(how_many + why + " ");
+            question_string.append(mined_blocks == 1 ? tr("Once spent, it can't be restored.") : tr("Once spent, they can't be restored."));
+            question_string.append("</span>");
+        }
     }
 
     // add total amount in all subdivision units

@@ -118,6 +118,10 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("bConsolidate", true);
     if (!gArgs.SoftSetBoolArg("-consolidate", settings.value("bConsolidate").toBool()))
         addOverriddenOption("-consolidate");
+    if (!settings.contains("bKeepMinedBlocks"))
+        settings.setValue("bKeepMinedBlocks", true);
+    if (!gArgs.SoftSetBoolArg("-keepminedblocks", settings.value("bKeepMinedBlocks").toBool()))
+        addOverriddenOption("-keepminedblocks");
 #endif
 
     // Network
@@ -318,6 +322,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("bSpendZeroConfChange");
         case Consolidate:
             return settings.value("bConsolidate");
+        case KeepMinedBlocks:
+            return settings.value("bKeepMinedBlocks");
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -439,6 +445,11 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             // takes effect at once: the background pass reads -consolidate every minute
             settings.setValue("bConsolidate", value);
             gArgs.ForceSetArg("-consolidate", value.toBool() ? "1" : "0");
+            break;
+        case KeepMinedBlocks:
+            // takes effect at once: merging and coin selection read -keepminedblocks each time
+            settings.setValue("bKeepMinedBlocks", value);
+            gArgs.ForceSetArg("-keepminedblocks", value.toBool() ? "1" : "0");
             break;
 #endif
         case DisplayUnit:
