@@ -466,9 +466,12 @@ def rejects(c, nodes, b, want, label, witness=None):
         res = submit(n, b, witness)
         named = res is not None and want in str(res)
         how = "reason named"
-        if not named and i > 0 and res is not None and str(res).startswith(("duplicate", "inconclusive")):
-            named = is_invalid_on(n, b.hash)
-            how = "already had it from %s; marked invalid=%s" % (nodes[0].name, named)
+        # an EndTimes node may already have fetched the block over P2P from a 0.14.1 peer and refused it
+        if not named and res is not None and (str(res).startswith("duplicate-invalid") or
+                                              (i > 0 and str(res).startswith(("duplicate", "inconclusive")))):
+            # "duplicate-invalid" is itself the node saying it holds the block marked invalid
+            named = str(res).startswith("duplicate-invalid") or is_invalid_on(n, b.hash)
+            how = "already had it; marked invalid=%s" % named
         c.ok(named and n.tip() == tip0, "%s rejects %s" % (n.name, label), "submitblock=%s, %s" % (res, how))
 
 

@@ -231,6 +231,16 @@ namespace {
     Mutex g_cs_recent_confirmed_transactions;
     std::unique_ptr<CRollingBloomFilter> g_recent_confirmed_transactions GUARDED_BY(g_cs_recent_confirmed_transactions);
 
+    /**
+     * (BOB) Blocks that a peer without NODE_WITNESS handed us stripped of the
+     * witness data they need (their coinbase carries a witness commitment).
+     * Those are only requested from witness peers. Every other block active
+     * after SegWit, i.e. one mined by an un-upgraded miner, is complete without
+     * witness data and may be downloaded from any peer.
+     */
+    std::set<uint256> g_blocks_needing_witness_peer GUARDED_BY(cs_main);
+    static const size_t MAX_BLOCKS_NEEDING_WITNESS_PEER = 5000;
+
     /** Blocks that are in flight, and that are in the queue to be downloaded. */
     struct QueuedBlock {
         uint256 hash;
@@ -749,8 +759,10 @@ static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vec
                 // We consider the chain that this peer is on invalid.
                 return;
             }
-            if (!State(nodeid)->fHaveWitness && IsWitnessEnabled(pindex->pprev, consensusParams)) {
-                // We wouldn't download this block or its descendants from this peer.
+            if (!State(nodeid)->fHaveWitness && IsWitnessEnabled(pindex->pprev, consensusParams) &&
+                    g_blocks_needing_witness_peer.count(pindex->GetBlockHash())) {
+                // This block needs witness data this peer cannot supply, so we
+                // wouldn't download it or its descendants from this peer.
                 return;
             }
             if (pindex->nStatus & BLOCK_HAVE_DATA || ::ChainActive().Contains(pindex)) {
@@ -1715,6 +1727,14 @@ void static ProcessGetData(CNode& pfrom, Peer& peer, const CChainParams& chainpa
         }
 
         CTransactionRef tx = FindTxForGetData(mempool, pfrom, ToGenTxid(inv), mempool_req, now);
+        // (BOB) Never hand a transaction that carries witness data to a peer
+        // without NODE_WITNESS. It would go out stripped of its witness, and an
+        // un-upgraded 0.14 miner would mine that stripped form into a block
+        // every upgraded node must reject.
+        if (tx && inv.IsMsgTx() && tx->HasWitness()) {
+            LOCK(cs_main);
+            if (!State(pfrom.GetId())->fHaveWitness) tx = nullptr;
+        }
         if (tx) {
             // WTX and WITNESS_TX imply we serialize with witness
             int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
@@ -1906,7 +1926,8 @@ void PeerManager::ProcessHeadersMessage(CNode& pfrom, const std::vector<CBlockHe
             while (pindexWalk && !::ChainActive().Contains(pindexWalk) && vToFetch.size() <= MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
                 if (!(pindexWalk->nStatus & BLOCK_HAVE_DATA) &&
                         !mapBlocksInFlight.count(pindexWalk->GetBlockHash()) &&
-                        (!IsWitnessEnabled(pindexWalk->pprev, m_chainparams.GetConsensus()) || State(pfrom.GetId())->fHaveWitness)) {
+                        (!IsWitnessEnabled(pindexWalk->pprev, m_chainparams.GetConsensus()) || State(pfrom.GetId())->fHaveWitness ||
+                         !g_blocks_needing_witness_peer.count(pindexWalk->GetBlockHash()))) {
                     // We don't have this block, and it's not yet in flight.
                     vToFetch.push_back(pindexWalk);
                 }
@@ -3561,6 +3582,26 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             // Also always process if we requested the block explicitly, as we may
             // need it even though it is not a candidate for a new best tip.
             forceProcessing |= MarkBlockAsReceived(hash);
+            // (BOB) A peer without NODE_WITNESS can only send a block without
+            // its witness data. If the coinbase carries a witness commitment the
+            // block is incomplete in that form: do not validate it (it would
+            // read as mutated and the innocent peer would be punished), remember
+            // that it has to come from a witness peer, and wait for one.
+            if (!State(pfrom.GetId())->fHaveWitness) {
+                const CBlockIndex* pindexPrev = LookupBlockIndex(pblock->hashPrevBlock);
+                if (pindexPrev && IsWitnessEnabled(pindexPrev, m_chainparams.GetConsensus()) &&
+                        GetWitnessCommitmentIndex(*pblock) != NO_WITNESS_COMMITMENT) {
+                    const CBlockIndex* pindexThis = LookupBlockIndex(hash);
+                    if (!pindexThis || !(pindexThis->nStatus & BLOCK_HAVE_DATA)) {
+                        if (g_blocks_needing_witness_peer.size() >= MAX_BLOCKS_NEEDING_WITNESS_PEER) {
+                            g_blocks_needing_witness_peer.clear();
+                        }
+                        g_blocks_needing_witness_peer.insert(hash);
+                        LogPrint(BCLog::NET, "block %s from peer=%d needs witness data the peer cannot supply; waiting for a witness peer\n", hash.ToString(), pfrom.GetId());
+                    }
+                    return;
+                }
+            }
             // mapBlockSource is only used for punishing peers and setting
             // which peers send us compact blocks, so the race between here and
             // cs_main in ProcessNewBlock is fine.

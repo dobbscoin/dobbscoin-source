@@ -109,14 +109,12 @@ try:
         reject(build_block(t, [], chain_id=BOB_CHAIN_ID, commit="none", auxpow=True), "premature-auxpow", "a merge-mined block one block early")
         reject(build_block(t, [], chain_id=BOB_CHAIN_ID, commit="none"), "premature-chainid", "chain ID 0x00B0 one block early")
     hz_w = mktx([(F, 1, 0xffffffff)], [(KL, v - 50000)])            # P2WPKH output spent with NOTHING
-    # 0.21 turns SCRIPT_VERIFY_WITNESS on for EVERY block once a SegWit height is configured at all
-    # (validation.cpp GetBlockScriptFlags / IsScriptWitnessEnabled); only witness DATA is height-gated.
-    reject(build_block(t, [hz_w], chain_id=cid(H - 1), commit="none"), "Witness program hash mismatch",
-           "a witness-LESS spend of a P2WPKH output, already at H-1 (the script rule is not height-gated; see scenario 4 for 0.14.1's view)")
+    # (BOB) the witness script rule is height-gated like CSV and CLTV: before H a P2WPKH output is
+    # anyone-can-spend for upgraded nodes exactly as it is for 0.14.1, so this goes INTO block H-1.
     hz_68 = lspend(8, seq=50, version=2)                            # BIP68 lock 50, input 14 deep
     hz_cltv = lspend(9, neg_cltv=True)                              # -1 CHECKLOCKTIMEVERIFY
-    x_h1 = build_block(t, [hz_68, hz_cltv], chain_id=cid(H - 1), commit="none")
-    accept(x_h1, "a BIP68 violation and a negative CLTV are both still VALID at H-1 (CSV and CLTV are height-gated)")
+    x_h1 = build_block(t, [hz_w, hz_68, hz_cltv], chain_id=cid(H - 1), commit="none")
+    accept(x_h1, "a witness-LESS P2WPKH spend, a BIP68 violation and a negative CLTV are all still VALID at H-1 (all three rules are height-gated)")
     c.ok(A.height() == H - 1, "tip is H-1")
 
     say("== X, block H: the first block under all the new rules")

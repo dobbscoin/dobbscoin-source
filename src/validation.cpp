@@ -1889,11 +1889,6 @@ static ThresholdConditionCache warningcache[VERSIONBITS_NUM_BITS] GUARDED_BY(cs_
 // mainnet. We no longer need to support disabling the segwit deployment
 // except for testing purposes, due to limitations of the functional test
 // environment. See test/functional/p2p-segwit.py.
-static bool IsScriptWitnessEnabled(const Consensus::Params& params)
-{
-    return params.SegwitHeight != std::numeric_limits<int>::max();
-}
-
 static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     AssertLockHeld(cs_main);
 
@@ -1911,9 +1906,11 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
         flags |= SCRIPT_VERIFY_P2SH;
     }
 
-    // Enforce WITNESS rules whenever P2SH is in effect (and the segwit
-    // deployment is defined).
-    if (flags & SCRIPT_VERIFY_P2SH && IsScriptWitnessEnabled(consensusparams)) {
+    // (BOB): enforce WITNESS rules from the SegWit activation height only.
+    // Bitcoin applies them to every block once the deployment is defined; here
+    // un-upgraded 0.14 miners keep producing blocks up to the fork height, and
+    // a block they accept must not be refused by upgraded nodes before it.
+    if (flags & SCRIPT_VERIFY_P2SH && IsWitnessEnabled(pindex->pprev, consensusparams)) {
         flags |= SCRIPT_VERIFY_WITNESS;
     }
 
