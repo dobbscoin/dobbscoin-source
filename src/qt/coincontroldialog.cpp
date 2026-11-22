@@ -109,6 +109,12 @@ CoinControlDialog::CoinControlDialog(CCoinControl& coin_control, WalletModel* _m
     // click on checkbox
     connect(ui->treeWidget, &QTreeWidget::itemChanged, this, &CoinControlDialog::viewItemChanged);
 
+    // (BOB) Shift-click ticks every coin from the last clicked row to this one,
+    // Ctrl-click ticks or unticks one coin without touching the others.
+    ui->treeWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    connect(ui->treeWidget, &QTreeWidget::itemPressed, this, &CoinControlDialog::viewItemPressed);
+    connect(ui->treeWidget, &QTreeWidget::itemClicked, this, &CoinControlDialog::viewItemClicked);
+
     // click on header
     ui->treeWidget->header()->setSectionsClickable(true);
     connect(ui->treeWidget->header(), &QHeaderView::sectionClicked, this, &CoinControlDialog::headerSectionClicked);
@@ -377,6 +383,44 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
         if (ui->treeWidget->isEnabled()) // do not update on every click for (un)select all
             CoinControlDialog::updateLabels(m_coin_control, model, this);
     }
+}
+
+void CoinControlDialog::viewItemPressed(QTreeWidgetItem* item, int column)
+{
+    // The view toggles a tick box on mouse release; remember what it was before.
+    m_pressed_item = item;
+    m_pressed_state = item ? item->checkState(COLUMN_CHECKBOX) : Qt::Unchecked;
+}
+
+void CoinControlDialog::viewItemClicked(QTreeWidgetItem* item, int column)
+{
+    const Qt::KeyboardModifiers mods = QApplication::keyboardModifiers();
+    const auto is_coin = [](const QTreeWidgetItem* it) {
+        // a coin that is not locked, or (tree mode) an address row, whose tick
+        // carries over to the coins under it
+        return it && !it->isDisabled() &&
+               (it->data(COLUMN_ADDRESS, TxHashRole).toString().length() == 64 || it->childCount() > 0);
+    };
+
+    if (mods & Qt::ShiftModifier) {
+        // The view has highlighted the run of rows; tick every coin in it.
+        ui->treeWidget->setEnabled(false); // one label update at the end, as "(un)select all" does
+        for (QTreeWidgetItem* it : ui->treeWidget->selectedItems()) {
+            if (is_coin(it) && it->checkState(COLUMN_CHECKBOX) != Qt::Checked) {
+                it->setCheckState(COLUMN_CHECKBOX, Qt::Checked);
+            }
+        }
+        ui->treeWidget->setEnabled(true);
+        ui->treeWidget->setFocus();
+        CoinControlDialog::updateLabels(m_coin_control, model, this);
+    } else if (mods & Qt::ControlModifier) {
+        // Flip this one coin. Clicking exactly on the tick box has already
+        // flipped it, so set the opposite of what it was at mouse-down.
+        if (is_coin(item) && item == m_pressed_item) {
+            item->setCheckState(COLUMN_CHECKBOX, m_pressed_state == Qt::Checked ? Qt::Unchecked : Qt::Checked);
+        }
+    }
+    m_pressed_item = nullptr;
 }
 
 // shows count of locked unspent outputs
