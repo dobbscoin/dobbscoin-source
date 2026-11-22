@@ -139,8 +139,9 @@ ServiceFlags GetDesirableServiceFlags(ServiceFlags services) {
     // (BOB): no NODE_WITNESS requirement. SegWit is not active on (BOB) (it arrives with
     // its own enable fork), and every (BOB) 0.14 node offers NODE_NETWORK only; requiring
     // NODE_WITNESS made this node disconnect every real (BOB) peer ("00000001 offered,
-    // 00000009 expected"). Block download still asks for witness peers only once SegWit is
-    // active (see IsWitnessEnabled in net_processing), so restoring it is part of that fork.
+    // 00000009 expected"). After SegWit activates, blocks from un-upgraded miners are still
+    // downloaded from such peers; only a block that really carries witness data has to come
+    // from a NODE_WITNESS peer (see g_blocks_needing_witness_peer in net_processing).
     if ((services & NODE_NETWORK_LIMITED) && g_initial_block_download_completed) {
         return ServiceFlags(NODE_NETWORK_LIMITED);
     }

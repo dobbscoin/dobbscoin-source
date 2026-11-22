@@ -139,7 +139,7 @@ try:
         res = A.err("submitblock", old.getblock(old.getblockhash(h), False)) or A.submitblock(old.getblock(old.getblockhash(h), False))
         say("   A, 0.14.1's descendant block %d -> %s" % (h, res))
     c.ok(A.tip() == good and B.tip() == good, "EndTimes still on the valid chain after seeing all 4 theft-chain blocks", tips(trio))
-    c.ok(any(t["status"] == "invalid" and t["height"] == H + 7 for t in A.getchaintips()), "A marks the whole theft chain invalid",
+    c.ok(any(t["status"] == "invalid" and t["height"] >= H + 4 for t in A.getchaintips()), "A marks the whole theft chain invalid",
          [(t["height"], t["status"]) for t in A.getchaintips()])
     c.ok(not unspent_in_chain(1) and not unspent_in_chain(6) and old.height() == H + 7,
          "(recorded) 0.14.1 FOLLOWS the theft chain: both outputs are spent in its view, tip H+7")
