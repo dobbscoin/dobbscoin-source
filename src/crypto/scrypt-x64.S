@@ -41,6 +41,10 @@
  *  - scrypt_core_6way ends with vzeroupper, so the SSE code that runs after
  *    it (the PBKDF2 steps) pays no AVX-SSE transition penalty.
  *  - Non-x86_64 targets and the x32 ABI assemble to an empty object.
+ *  - Every macro that takes no argument declares a dummy one (unused_arg=0).
+ *    clang's Darwin assembler reads $7 inside a parameterless macro as a
+ *    positional macro argument; with a named parameter it is the immediate 7.
+ *    The assembled Linux code is byte-identical.
  */
 #if defined(__x86_64__) && !defined(__ILP32__)
 #define USE_ASM 1
@@ -170,7 +174,7 @@ scrypt_best_throughput_exit:
 .endm
 
 
-.macro salsa8_core_gen_doubleround
+.macro salsa8_core_gen_doubleround unused_arg=0
 	movq	72(%rsp), %r15
 	
 	leaq	(%r14, %rdx), %rbp
@@ -410,7 +414,7 @@ _scrypt_core:
 	movq	%rdx, %r8
 #endif
 
-.macro scrypt_core_cleanup
+.macro scrypt_core_cleanup unused_arg=0
 #if defined(_WIN64) || defined(__CYGWIN__)
 	popq	%rsi
 	popq	%rdi
@@ -585,7 +589,7 @@ scrypt_core_gen_loop2:
 	ret
 
 
-.macro salsa8_core_xmm_doubleround
+.macro salsa8_core_xmm_doubleround unused_arg=0
 	movdqa	%xmm1, %xmm4
 	paddd	%xmm0, %xmm4
 	movdqa	%xmm4, %xmm5
@@ -657,7 +661,7 @@ scrypt_core_gen_loop2:
 	pxor	%xmm5, %xmm0
 .endm
 
-.macro salsa8_core_xmm
+.macro salsa8_core_xmm unused_arg=0
 	salsa8_core_xmm_doubleround
 	salsa8_core_xmm_doubleround
 	salsa8_core_xmm_doubleround
@@ -873,7 +877,7 @@ scrypt_core_xmm_loop2:
 	
 	
 #if defined(USE_AVX)
-.macro salsa8_core_3way_avx_doubleround
+.macro salsa8_core_3way_avx_doubleround unused_arg=0
 	vpaddd	%xmm0, %xmm1, %xmm4
 	vpaddd	%xmm8, %xmm9, %xmm6
 	vpaddd	%xmm12, %xmm13, %xmm7
@@ -1021,7 +1025,7 @@ scrypt_core_xmm_loop2:
 	vpxor	%xmm7, %xmm12, %xmm12
 .endm
 
-.macro salsa8_core_3way_avx
+.macro salsa8_core_3way_avx unused_arg=0
 	salsa8_core_3way_avx_doubleround
 	salsa8_core_3way_avx_doubleround
 	salsa8_core_3way_avx_doubleround
@@ -1031,7 +1035,7 @@ scrypt_core_xmm_loop2:
 	
 	.text
 	.p2align 6
-.macro scrypt_core_3way_prologue
+.macro scrypt_core_3way_prologue unused_arg=0
 	pushq	%rbx
 	pushq	%rbp
 #if defined(_WIN64) || defined(__CYGWIN__)
@@ -1070,7 +1074,7 @@ scrypt_core_3way:
 _scrypt_core_3way:
 	scrypt_core_3way_prologue
 	
-.macro scrypt_core_3way_cleanup
+.macro scrypt_core_3way_cleanup unused_arg=0
 	addq	$392, %rsp
 #if defined(_WIN64) || defined(__CYGWIN__)
 	popq	%rsi
@@ -1412,7 +1416,7 @@ scrypt_core_3way_avx_loop2:
 	ret
 
 #if defined(USE_XOP)
-.macro salsa8_core_3way_xop_doubleround
+.macro salsa8_core_3way_xop_doubleround unused_arg=0
 	vpaddd	%xmm0, %xmm1, %xmm4
 	vpaddd	%xmm8, %xmm9, %xmm6
 	vpaddd	%xmm12, %xmm13, %xmm7
@@ -1512,7 +1516,7 @@ scrypt_core_3way_avx_loop2:
 	vpshufd	$0x39, %xmm15, %xmm15
 .endm
 
-.macro salsa8_core_3way_xop
+.macro salsa8_core_3way_xop unused_arg=0
 	salsa8_core_3way_xop_doubleround
 	salsa8_core_3way_xop_doubleround
 	salsa8_core_3way_xop_doubleround
@@ -1819,7 +1823,7 @@ scrypt_core_3way_xop_loop2:
 #endif /* USE_XOP */
 #endif /* USE_AVX */
 	
-.macro salsa8_core_3way_xmm_doubleround
+.macro salsa8_core_3way_xmm_doubleround unused_arg=0
 	movdqa	%xmm1, %xmm4
 	movdqa	%xmm9, %xmm6
 	movdqa	%xmm13, %xmm7
@@ -2015,7 +2019,7 @@ scrypt_core_3way_xop_loop2:
 	pxor	%xmm5, %xmm12
 .endm
 
-.macro salsa8_core_3way_xmm
+.macro salsa8_core_3way_xmm unused_arg=0
 	salsa8_core_3way_xmm_doubleround
 	salsa8_core_3way_xmm_doubleround
 	salsa8_core_3way_xmm_doubleround
@@ -2323,7 +2327,7 @@ scrypt_core_3way_xmm_loop2:
 
 #if defined(USE_AVX2)
 
-.macro salsa8_core_6way_avx2_doubleround
+.macro salsa8_core_6way_avx2_doubleround unused_arg=0
 	vpaddd	%ymm0, %ymm1, %ymm4
 	vpaddd	%ymm8, %ymm9, %ymm6
 	vpaddd	%ymm12, %ymm13, %ymm7
@@ -2471,7 +2475,7 @@ scrypt_core_3way_xmm_loop2:
 	vpxor	%ymm7, %ymm12, %ymm12
 .endm
 
-.macro salsa8_core_6way_avx2
+.macro salsa8_core_6way_avx2 unused_arg=0
 	salsa8_core_6way_avx2_doubleround
 	salsa8_core_6way_avx2_doubleround
 	salsa8_core_6way_avx2_doubleround
@@ -2509,7 +2513,7 @@ _scrypt_core_6way:
 	subq	$768, %rsp
 	andq	$-128, %rsp
 	
-.macro scrypt_core_6way_cleanup
+.macro scrypt_core_6way_cleanup unused_arg=0
 	vzeroupper
 	movq	%rdx, %rsp
 #if defined(_WIN64) || defined(__CYGWIN__)
