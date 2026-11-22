@@ -452,6 +452,7 @@ public:
     bool privateKeysDisabled() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS); }
     OutputType getDefaultAddressType() override { return m_wallet->m_default_address_type; }
     bool bobSegwitActive() override { return m_wallet->BobSegwitActive(); }
+    bool bobBech32Default() override { return m_wallet->BobBech32Default(); }
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
     void remove() override
     {

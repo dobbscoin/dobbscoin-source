@@ -264,6 +264,9 @@ public:
     //! (BOB) Whether SegWit is active for the next block on this wallet's chain.
     virtual bool bobSegwitActive() = 0;
 
+    //! (BOB) Whether the Receive tab should offer a bech32 address by default.
+    virtual bool bobBech32Default() = 0;
+
     //! Get max tx fee.
     virtual CAmount getDefaultMaxTxFee() = 0;
 

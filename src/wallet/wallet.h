@@ -113,6 +113,10 @@ class ReserveDestination;
 //! Default for -addresstype
 constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::LEGACY};
 
+//! (BOB) blocks after the SegWit height before the GUI offers bech32 addresses by
+//! default: time to see that upgraded miners carry the chain past the fork.
+static const int BOB_BECH32_DEFAULT_DELAY = 10000;
+
 static constexpr uint64_t KNOWN_WALLET_FLAGS =
         WALLET_FLAG_AVOID_REUSE
     |   WALLET_FLAG_BLANK_WALLET
@@ -811,6 +815,9 @@ public:
     /** (BOB): true once SegWit is active for the next block. Until then a witness program
      *  is anyone-can-spend on (BOB), so the wallet hands out and pays to legacy only. */
     bool BobSegwitActive() const;
+    //! (BOB) true from BOB_BECH32_DEFAULT_DELAY blocks after SegWit activates (block
+    //! 2,010,000 on mainnet): the Receive tab then offers a bech32 address by default.
+    bool BobBech32Default() const;
     //! (BOB) true when a P2SH-wrapped SegWit address/change type must be refused.
     static bool BobWrappedSegwitRefused(const OutputType type);
 

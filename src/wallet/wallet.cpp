@@ -3414,6 +3414,15 @@ bool CWallet::BobSegwitActive() const
     return height && *height + 1 >= segwit_height;
 }
 
+bool CWallet::BobBech32Default() const
+{
+    const int segwit_height = Params().GetConsensus().SegwitHeight;
+    if (segwit_height == std::numeric_limits<int>::max() || !m_chain) return false;
+    const int64_t delay = gArgs.GetArg("-bech32defaultdelay", BOB_BECH32_DEFAULT_DELAY);
+    const Optional<int> height = m_chain->getHeight();
+    return height && int64_t{*height} + 1 >= int64_t{segwit_height} + delay;
+}
+
 bool CWallet::BobWrappedSegwitRefused(const OutputType type)
 {
     // (BOB): a P2SH-wrapped witness output looks like an ordinary P2SH output to

@@ -14,6 +14,7 @@
 #include <qt/recentrequeststablemodel.h>
 #include <qt/walletmodel.h>
 
+#include <QSettings>
 #include <QAction>
 #include <QCursor>
 #include <QMessageBox>
@@ -92,12 +93,21 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
         // Last 2 columns are set by the columnResizingFixer, when the table geometry is ready.
         columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, AMOUNT_MINIMUM_COLUMN_WIDTH, DATE_COLUMN_WIDTH, this);
 
-        ui->useBech32->setCheckState(model->wallet().getDefaultAddressType() == OutputType::BECH32 ? Qt::Checked : Qt::Unchecked);
+        // setModel can run more than once; do not undo a choice already put on the box
+        if (!m_bech32_choice_applied) {
+            ui->useBech32->setCheckState(model->wallet().getDefaultAddressType() == OutputType::BECH32 ? Qt::Checked : Qt::Unchecked);
+        }
         // (BOB) A SegWit output is spendable by anyone until SegWit activates, so the wallet refuses
         // bech32 addresses before the activation height. Offer the box once it is active, and
         // re-check while the wallet is open so it turns on by itself when the chain gets there.
+        // From 10,000 blocks after activation (block 2,010,000) the box starts ticked.
+        // What the user last chose here wins over that default, and is remembered.
+        connect(ui->useBech32, &QCheckBox::clicked, [](bool checked) {
+            QSettings settings;
+            settings.setValue("bUseBech32Receive", checked);
+        });
         updateBech32Availability();
-        if (!ui->useBech32->isEnabled()) {
+        if (!m_bech32_choice_applied) {
             m_bech32_timer = new QTimer(this);
             connect(m_bech32_timer, &QTimer::timeout, this, &ReceiveCoinsDialog::updateBech32Availability);
             m_bech32_timer->start(10000);
@@ -123,7 +133,17 @@ void ReceiveCoinsDialog::updateBech32Availability()
     if (!model) return;
     const bool available = model->wallet().getDefaultAddressType() == OutputType::BECH32 || model->wallet().bobSegwitActive();
     ui->useBech32->setEnabled(available);
-    if (available && m_bech32_timer) m_bech32_timer->stop();
+    if (available && !m_bech32_choice_applied) {
+        QSettings settings;
+        if (settings.contains("bUseBech32Receive")) {
+            ui->useBech32->setChecked(settings.value("bUseBech32Receive").toBool());
+            m_bech32_choice_applied = true;
+        } else if (model->wallet().bobBech32Default()) {
+            ui->useBech32->setChecked(true);
+            m_bech32_choice_applied = true;
+        }
+    }
+    if (m_bech32_choice_applied && m_bech32_timer) m_bech32_timer->stop();
 }
 
 void ReceiveCoinsDialog::clear()

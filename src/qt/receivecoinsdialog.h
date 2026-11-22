@@ -52,6 +52,8 @@ public Q_SLOTS:
 
 private:
     QTimer* m_bech32_timer{nullptr};
+    //! (BOB) the remembered choice or the block-2,010,000 default has been put on the Bech32 box
+    bool m_bech32_choice_applied{false};
     Ui::ReceiveCoinsDialog *ui;
     GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
     WalletModel *model;
