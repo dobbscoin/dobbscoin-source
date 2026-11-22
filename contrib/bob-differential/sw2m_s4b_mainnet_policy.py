@@ -7,8 +7,11 @@ parameters on fresh datadirs. They are wired to each other only (-connect on loo
 no DNS seeds, no discovery) so they never see the real network; they share a private
 chain grown from the mainnet genesis block at mainnet minimum difficulty (about a million
 scrypt hashes per block, mined by 0.14.1's own built-in miner; expect roughly an hour for
-the 103 blocks needed to mature two coinbases). No EndTimes node is involved: the question
-is only what an un-upgraded node and miner do by themselves.
+the 103 blocks needed to mature two coinbases; --resume reuses a chain already mined). No
+EndTimes node is involved: the question is only what an un-upgraded node and miner do by
+themselves. The private chain is about 100 blocks high, so 0.14.1 counts itself as still
+syncing (it is below its last checkpoint height); that stops block announcements, not
+mempool policy, relay of transactions or its miner.
 
 Checked, each against M's sendrawtransaction, R's mempool (relay) and M's own next block:
   a. creating a P2SH-P2WPKH output (what a "3..."-style SegWit address is)
@@ -30,6 +33,8 @@ ap.add_argument("--threads", type=int, default=3, help="0.14.1 miner threads / g
 ap.add_argument("--mine-timeout", type=int, default=6 * 3600)
 ap.add_argument("--keep", action="store_true")
 ap.add_argument("--resume", action="store_true", help="reuse the datadirs in the work dir (chain already mined)")
+ap.add_argument("--dry-regtest", action="store_true",
+                help="self-test of this script only: same steps on regtest (instant blocks, NO standardness rules, so it proves nothing about policy)")
 ap.add_argument("work")
 a = ap.parse_args()
 c = Checks()
@@ -56,7 +61,7 @@ def mainnet_node(name, p2p, rpc, peer_p2p):
     n.argv = [os.path.join(a.ref, "dobbscoind"), "-datadir=" + n.dd, "-rpcuser=d", "-rpcpassword=ee", "-rpcport=%d" % rpc,
               "-rpcbind=127.0.0.1", "-rpcallowip=127.0.0.1", "-port=%d" % p2p, "-bind=127.0.0.1", "-listen=1", "-server=1",
               "-printtoconsole=0", "-debug=net", "-dnsseed=0", "-dns=0", "-discover=0", "-upnp=0",
-              "-connect=127.0.0.1:%d" % peer_p2p]
+              "-connect=127.0.0.1:%d" % peer_p2p] + (["-regtest"] if a.dry_regtest else [])
     n.env = dict(os.environ, LD_LIBRARY_PATH=os.path.join(a.ref, "lib"))
     n.start()
     return n
@@ -107,6 +112,10 @@ def mine_to(M, height, label):
     t0, last = time.time(), M.height()
     if last >= height:
         return
+    if a.dry_regtest:
+        M.setgenerate(True, height - last)
+        wait_until(lambda: M.height() >= height, 120)
+        return
     M.setgenerate(True, a.threads)
     try:
         while M.height() < height:
@@ -122,13 +131,32 @@ def mine_to(M, height, label):
     time.sleep(2)
 
 
+def mined_in(M, txid, from_height):
+    """(height, hash) of the block from from_height on that holds txid in M's chain, or None."""
+    for h in range(from_height, M.height() + 1):
+        bh = M.getblockhash(h)
+        if txid in M.getblock(bh)["tx"]:
+            return h, bh
+    return None
+
+
+def sync_r(M, R):
+    """Bring R to M's tip. A mainnet 0.14.1 whose chain is below its last checkpoint height counts itself as
+    still in initial block download and does not announce the blocks it mines (observed in the first run: R
+    stayed at height 0 for two hours), so on this short private chain M's new blocks are handed to R with
+    submitblock. Transactions ARE relayed between the two over P2P; that is what is measured."""
+    for h in range(R.height() + 1, M.height() + 1):
+        R.submitblock(M.getblock(M.getblockhash(h), False))
+    return R.tip() == M.tip()
+
+
 def offer(M, R, tx, what):
     """sendrawtransaction to M; returns (accepted, reason, relayed_to_R)."""
     e = M.err("sendrawtransaction", legacy_hex(tx))
     inpool = tx.hash in M.getrawmempool()
     relayed = inpool and wait_until(lambda: tx.hash in R.getrawmempool(), 30)
-    say("   0.14.1 (mainnet policy) sendrawtransaction %s -> %s; in M's mempool: %s; relayed to R: %s" %
-        (what, e or "ACCEPTED", inpool, relayed))
+    say("   0.14.1 (%s) sendrawtransaction %s -> %s; in M's mempool: %s; relayed to R: %s" %
+        ("regtest dry run" if a.dry_regtest else "mainnet policy", what, e or "ACCEPTED", inpool, relayed))
     return inpool, e, relayed
 
 
@@ -139,7 +167,8 @@ try:
     net_nodes = []
     M = mainnet_node("M-0.14.1-mainnet", a.port0, a.port0 + 1, a.port0 + 2); net_nodes.append(M)
     R = mainnet_node("R-0.14.1-mainnet", a.port0 + 2, a.port0 + 3, a.port0); net_nodes.append(R)
-    say("== scenario 4b: two stock 0.14.1 nodes, MAINNET parameters, private loopback-only chain")
+    say("== scenario 4b: two stock 0.14.1 nodes, %s, private loopback-only chain" %
+        ("REGTEST DRY RUN OF THE SCRIPT (proves nothing about policy)" if a.dry_regtest else "MAINNET parameters"))
     info = M.getinfo()
     c.ok(info.get("testnet") is False and M.getblockhash(0) == R.getblockhash(0) and not os.path.exists(os.path.join(M.dd, "regtest")),
          "both run MAINNET parameters (genesis %s, testnet=%s, no regtest/testnet subdir)" % (M.getblockhash(0)[:16], info.get("testnet")))
@@ -148,7 +177,9 @@ try:
     c.ok(peers == ["127.0.0.1"], "their only peers are each other on loopback", peers)
 
     mine_to(M, 103, "maturing two coinbases")
-    c.ok(wait_until(lambda: R.tip() == M.tip(), 120), "R follows M's chain", tips(net_nodes))
+    by_p2p = wait_until(lambda: R.tip() == M.tip(), 20)
+    say("   NOTE R got M's blocks over P2P by itself: %s (it does when it connects to a longer chain; NEW blocks are not announced, see sync_r)" % by_p2p)
+    c.ok(sync_r(M, R), "R is on M's chain (blocks handed over with submitblock where needed)", tips(net_nodes))
     say("   chain: height %d, difficulty %s, block version %s" % (M.height(), M.getdifficulty(), M.getblock(M.tip())["version"]))
     coins = sorted([u for u in M.listunspent(100)], key=lambda u: -u["confirmations"])
     c.ok(len(coins) >= 2, "M's wallet has two mature coinbases", len(coins))
@@ -173,7 +204,8 @@ try:
     ok_, e, rel = offer(M, R, fw, "tx paying 3 P2SH-P2WPKH outputs")
     c.ok(ok_ and rel, "(expected) 0.14.1 accepts and relays a payment TO a P2SH-P2WPKH output: to it, an ordinary P2SH payment", e)
     mine_to(M, M.height() + 1, "confirming it")
-    c.ok(M.gettxout(fw.hash, 0, False) is not None, "it is confirmed in 0.14.1's own block %d" % M.height())
+    sync_r(M, R)
+    c.ok(M.gettxout(fw.hash, 0, False) is not None and R.gettxout(fw.hash, 0, False) is not None, "it is confirmed in 0.14.1's own block %d (R has the block too)" % M.height())
 
     # ---- b. the theft
     say("== b. THE THEFT: spending that P2SH-P2WPKH output with NO witness and NO signature")
@@ -186,26 +218,29 @@ try:
          e or "it was ACCEPTED into the mempool as a standard transaction")
     c.ok(not rel, "stock 0.14.1 does not RELAY it to its peer", "R's mempool has it" if rel else "")
     if ok_:
-        mine_to(M, M.height() + 1, "0.14.1 mining with the theft tx in its mempool")
-        blk = M.getblock(M.tip())
-        mined = steal.hash in blk["tx"]
+        h0 = M.height()
+        mine_to(M, h0 + 1, "0.14.1 mining with the theft tx in its mempool")
+        mined = mined_in(M, steal.hash, h0 + 1)
         c.ok(not mined, "stock 0.14.1's own miner does NOT put it in a block",
-             "block %d %s, mined by 0.14.1's built-in miner, contains it" % (blk["height"], blk["hash"][:16]) if mined else "")
-        c.ok(wait_until(lambda: R.tip() == M.tip(), 60), "(recorded) the second 0.14.1 node accepts that block", tips(net_nodes))
+             "block %d %s, mined by 0.14.1's built-in miner, contains it" % (mined[0], mined[1][:16]) if mined else "")
+        c.ok(mined and M.gettxout(fw.hash, 0, False) is None, "(recorded) in 0.14.1's chain the P2SH-P2WPKH output is now spent by the thief")
+        c.ok(sync_r(M, R), "(recorded) the second 0.14.1 node accepts that block", tips(net_nodes))
         say("   R's wallet (the thief) now shows unconfirmed+confirmed balance: %s" % R.getbalance("*", 0))
 
     # ---- c. create a bare P2WPKH output
     say("== c. paying to a bare P2WPKH output (a bech32 address)")
+    sync_r(M, R)
     fb, vb = fund(coins[1], W, 2)
     ok_, e, rel = offer(M, R, fb, "tx paying 2 bare P2WPKH outputs")
     say("   NOTE stock 0.14.1 %s a payment TO a bare witness program%s" % ("ACCEPTS" if ok_ else "refuses", "" if ok_ else " (%s): only a miner can put one on chain" % e))
-    if ok_:
+    if ok_ and not a.dry_regtest:
         mine_to(M, M.height() + 1, "confirming it")
     else:
         hb = hand_block(M, [fb])
         res = submit(M, hb, witness=False)
         c.ok(res is None and M.tip() == hb.hash, "hand-built block with that payment accepted by 0.14.1 (it is consensus-valid)", res)
-    c.ok(M.gettxout(fb.hash, 0, False) is not None, "a bare P2WPKH output is now on the chain")
+    sync_r(M, R)
+    c.ok(M.gettxout(fb.hash, 0, False) is not None and R.gettxout(fb.hash, 0, False) is not None, "a bare P2WPKH output is now on the chain of both nodes")
 
     # ---- d. spend it with nothing
     say("== d. spending the bare P2WPKH output with an empty scriptSig")
@@ -213,9 +248,10 @@ try:
     ok_, e, rel = offer(M, R, steal2, "witness-less spend of the bare P2WPKH output")
     c.ok(not ok_, "stock 0.14.1 under MAINNET policy REFUSES the witness-less bare P2WPKH spend (non-standard)", e or "ACCEPTED")
     if ok_:
-        mine_to(M, M.height() + 1, "0.14.1 mining with it")
-        c.ok(steal2.hash not in M.getblock(M.tip())["tx"], "stock 0.14.1's own miner does NOT put it in a block")
-    rc = c.finish("scenario 4b (0.14.1 mainnet policy)")
+        h0 = M.height()
+        mine_to(M, h0 + 1, "0.14.1 mining with it")
+        c.ok(not mined_in(M, steal2.hash, h0 + 1), "stock 0.14.1's own miner does NOT put it in a block")
+    rc = c.finish("scenario 4b (0.14.1 mainnet policy)" + (" DRY RUN ON REGTEST, NOT A RESULT" if a.dry_regtest else ""))
 finally:
     for n in list(locals().get("net_nodes", [])):
         n.stop()
