@@ -165,8 +165,10 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         address_type = OutputType::BECH32;
     } else {
         address_type = model->wallet().getDefaultAddressType();
-        if (address_type == OutputType::BECH32) {
-            address_type = OutputType::P2SH_SEGWIT;
+        // (BOB): the unticked box means an old-style address, never a wrapped
+        // SegWit one (un-upgraded miners can take coins sent to those).
+        if (address_type != OutputType::LEGACY) {
+            address_type = OutputType::LEGACY;
         }
     }
     address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", address_type);

@@ -1022,6 +1022,9 @@ static RPCHelpMan addmultisigaddress()
 
     // Construct using pay-to-script-hash:
     CScript inner;
+    if (CWallet::BobWrappedSegwitRefused(output_type)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Wrapped SegWit (p2sh-segwit) addresses are not offered on Dobbscoin: nodes and miners that have not upgraded treat their coins as spendable by anyone. Use a bech32 (bob1) or a legacy address");
+    }
     CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, spk_man, inner);
     pwallet->SetAddressBook(dest, label, "send");
 

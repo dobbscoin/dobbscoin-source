@@ -72,7 +72,7 @@ def mine_new(n, label):
 env = dict(os.environ, LD_LIBRARY_PATH=os.path.join(REF, "lib"))
 old = Node("old-0.14.1", [os.path.join(REF, "dobbscoind"), "-port=19656", "-listen=1", "-bind=127.0.0.1"], 19655, env)
 new = Node("endtimes", [os.path.join(NEW, "dobbscoind"), "-port=19666", "-listen=0", "-connect=127.0.0.1:19656",
-                        "-segwitheight=%d" % ACT, "-csvheight=%d" % ACT], 19665)
+                        "-segwitheight=%d" % ACT, "-csvheight=%d" % ACT, "-allowwrappedsegwit=1"], 19665)
 try:
     for _ in range(60):
         if new.call("getconnectioncount") > 0: break

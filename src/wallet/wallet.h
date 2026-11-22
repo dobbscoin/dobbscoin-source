@@ -811,6 +811,8 @@ public:
     /** (BOB): true once SegWit is active for the next block. Until then a witness program
      *  is anyone-can-spend on (BOB), so the wallet hands out and pays to legacy only. */
     bool BobSegwitActive() const;
+    //! (BOB) true when a P2SH-wrapped SegWit address/change type must be refused.
+    static bool BobWrappedSegwitRefused(const OutputType type);
 
     const CWalletTx* GetWalletTx(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsTrusted(const CWalletTx& wtx, std::set<uint256>& trusted_parents) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

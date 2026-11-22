@@ -2741,9 +2741,12 @@ OutputType CWallet::TransactionChangeType(const Optional<OutputType>& change_typ
         return OutputType::LEGACY;
     }
 
+    // (BOB): never wrapped SegWit change; native SegWit instead.
+    const auto no_wrapped = [](OutputType t) { return BobWrappedSegwitRefused(t) ? OutputType::BECH32 : t; };
+
     // If -changetype is specified, always use that change type.
     if (change_type) {
-        return *change_type;
+        return no_wrapped(*change_type);
     }
 
     // if m_default_address_type is legacy, use legacy address as change (even
@@ -2764,7 +2767,7 @@ OutputType CWallet::TransactionChangeType(const Optional<OutputType>& change_typ
     }
 
     // else use m_default_address_type for change
-    return m_default_address_type;
+    return no_wrapped(m_default_address_type);
 }
 
 bool CWallet::CreateTransactionInternal(
@@ -3411,12 +3414,26 @@ bool CWallet::BobSegwitActive() const
     return height && *height + 1 >= segwit_height;
 }
 
+bool CWallet::BobWrappedSegwitRefused(const OutputType type)
+{
+    // (BOB): a P2SH-wrapped witness output looks like an ordinary P2SH output to
+    // 0.14 nodes, and spending it with no witness and no signature is a STANDARD
+    // transaction there: stock 0.14 relays and mines it. A native (bech32) output
+    // is non-standard to them. So this wallet never creates wrapped addresses.
+    // -allowwrappedsegwit exists for the tests only.
+    return type == OutputType::P2SH_SEGWIT && !gArgs.GetBoolArg("-allowwrappedsegwit", false);
+}
+
 bool CWallet::GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, std::string& error)
 {
     LOCK(cs_wallet);
     error.clear();
     if (type != OutputType::LEGACY && !BobSegwitActive()) {
         error = "Only legacy addresses can be used on Dobbscoin until SegWit is activated (a SegWit output would be spendable by anyone)";
+        return false;
+    }
+    if (BobWrappedSegwitRefused(type)) {
+        error = "Wrapped SegWit (p2sh-segwit) addresses are not offered on Dobbscoin: nodes and miners that have not upgraded treat their coins as spendable by anyone. Use a bech32 (bob1) or a legacy address";
         return false;
     }
     bool result = false;
@@ -3440,6 +3457,10 @@ bool CWallet::GetNewChangeDestination(const OutputType type, CTxDestination& des
     error.clear();
     if (type != OutputType::LEGACY && !BobSegwitActive()) {
         error = "Only legacy addresses can be used on Dobbscoin until SegWit is activated (a SegWit output would be spendable by anyone)";
+        return false;
+    }
+    if (BobWrappedSegwitRefused(type)) {
+        error = "Wrapped SegWit (p2sh-segwit) addresses are not offered on Dobbscoin: nodes and miners that have not upgraded treat their coins as spendable by anyone. Use a bech32 (bob1) or a legacy address";
         return false;
     }
 

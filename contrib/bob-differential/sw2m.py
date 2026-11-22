@@ -167,7 +167,7 @@ class Net:
         H = self.H
         return ["-auxpowheight=%d" % (self.auxpow if auxpow is None else auxpow),
                 "-bip65height=%d" % (H if cltv is None else cltv),
-                "-segwitheight=%d" % (H if segwit is None else segwit),
+                "-segwitheight=%d" % (H if segwit is None else segwit), "-allowwrappedsegwit=1",
                 "-csvheight=%d" % (H if csv is None else csv)]
 
     def new(self, name, extra=(), **hk):
