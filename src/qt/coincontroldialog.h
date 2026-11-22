@@ -105,10 +105,17 @@ private Q_SLOTS:
     void radioTreeMode(bool);
     void radioListMode(bool);
     void viewItemChanged(QTreeWidgetItem*, int);
+    void viewItemPressed(QTreeWidgetItem*, int);
+    void viewItemClicked(QTreeWidgetItem*, int);
     void headerSectionClicked(int);
     void buttonBoxClicked(QAbstractButton*);
     void buttonSelectAllClicked();
     void updateLabelLocked();
+
+private:
+    //! Row and tick state under the mouse when its button went down (Ctrl-click).
+    QTreeWidgetItem* m_pressed_item{nullptr};
+    Qt::CheckState m_pressed_state{Qt::Unchecked};
 };
 
 #endif // BITCOIN_QT_COINCONTROLDIALOG_H
