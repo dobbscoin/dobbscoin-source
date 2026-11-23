@@ -29,6 +29,7 @@ void BobAddConsolidateOptions(ArgsManager& argsman)
     argsman.AddArg("-consolidate", strprintf("Automatically merge many small coins (such as mining payouts) into one, in the background (default: %u)", DEFAULT_BOB_CONSOLIDATE), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-consolidateall", strprintf("Let automatic merging combine coins from different addresses, which shows publicly that they belong together. Otherwise only coins on the same address are merged (default: %u)", DEFAULT_BOB_CONSOLIDATE_ALL), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-consolidatemin=<n>", strprintf("Merge once more than this many small coins have collected (default: %d)", DEFAULT_BOB_CONSOLIDATE_MIN), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
+    argsman.AddArg("-consolidategap=<minutes>", strprintf("At most one automatic merge in this many minutes, 0 for no limit (default: %d)", DEFAULT_BOB_CONSOLIDATE_GAP), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-consolidatebelow=<amt>", strprintf("Coins below this amount count as small (default: %s)", FormatMoney(DEFAULT_BOB_CONSOLIDATE_BELOW)), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-keepminedblocks", strprintf("Keep blocks mined by this wallet intact: never merge them, and spend them only when the other coins cannot cover a payment (default: %u)", DEFAULT_BOB_KEEP_MINED_BLOCKS), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-consolidatekeepbefore=<unix time>", strprintf("Never merge coins confirmed before this time, 0 for no limit (default: %d)", DEFAULT_BOB_CONSOLIDATE_KEEP_BEFORE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET);
@@ -53,6 +54,18 @@ static bool PendingConsolidation(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED
         if (wtx.mapValue.count(BOB_CONSOLIDATION_KEY) && !wtx.isAbandoned() && wtx.GetDepthInMainChain() == 0 && wtx.InMempool()) return true;
     }
     return false;
+}
+
+// When this wallet last sent a merge (0 if never). Kept in the wallet's own records,
+// so the gap holds across a restart.
+static int64_t LastConsolidationTime(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    int64_t last = 0;
+    for (const auto& entry : wallet.mapWallet) {
+        const CWalletTx& wtx = entry.second;
+        if (wtx.mapValue.count(BOB_CONSOLIDATION_KEY) && !wtx.isAbandoned()) last = std::max<int64_t>(last, wtx.nTimeReceived);
+    }
+    return last;
 }
 
 std::string BobMaybeConsolidate(CWallet& wallet, std::string& why_not)
@@ -85,6 +98,11 @@ std::string BobMaybeConsolidate(CWallet& wallet, std::string& why_not)
             return "";
         }
         if (PendingConsolidation(wallet)) { why_not = "waiting for the last batch to confirm"; return ""; }
+        const int64_t gap_minutes = std::max<int64_t>(0, gArgs.GetArg("-consolidategap", DEFAULT_BOB_CONSOLIDATE_GAP));
+        if (gap_minutes > 0 && LastConsolidationTime(wallet) + gap_minutes * 60 > wallet.chain().getAdjustedTime()) {
+            why_not = strprintf("at most one merge every %d minutes", gap_minutes);
+            return "";
+        }
 
         CCoinControl cc;
         cc.m_min_depth = 1;

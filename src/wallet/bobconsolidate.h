@@ -27,6 +27,9 @@ static constexpr int DEFAULT_BOB_CONSOLIDATE_BATCH{400};
 static constexpr int MAX_BOB_CONSOLIDATE_BATCH{500};
 static constexpr CAmount DEFAULT_BOB_CONSOLIDATE_BELOW{10 * COIN};
 static constexpr bool DEFAULT_BOB_CONSOLIDATE_ALL{false};
+//! At most one automatic merge in this many minutes. Blocks can come in bursts, and
+//! without a gap a backlog went out as one large transaction a minute.
+static constexpr int64_t DEFAULT_BOB_CONSOLIDATE_GAP{60};
 //! Coins confirmed before this time (2026-01-28 00:00 UTC) are never merged: moving a coin
 //! resets its age, and the (BOB) buyback pays by age. Same boundary as the buyback checker.
 static constexpr int64_t DEFAULT_BOB_CONSOLIDATE_KEEP_BEFORE{1769558400};

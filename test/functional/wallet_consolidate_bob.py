@@ -20,7 +20,7 @@ from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
-ARGS = ["-consolidatemin=20", "-consolidatebatch=15", "-consolidatebelow=2"]
+ARGS = ["-consolidategap=0", "-consolidatemin=20", "-consolidatebatch=15", "-consolidatebelow=2"]
 
 
 class ConsolidateBobTest(BitcoinTestFramework):
@@ -134,6 +134,42 @@ class ConsolidateBobTest(BitcoinTestFramework):
         fees = sum(-n1.gettransaction(t["txid"])["fee"] for t in self.consolidations())
         assert 0 < fees < Decimal("0.01"), fees
         assert_equal(after, before + Decimal("6.0") - fees)   # + the ten 0.6 payouts, - fees only
+
+
+        self.log.info("at most one merge an hour (the default gap), also across a restart")
+        import time
+        gap_args = [x for x in ARGS if not x.startswith("-consolidategap")] + ["-consolidatemin=5"]
+        self.restart_node(1, gap_args)   # the earlier merges were seconds ago
+        self.connect_nodes(0, 1)
+        n1.walletpassphrase("pass", 100000)
+        self.pay(n1.getnewaddress("gap"), [Decimal("0.9")] * 40)   # a backlog: 40 small coins, 15 per merge
+        count = len(self.consolidations())
+        self.tick()
+        assert_equal(len(self.consolidations()), count)   # inside the hour: nothing
+
+        def hour_later(hours):
+            t = int(time.time()) + hours * 3660
+            for n in (n0, n1):
+                n.setmocktime(t)
+            n0.generatetoaddress(1, n0.getnewaddress())   # a fresh tip, or the wallet counts as behind
+            self.sync_blocks()   # not mempools: transaction relay stands still under mocktime
+
+        hour_later(1)
+        self.tick()
+        self.wait_until(lambda: len(self.consolidations()) == count + 1)
+        n1.generatetoaddress(1, n0.getnewaddress())   # node1 confirms its own merge
+        self.sync_blocks()
+        assert_equal(n1.gettransaction(self.consolidations()[-1]["txid"])["confirmations"], 1)
+        self.tick()
+        assert_equal(len(self.consolidations()), count + 1)   # confirmed, backlog left, but the hour is not up
+        self.restart_node(1, gap_args + ["-mocktime=%d" % (int(time.time()) + 3660 + 600)])
+        self.connect_nodes(0, 1)
+        n1.walletpassphrase("pass", 100000)
+        self.tick()
+        assert_equal(len(self.consolidations()), count + 1)   # a restart does not reset the gap
+        hour_later(2)
+        self.tick()
+        self.wait_until(lambda: len(self.consolidations()) == count + 2)
 
 
 if __name__ == '__main__':

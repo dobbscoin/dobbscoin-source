@@ -20,7 +20,7 @@ import time
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
-ARGS = ["-consolidatemin=20", "-consolidatebatch=15", "-consolidatebelow=100000"]
+ARGS = ["-consolidategap=0", "-consolidatemin=20", "-consolidatebatch=15", "-consolidatebelow=100000"]
 
 
 class KeepMinedBobTest(BitcoinTestFramework):
