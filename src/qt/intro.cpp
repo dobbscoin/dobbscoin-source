@@ -196,8 +196,12 @@ bool Intro::showIfNeeded(bool& did_show_intro, bool& prune)
     /* 2) Allow QSettings to override default dir */
     dataDir = settings.value("strDataDir", dataDir).toString();
 
-    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || gArgs.GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || settings.value("fReset", false).toBool() || gArgs.GetBoolArg("-resetguisettings", false))
+    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || gArgs.GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || settings.value("fReset", false).toBool() || gArgs.GetBoolArg("-resetguisettings", false) || settings.value("fChooseDataDir", false).toBool())
     {
+        /* (BOB) Settings > Change data folder asks for the chooser exactly once: clear the
+           request before showing it, so Cancel leaves the next start as it was. */
+        settings.remove("fChooseDataDir");
+
         /* Use selectParams here to guarantee Params() can be used by node interface */
         try {
             SelectParams(gArgs.GetChainName());

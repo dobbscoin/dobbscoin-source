@@ -147,6 +147,7 @@ private:
     QAction* receiveCoinsAction = nullptr;
     QAction* receiveCoinsMenuAction = nullptr;
     QAction* optionsAction = nullptr;
+    QAction* changeDataDirAction = nullptr;
     QAction* toggleHideAction = nullptr;
     QAction* encryptWalletAction = nullptr;
     QAction* backupWalletAction = nullptr;
@@ -292,6 +293,8 @@ public Q_SLOTS:
 #endif // ENABLE_WALLET
     /** Show configuration dialog */
     void optionsClicked();
+    /** (BOB) Ask for the data folder chooser on the next start, then quit */
+    void changeDataDirClicked();
     /** Show about dialog */
     void aboutClicked();
     /** Show debug window */

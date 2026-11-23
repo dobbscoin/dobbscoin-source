@@ -325,6 +325,11 @@ void BitcoinGUI::createActions()
     optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(PACKAGE_NAME));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     optionsAction->setEnabled(false);
+    // (BOB) The first-run folder chooser only appears when the default folder is missing, so a
+    // user who wants the chain on another drive later had to know -choosedatadir. Give it a menu item.
+    changeDataDirAction = new QAction(tr("Change &data folder..."), this);
+    changeDataDirAction->setStatusTip(tr("Choose where %1 keeps the block chain and wallet files (takes effect on the next start)").arg(PACKAGE_NAME));
+    changeDataDirAction->setMenuRole(QAction::NoRole);
     toggleHideAction = new QAction(tr("&Show / Hide"), this);
     toggleHideAction->setIcon(m_network_style->getAppIcon()); // (BOB) 0.14 menu icon
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
@@ -395,6 +400,7 @@ void BitcoinGUI::createActions()
     connect(aboutAction, &QAction::triggered, this, &BitcoinGUI::aboutClicked);
     connect(aboutQtAction, &QAction::triggered, qApp, QApplication::aboutQt);
     connect(optionsAction, &QAction::triggered, this, &BitcoinGUI::optionsClicked);
+    connect(changeDataDirAction, &QAction::triggered, this, &BitcoinGUI::changeDataDirClicked);
     connect(toggleHideAction, &QAction::triggered, this, &BitcoinGUI::toggleHidden);
     connect(showHelpMessageAction, &QAction::triggered, this, &BitcoinGUI::showHelpMessageClicked);
     connect(openRPCConsoleAction, &QAction::triggered, this, &BitcoinGUI::showDebugWindow);
@@ -504,6 +510,7 @@ void BitcoinGUI::createMenuBar()
         settings->addSeparator();
     }
     settings->addAction(optionsAction);
+    settings->addAction(changeDataDirAction);
 
     QMenu* window_menu = appMenuBar->addMenu(tr("&Window"));
 
@@ -843,6 +850,29 @@ void BitcoinGUI::macosDockIconActivated()
     activateWindow();
 }
 #endif
+
+void BitcoinGUI::changeDataDirClicked()
+{
+    if (!gArgs.GetArg("-datadir", "").empty()) {
+        QMessageBox::information(this, tr("Change data folder"),
+            tr("%1 was started with a fixed data folder (the -datadir option), so the folder cannot be changed from here. Remove that option and start again.").arg(PACKAGE_NAME));
+        return;
+    }
+    const QString current = GUIUtil::boostPathToQString(GetDataDir());
+    QMessageBox::StandardButton answer = QMessageBox::question(this, tr("Change data folder"),
+        tr("%1 will close now. The next time you start it, it will ask where to keep its data.\n\n"
+           "Nothing is moved or deleted. Your current data stays in:\n%2\n\n"
+           "To keep your coins and the chain you already downloaded, move that folder to the new place yourself while %1 is closed, then choose it on the next start. "
+           "If you choose an empty folder, %1 starts with a NEW, empty wallet and downloads the chain again.\n\n"
+           "Close %1 now?").arg(PACKAGE_NAME, current),
+        QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+    if (answer != QMessageBox::Yes) return;
+
+    QSettings settings;
+    settings.setValue("fChooseDataDir", true);
+    settings.sync();
+    QApplication::quit();
+}
 
 void BitcoinGUI::optionsClicked()
 {
