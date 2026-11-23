@@ -68,7 +68,25 @@ InstallDirRegKey HKCU "${REGKEY}" Path
 ShowUninstDetails show
 
 # Installer sections
+# (BOB) A running wallet keeps its program file locked. Without this check the
+# installer stops on a write error with an Ignore button, and Ignore leaves the old
+# program in place beside new tools. Ask for the wallet to be closed instead.
+!macro BobWaitUntilClosed FILE UID
+    retry_${UID}:
+    IfFileExists "${FILE}" 0 free_${UID}
+    ClearErrors
+    FileOpen $0 "${FILE}" a
+    IfErrors 0 close_${UID}
+        MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Dobbscoin is still running.$\r$\n$\r$\nClose it first: File > Exit in the wallet, then wait until its icon near the clock is gone. Then press Retry.$\r$\n$\r$\nCancel leaves your current version untouched." /SD IDCANCEL IDRETRY retry_${UID}
+        Abort "Setup was cancelled because Dobbscoin is still running. Nothing was changed."
+    close_${UID}:
+    FileClose $0
+    free_${UID}:
+!macroend
+
 Section -Main SEC0000
+    !insertmacro BobWaitUntilClosed "$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" gui
+    !insertmacro BobWaitUntilClosed "$INSTDIR\daemon\@BITCOIN_DAEMON_NAME@@EXEEXT@" daemon
     SetOutPath $INSTDIR
     SetOverwrite on
     File @abs_top_srcdir@/release/@BITCOIN_GUI_NAME@@EXEEXT@
