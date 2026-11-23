@@ -179,6 +179,16 @@ void OptionsDialog::setModel(OptionsModel *_model)
         setMapper();
         mapper->toFirst();
 
+        // (BOB) set in dobbscoin.conf or on the command line: show the value in force, greyed out
+        if (_model->isConsolidateOverridden()) {
+            ui->consolidate->setEnabled(false);
+            ui->consolidate->setToolTip(tr("Set by consolidate=%1 in dobbscoin.conf or on the command line. Change it there.").arg(ui->consolidate->isChecked() ? 1 : 0));
+        }
+        if (_model->isKeepMinedBlocksOverridden()) {
+            ui->keepMinedBlocks->setEnabled(false);
+            ui->keepMinedBlocks->setToolTip(tr("Set by keepminedblocks=%1 in dobbscoin.conf or on the command line. Change it there.").arg(ui->keepMinedBlocks->isChecked() ? 1 : 0));
+        }
+
         updateDefaultProxyNets();
     }
 

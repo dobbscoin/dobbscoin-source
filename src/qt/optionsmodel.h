@@ -87,6 +87,9 @@ public:
     int getDisplayUnit() const { return nDisplayUnit; }
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
+    //! (BOB) true when dobbscoin.conf or the command line sets the option, so the dialog cannot change it
+    bool isConsolidateOverridden() const { return m_consolidate_overridden; }
+    bool isKeepMinedBlocksOverridden() const { return m_keep_mined_overridden; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Explicit setters */
@@ -112,6 +115,8 @@ private:
     bool fCoinControlFeatures;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
+    bool m_consolidate_overridden{false};
+    bool m_keep_mined_overridden{false};
 
     // Add option to list of GUI options overridden through command line/config file
     void addOverriddenOption(const std::string &option);

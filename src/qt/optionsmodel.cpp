@@ -116,11 +116,15 @@ void OptionsModel::Init(bool resetSettings)
         addOverriddenOption("-spendzeroconfchange");
     if (!settings.contains("bConsolidate"))
         settings.setValue("bConsolidate", true);
-    if (!gArgs.SoftSetBoolArg("-consolidate", settings.value("bConsolidate").toBool()))
+    // (BOB) A value from dobbscoin.conf or the command line wins for the whole session:
+    // the Options dialog shows it, greys the box out, and pressing OK does not replace it.
+    m_consolidate_overridden = !gArgs.SoftSetBoolArg("-consolidate", settings.value("bConsolidate").toBool());
+    if (m_consolidate_overridden)
         addOverriddenOption("-consolidate");
     if (!settings.contains("bKeepMinedBlocks"))
         settings.setValue("bKeepMinedBlocks", true);
-    if (!gArgs.SoftSetBoolArg("-keepminedblocks", settings.value("bKeepMinedBlocks").toBool()))
+    m_keep_mined_overridden = !gArgs.SoftSetBoolArg("-keepminedblocks", settings.value("bKeepMinedBlocks").toBool());
+    if (m_keep_mined_overridden)
         addOverriddenOption("-keepminedblocks");
 #endif
 
@@ -321,8 +325,10 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
         case Consolidate:
+            if (m_consolidate_overridden) return gArgs.GetBoolArg("-consolidate", true);
             return settings.value("bConsolidate");
         case KeepMinedBlocks:
+            if (m_keep_mined_overridden) return gArgs.GetBoolArg("-keepminedblocks", true);
             return settings.value("bKeepMinedBlocks");
 #endif
         case DisplayUnit:
@@ -443,11 +449,13 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             break;
         case Consolidate:
             // takes effect at once: the background pass reads -consolidate every minute
+            if (m_consolidate_overridden) break; // dobbscoin.conf / command line decides
             settings.setValue("bConsolidate", value);
             gArgs.ForceSetArg("-consolidate", value.toBool() ? "1" : "0");
             break;
         case KeepMinedBlocks:
             // takes effect at once: merging and coin selection read -keepminedblocks each time
+            if (m_keep_mined_overridden) break; // dobbscoin.conf / command line decides
             settings.setValue("bKeepMinedBlocks", value);
             gArgs.ForceSetArg("-keepminedblocks", value.toBool() ? "1" : "0");
             break;
