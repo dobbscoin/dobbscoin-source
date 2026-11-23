@@ -142,8 +142,10 @@ public:
         pchMessageStart[3] = 0x83;
         nDefaultPort = 19985;
         nPruneAfterHeight = 100000;
-        m_assumed_blockchain_size = 350;
-        m_assumed_chain_state_size = 6;
+        // (BOB) measured 2026-11 at height ~1.95M: blocks 1.3 GB, chainstate 78 MB. These only feed
+        // the GUI's first-run screen (disk estimate and whether pruning is pre-ticked).
+        m_assumed_blockchain_size = 2;
+        m_assumed_chain_state_size = 1;
 
         genesis = CreateBobGenesisBlock(1389086657, 2084524493, 0x1e0ffff0, 1, 1); // (BOB) genesis acid-test
         consensus.hashGenesisBlock = genesis.GetHash();
