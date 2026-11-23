@@ -129,6 +129,15 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
       AC_DEFINE(QT_QPA_PLATFORM_XCB, 1, [Define this symbol if the qt platform is xcb])
     elif test "x$TARGET_OS" = xdarwin; then
       AX_CHECK_LINK_FLAG([[-framework IOKit]],[QT_LIBS="$QT_LIBS -framework IOKit"],[AC_MSG_ERROR(could not iokit framework)])
+      dnl (BOB) Qt 5.15 (Apple Silicon build): cocoa needs these frameworks and the Mac style is its own plugin
+      if test -f "$qt_plugin_path/styles/libqmacstyle.a"; then
+        AX_CHECK_LINK_FLAG([[-framework Carbon]],[QT_LIBS="$QT_LIBS -framework Carbon"],[AC_MSG_ERROR(could not link against Carbon framework)])
+        AX_CHECK_LINK_FLAG([[-framework IOSurface]],[QT_LIBS="$QT_LIBS -framework IOSurface"],[AC_MSG_ERROR(could not link against IOSurface framework)])
+        AX_CHECK_LINK_FLAG([[-framework Metal]],[QT_LIBS="$QT_LIBS -framework Metal"],[AC_MSG_ERROR(could not link against Metal framework)])
+        AX_CHECK_LINK_FLAG([[-framework QuartzCore]],[QT_LIBS="$QT_LIBS -framework QuartzCore"],[AC_MSG_ERROR(could not link against QuartzCore framework)])
+        QT_LIBS="-L$qt_plugin_path/styles -lqmacstyle $QT_LIBS"
+        AC_DEFINE(QT_QPA_STYLE_MAC, 1, [Define this symbol if the qt mac style plugin exists])
+      fi
       _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin)],[-lqcocoa])
       AC_DEFINE(QT_QPA_PLATFORM_COCOA, 1, [Define this symbol if the qt platform is cocoa])
     elif test "x$TARGET_OS" = xandroid; then
@@ -320,7 +329,10 @@ AC_DEFUN([_BITCOIN_QT_FIND_STATIC_PLUGINS],[
       elif test "x$TARGET_OS" = xdarwin; then
         PKG_CHECK_MODULES([QTCLIPBOARD], [Qt5ClipboardSupport], [QT_LIBS="-lQt5ClipboardSupport $QT_LIBS"])
         PKG_CHECK_MODULES([QTGRAPHICS], [Qt5GraphicsSupport], [QT_LIBS="-lQt5GraphicsSupport $QT_LIBS"])
-        PKG_CHECK_MODULES([QTCGL], [Qt5CglSupport], [QT_LIBS="-lQt5CglSupport $QT_LIBS"])
+        dnl (BOB) Qt 5.9 has CglSupport; Qt 5.15 dropped it and added Service/Edid support
+        PKG_CHECK_MODULES([QTCGL], [Qt5CglSupport], [QT_LIBS="-lQt5CglSupport $QT_LIBS"], [true])
+        PKG_CHECK_MODULES([QTSERVICE], [Qt5ServiceSupport], [QT_LIBS="-lQt5ServiceSupport $QT_LIBS"], [true])
+        PKG_CHECK_MODULES([QTEDID], [Qt5EdidSupport], [QT_LIBS="-lQt5EdidSupport $QT_LIBS"], [true])
       fi
     fi
 ])

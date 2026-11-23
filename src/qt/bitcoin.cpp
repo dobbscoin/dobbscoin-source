@@ -61,6 +61,9 @@ Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 #elif defined(QT_QPA_PLATFORM_COCOA)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
+#if defined(QT_QPA_STYLE_MAC)
+Q_IMPORT_PLUGIN(QMacStylePlugin);
+#endif
 #endif
 #endif
 

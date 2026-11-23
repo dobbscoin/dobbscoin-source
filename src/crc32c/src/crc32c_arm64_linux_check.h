@@ -20,7 +20,7 @@
 
 #if HAVE_STRONG_GETAUXVAL
 #include <sys/auxv.h>
-#elif HAVE_WEAK_GETAUXVAL
+#elif HAVE_WEAK_GETAUXVAL && !defined(__APPLE__)
 // getauxval() is not available on Android until API level 20. Link it as a weak
 // symbol.
 extern "C" unsigned long getauxval(unsigned long type) __attribute__((weak));
@@ -31,7 +31,10 @@ extern "C" unsigned long getauxval(unsigned long type) __attribute__((weak));
 namespace crc32c {
 
 inline bool CanUseArm64Linux() {
-#if HAVE_STRONG_GETAUXVAL || HAVE_WEAK_GETAUXVAL
+#if defined(__APPLE__)
+  // (BOB) macOS has no getauxval(); every Apple Silicon CPU has CRC32 and PMULL.
+  return true;
+#elif HAVE_STRONG_GETAUXVAL || HAVE_WEAK_GETAUXVAL
   // From 'arch/arm64/include/uapi/asm/hwcap.h' in Linux kernel source code.
   constexpr unsigned long kHWCAP_PMULL = 1 << 4;
   constexpr unsigned long kHWCAP_CRC32 = 1 << 7;
