@@ -239,10 +239,10 @@
           <item>
            <widget class="QLabel" name="consolidateSkipsLabel">
             <property name="toolTip">
-             <string>Moving a coin resets its age, and the (BOB) buyback pays more for older coins. Merging therefore never touches coins that confirmed before January 28, 2026.</string>
+             <string>A coin&apos;s age is the timestamp of the block it was born in. Move the coin and the age is gone. A relic that has been moved is a souvenir. Merging does not make souvenirs.</string>
             </property>
             <property name="text">
-             <string>Merging leaves alone coins from before Jan 28, 2026, and mined blocks while the box below is ticked.</string>
+             <string>Coins from before Jan 28, 2026 are relics of the Before Times. Merging leaves them where they lie, and mined blocks too while the box below is ticked.</string>
             </property>
             <property name="wordWrap">
              <bool>true</bool>
