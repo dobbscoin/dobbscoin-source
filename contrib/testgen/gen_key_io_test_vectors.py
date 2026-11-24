@@ -20,12 +20,15 @@ from segwit_addr import bech32_encode, decode_segwit_address, convertbits, CHARS
 # key types
 PUBKEY_ADDRESS = 0     # (BOB) mainnet
 SCRIPT_ADDRESS = 5
-PUBKEY_ADDRESS_TEST = 113
+PUBKEY_ADDRESS_TEST = 111      # (BOB) 0.14 testnet (ported 2026-11-18; these were Dogecoin testnet values)
 SCRIPT_ADDRESS_TEST = 196
+PUBKEY_ADDRESS_SIGNET = 113    # signet keeps the values the base came with
+SCRIPT_ADDRESS_SIGNET = 196
 PUBKEY_ADDRESS_REGTEST = 111   # (BOB) 0.14 regtest
 SCRIPT_ADDRESS_REGTEST = 196
 PRIVKEY = 128
-PRIVKEY_TEST = 241
+PRIVKEY_TEST = 239
+PRIVKEY_SIGNET = 241
 PRIVKEY_REGTEST = 239
 
 # script
@@ -56,16 +59,16 @@ templates = [
   ((SCRIPT_ADDRESS,),         20, (),   (False, 'main',    None,  None), script_prefix, script_suffix),
   ((PUBKEY_ADDRESS_TEST,),    20, (),   (False, 'test',    None,  None), pubkey_prefix, pubkey_suffix),
   ((SCRIPT_ADDRESS_TEST,),    20, (),   (False, 'test',    None,  None), script_prefix, script_suffix),
-  ((PUBKEY_ADDRESS_TEST,),    20, (),   (False, 'signet',  None,  None), pubkey_prefix, pubkey_suffix),
-  ((SCRIPT_ADDRESS_TEST,),    20, (),   (False, 'signet',  None,  None), script_prefix, script_suffix),
+  ((PUBKEY_ADDRESS_SIGNET,),  20, (),   (False, 'signet',  None,  None), pubkey_prefix, pubkey_suffix),
+  ((SCRIPT_ADDRESS_SIGNET,),  20, (),   (False, 'signet',  None,  None), script_prefix, script_suffix),
   ((PUBKEY_ADDRESS_REGTEST,), 20, (),   (False, 'regtest', None,  None), pubkey_prefix, pubkey_suffix),
   ((SCRIPT_ADDRESS_REGTEST,), 20, (),   (False, 'regtest', None,  None), script_prefix, script_suffix),
   ((PRIVKEY,),                32, (),   (True,  'main',    False, None), (),            ()),
   ((PRIVKEY,),                32, (1,), (True,  'main',    True,  None), (),            ()),
   ((PRIVKEY_TEST,),           32, (),   (True,  'test',    False, None), (),            ()),
   ((PRIVKEY_TEST,),           32, (1,), (True,  'test',    True,  None), (),            ()),
-  ((PRIVKEY_TEST,),           32, (),   (True,  'signet',  False, None), (),            ()),
-  ((PRIVKEY_TEST,),           32, (1,), (True,  'signet',  True,  None), (),            ()),
+  ((PRIVKEY_SIGNET,),         32, (),   (True,  'signet',  False, None), (),            ()),
+  ((PRIVKEY_SIGNET,),         32, (1,), (True,  'signet',  True,  None), (),            ()),
   ((PRIVKEY_REGTEST,),        32, (),   (True,  'regtest', False, None), (),            ()),
   ((PRIVKEY_REGTEST,),        32, (1,), (True,  'regtest', True,  None), (),            ())
 ]
@@ -76,10 +79,10 @@ bech32_templates = [
   ('bob',    0, 32, (False, 'main',    None, True), Encoding.BECH32,  p2wsh_prefix),
   ('bob',    1, 32, (False, 'main',    None, True), Encoding.BECH32M, p2tr_prefix),
   ('bob',    2,  2, (False, 'main',    None, True), Encoding.BECH32M, (OP_2, 2)),
-  ('tdge',    0, 20, (False, 'test',    None, True), Encoding.BECH32,  p2wpkh_prefix),
-  ('tdge',    0, 32, (False, 'test',    None, True), Encoding.BECH32,  p2wsh_prefix),
-  ('tdge',    1, 32, (False, 'test',    None, True), Encoding.BECH32M, p2tr_prefix),
-  ('tdge',    3, 16, (False, 'test',    None, True), Encoding.BECH32M, (OP_3, 16)),
+  ('tbob',    0, 20, (False, 'test',    None, True), Encoding.BECH32,  p2wpkh_prefix),
+  ('tbob',    0, 32, (False, 'test',    None, True), Encoding.BECH32,  p2wsh_prefix),
+  ('tbob',    1, 32, (False, 'test',    None, True), Encoding.BECH32M, p2tr_prefix),
+  ('tbob',    3, 16, (False, 'test',    None, True), Encoding.BECH32M, (OP_3, 16)),
   ('tdge',    0, 20, (False, 'signet',  None, True), Encoding.BECH32,  p2wpkh_prefix),
   ('tdge',    0, 32, (False, 'signet',  None, True), Encoding.BECH32,  p2wsh_prefix),
   ('tdge',    1, 32, (False, 'signet',  None, True), Encoding.BECH32M, p2tr_prefix),
@@ -127,7 +130,7 @@ def is_valid(v):
 
 def is_valid_bech32(v):
     '''Check vector v for bech32 validity'''
-    for hrp in ['bob', 'tdge', 'dcrt']:
+    for hrp in ['bob', 'tbob', 'tdge', 'dcrt']:
         if decode_segwit_address(hrp, v) != (None, None):
             return True
     return False
