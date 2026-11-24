@@ -21,6 +21,10 @@ ap.add_argument("--rebase-bin", default=None, help="dobbscoind of the rebase (de
 ap.add_argument("--segwit", type=int, default=0,
                 help="SegWit+CSV activation height on the rebase node (0 = off). The pool starts 5 blocks before it, "
                      "and a wallet keeps bech32 payments and witness spends in the mempool from the height on.")
+ap.add_argument("--payments", action="store_true",
+                help="also run MiningCore's payout side as the live pool does (PROP, minimum 0.5, a Postgres database "
+                     "'miningcore' on 127.0.0.1 with the stock schema, user miningcore / password mcpooltest): the pool "
+                     "node's wallet owns the pool address, the miner is paid to an address of the OTHER node's wallet")
 ap.add_argument("base"); ap.add_argument("work")
 A = ap.parse_args()
 BASE, WORK = os.path.abspath(A.base), os.path.abspath(A.work)
@@ -29,6 +33,17 @@ STRATUM_PORT = 3933
 
 
 POOL_ADDR = None   # regtest P2PKH (prefix 111), derived by the rebase node at start
+FEE_ADDR = None    # --payments: the 1% reward recipient of the pool itself
+MINER_ADDR = None  # --payments: where the miner is paid (an address of the other node's wallet)
+PG = {"host": "127.0.0.1", "port": 5432, "user": "miningcore", "password": "mcpooltest", "database": "miningcore"}
+
+
+def psql(sql):
+    out = subprocess.run(["psql", "-h", PG["host"], "-U", PG["user"], "-d", PG["database"], "-At", "-c", sql],
+                         env=dict(os.environ, PGPASSWORD=PG["password"]), capture_output=True, text=True)
+    if out.returncode:
+        raise RuntimeError("psql: " + out.stderr.strip()[:200])
+    return out.stdout.strip()
 
 
 class Node:
@@ -129,7 +144,7 @@ class Miner(threading.Thread):
                 if self.job is not job:
                     break
                 if scrypt_int(head + struct.pack("<I", nonce)) <= target:
-                    self.send(sid, "mining.submit", [POOL_ADDR + ".test", jid, en2, timehex, "%08x" % nonce])
+                    self.send(sid, "mining.submit", [(MINER_ADDR or POOL_ADDR) + ".test", jid, en2, timehex, "%08x" % nonce])
                     sid += 1; self.submits += 1
                     break
 
@@ -141,7 +156,7 @@ def main():
                               "-bind=127.0.0.1"], 19555, refenv)
     new = Node("rebase", [A.rebase_bin or os.path.join(BASE, "dogecoin-121dev", "src", "dobbscoind"), "-port=19566", "-listen=0",
                           "-connect=127.0.0.1:19556"] + (["-segwitheight=%d" % A.segwit, "-csvheight=%d" % A.segwit]
-                                                         if A.segwit else ["-disablewallet"]), 19565)
+                                                         if A.segwit else [] if A.payments else ["-disablewallet"]), 19565)
     nodes = {"old": old, "rebase": new}
     pool_node, follower = nodes[A.pool_on], nodes["old" if A.pool_on == "rebase" else "rebase"]
     mc = None
@@ -155,6 +170,14 @@ def main():
         pk = "02" + "22" * 32
         POOL_ADDR = new.call("deriveaddresses", new.call("getdescriptorinfo", "pkh(%s)" % pk)["descriptor"])[0]
         assert old.call("validateaddress", POOL_ADDR)["isvalid"], "0.14 rejects the pool address"
+        if A.payments:
+            global MINER_ADDR, FEE_ADDR
+            if not A.segwit:
+                new.call("createwallet", "pooltest")
+            POOL_ADDR = pool_node.call("getnewaddress")       # the pool node's own wallet must hold the rewards
+            MINER_ADDR = follower.call("getnewaddress")
+            FEE_ADDR = pool_node.call("getnewaddress")
+            psql("TRUNCATE shares, blocks, balances, balance_changes, payments, minerstats, poolstats")
         # One block with a current timestamp ends initial block download on both.
         desc = new.call("getdescriptorinfo", "raw(51)")["descriptor"]
         new.call("generatetodescriptor", 1, desc)
@@ -191,16 +214,19 @@ def main():
                         "logFile": "", "logBaseDirectory": "", "perPoolLogFile": False},
             "banning": {"manager": "integrated", "banOnJunkReceive": True, "banOnInvalidShares": False},
             "notifications": {"enabled": False},
-            "persistence": {},
-            "paymentProcessing": {"enabled": False, "interval": 600, "shareRecoveryFile": "recovered-shares.txt"},
+            "persistence": {"postgres": PG} if A.payments else {},
+            "paymentProcessing": {"enabled": A.payments, "interval": 15 if A.payments else 600, "shareRecoveryFile": "recovered-shares.txt"},
             "pools": [{
                 "id": "dobbscoin", "enabled": True, "coin": "dobbscoin", "address": POOL_ADDR,
-                "rewardRecipients": [], "blockRefreshInterval": 250, "jobRebroadcastTimeout": 10,
+                # the live pool keeps a fee through one reward recipient; without one the wallet owes every
+                # coin it holds and has nothing left for the fee of the payout itself ("Insufficient funds")
+                "rewardRecipients": ([{"address": FEE_ADDR, "percentage": 1.0}] if A.payments else []), "blockRefreshInterval": 250, "jobRebroadcastTimeout": 10,
                 "clientConnectionTimeout": 600,
                 "banning": {"enabled": False},
                 "ports": {str(STRATUM_PORT): {"listenAddress": "127.0.0.1", "difficulty": 0.0001, "name": "pooltest"}},
                 "daemons": [{"host": "127.0.0.1", "port": pool_node.port, "user": "d", "password": "d"}],
-                "paymentProcessing": {"enabled": False},
+                "paymentProcessing": ({"enabled": True, "minimumPayment": 0.5, "payoutScheme": "PROP",
+                                       "payoutSchemeConfig": {"factor": 2.0}} if A.payments else {"enabled": False}),
             }],
         }
         cfgpath = os.path.join(WORK, "miningcore.json")
@@ -277,6 +303,47 @@ def main():
             print("segwit: %d pool blocks from the activation height, %d witness inputs in them, %d with a witness commitment"
                   % (after, wit, commit))
             bad += wit == 0
+        if A.payments:
+            # Let the pool's blocks mature (100), mined outside the pool to the OTHER node's wallet,
+            # then give the payout loop (every 15 s) time to confirm the blocks and pay the miner.
+            print("== payouts: maturing the pool's blocks, then waiting for MiningCore to pay", MINER_ADDR)
+            spare = follower.call("getnewaddress")
+            if pool_node is new:
+                # five blocks of its own first: the wallet owes every pool coin it holds (miner + fee recipient),
+                # so it needs something else to pay the network fee of the payout from. The 0.14 side gets the
+                # same from setgenerate, which mines to its own wallet.
+                new.call("generatetoaddress", 5, new.call("getnewaddress"))
+                new.call("generatetoaddress", 110, spare)
+            else:
+                old.call("setgenerate", True, 110)
+            paid, deadline = "", time.time() + 240
+            while time.time() < deadline:
+                if mc.poll() is not None:
+                    raise SystemExit("MiningCore exited (%s); see miningcore.log" % mc.returncode)
+                paid = psql("select count(*) || ' ' || coalesce(sum(amount),0) || ' ' || coalesce(max(transactionconfirmationdata),'') from payments")
+                if not paid.startswith("0 "):
+                    break
+                time.sleep(5)
+            log = open(os.path.join(WORK, "miningcore.log")).read()
+            for l in [l for l in log.splitlines() if "ayout" in l or "ayment" in l or "ismine" in l.lower() or "[E]" in l or "rror" in l][-14:]:
+                print("    mc:", l[:210])
+            print("blocks table:", psql("select status || ':' || count(*) from blocks group by status").replace("\n", " "))
+            print("payments table (count, sum, txid):", paid)
+            n_pay = int(paid.split()[0]) if paid else 0
+            bad += n_pay == 0
+            if n_pay:
+                txid = paid.split()[2]
+                tx = pool_node.call("gettransaction", txid)
+                print("payout tx on the pool node: %s, amount %s, fee %s, confirmations %s" % (txid[:16], tx["amount"], tx.get("fee"), tx["confirmations"]))
+                time.sleep(3)
+                got = follower.call("getreceivedbyaddress", MINER_ADDR, 0)
+                print("miner address %s received (0-conf, seen by the other node over P2P): %s" % (MINER_ADDR, got))
+                bad += not float(got) >= 0.5
+                (new.call("generatetoaddress", 1, spare) if pool_node is new else old.call("setgenerate", True, 1))
+                time.sleep(3)
+                got1 = follower.call("getreceivedbyaddress", MINER_ADDR, 1)
+                print("after one more block, confirmed on the other node: %s" % got1)
+                bad += not float(got1) >= 0.5
         print("PASS" if bad == 0 else "FAIL: %d problem(s)" % bad)
         return 0 if bad == 0 else 1
     finally:
