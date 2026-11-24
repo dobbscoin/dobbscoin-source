@@ -44,9 +44,11 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <QFont>
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QMessageBox>
+#include <QOperatingSystemVersion>
 #include <QSettings>
 #include <QThread>
 #include <QTimer>
@@ -479,6 +481,19 @@ int GuiMain(int argc, char* argv[])
 #endif
 
     BitcoinApplication app;
+
+#if defined(Q_OS_MACOS) && (QT_VERSION < QT_VERSION_CHECK(5, 15, 3))
+    // QTBUG-88495: on macOS 11 and newer, Qt before 5.15.3 loses the first space
+    // after a period or a comma when it draws text in the system font ("CPU.He
+    // notices", "address,transaction id"). Both Mac builds use an affected Qt
+    // (5.9.8 and 5.15.2), so draw the interface in Helvetica Neue there instead.
+    // Menus and window titles are drawn by macOS itself and are not affected.
+    if (QOperatingSystemVersion::current() >= QOperatingSystemVersion(QOperatingSystemVersion::MacOS, 10, 16)) {
+        QFont app_font = QApplication::font();
+        app_font.setFamily(QStringLiteral("Helvetica Neue"));
+        QApplication::setFont(app_font);
+    }
+#endif
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
